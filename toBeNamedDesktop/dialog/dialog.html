@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .dialogContainer{
+            display: block;
+            background: rgb(255 255 255 / 70%);
+            width: 300px;
+            height: auto;
+            border-radius: 12px;
+            user-select: none;
+        }
+        .dialogButton{
+            display: flex;
+            background: rgb(248 125 166 / 44%);
+            border-radius: 12px;
+            width: 64px;
+            height: 33px;
+            margin: 10px;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            color:white;
+        }
+        .dialogButton img{
+            width: auto;
+            height: 22px;
+           /*  mix-blend-mode: overlay; */
+            opacity: 0.5;
+        }
+        .dialogFlexContainer{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            padding: 4px;
+            justify-content: space-evenly;
+            align-content: center;
+        } 
+        .dialogTrayContainer{
+            display: flex;
+            width: 100%;
+            height: auto;
+            border-radius: 10px 10px 0px 0px;
+            justify-content: space-around;
+        }
+        .dialogTray{
+            display: flex;
+            width: 90%;
+            height: 70%;
+            border-radius: 10px;
+            margin:8px;
+            text-align: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-around;
+            align-items: center;
+            color:white;
+        }
+        .color{
+            background: rgb(255 47 47 / 80%);
+        }
+        .colorDarker{
+            background: rgba(193, 35, 35, 0.8);
+        }
+        .dialogTitle{
+            font-family: system-ui;
+            font-size: 90%;
+        }
+        </style>
+</head>
+<body>
+    <div class="dialogContainer">
+        <div class="dialogTrayContainer color">
+        <div class="dialogTray colorDarker"> <p class="dialogTitle">Are you sure you want to do this?</p>
+</div>
+    </div>
+          <div class="dialogFlexContainer">
+            <div class="dialogButton color">
+            <div>Yes</div>
+            </div>
+            <div class="dialogButton color"><div>No</div></div>
+        </div>
+            <input type="color" oninput="console.log(hexToRgbA(this.value))" value="rgba(0,0,0 / 100)" style="width:85%;border:none;position: absolute;width: 30px;">
+    </div>
+    <script>
+        var styleElement=document.getElementsByTagName("style");
+        var oldStyle=styleElement[0].innerHTML;
+        function hexToRgbA(hex){
+            var c;
+            if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                c= hex.substring(1).split('');
+                if(c.length== 3){
+                    c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+                }
+                c= '0x'+c.join('');
+                color='rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',0.8)';
+                colorDarker='rgba('+[((c>>16)&255)*0.75, ((c>>8)&255)*0.75, (c&255)*0.75].join(',')+',0.8)';
+                colorChange(color,colorDarker);
+                return color+" "+colorDarker;
+            }
+            throw new Error('Bad Hex');
+        }
+        function colorChange(color,colorDarker){
+            styleElement[0].innerHTML=oldStyle;
+            var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .dialogButton.color:hover{ background-color: '+colorDarker+' }';
+            oldStyle=styleElement[0].innerHTML;
+            styleElement[0].innerHTML=oldStyle+css;
+            console.log(styleElement[0]);
+        }
+    </script>
+</script>
+
+</body>
+</html>

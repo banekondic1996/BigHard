@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="Chart.js"></script>
+    <title>Transfer Dialog</title>
+    <style>
+        body{
+            background: antiquewhite;
+        }
+        .transferDialogContainer{
+            display: block;
+            background: rgb(255 255 255 / 70%);
+            width: 300px;
+            height: auto;
+            border-radius: 12px;
+            user-select: none;
+            margin-inline: 10px;
+        }
+        .transferDialogButton{
+            display: flex;
+            background: rgb(248 125 166 / 44%);
+            border-radius: 12px;
+            width: 64px;
+            height: 33px;
+            margin-bottom: 10px;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            color:white;
+        }
+        .transferDialogButton img{
+            width: auto;
+            height: 22px;
+           /*  mix-blend-mode: overlay; */
+            opacity: 0.5;
+        }
+        .transferDialogFlexContainer{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            padding: 4px;
+            justify-content: space-evenly;
+            align-content: center;
+        }
+        .sliderContainer{
+            text-align: center;
+        }
+        .slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 20px;
+        background: #d3d3d3;
+        outline: none;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+        margin: 10px;
+        border-radius: 10px;
+        }
+    
+        .slider:hover {
+        opacity: 1;
+        }
+         .sliderTrack{
+            -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: rgb(248 125 166 / 44%);;
+        cursor: pointer;
+        position: absolute;
+        border-radius: 10px;
+        margin: 13px;
+        z-index: 0;
+        pointer-events: none;
+        max-width: 170px; 
+        min-width: 10px;
+         }
+        .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: #ff80db00;
+        cursor: pointer;
+        border-radius: 100%;
+        z-index:999;
+        }
+    
+        .slider::-moz-range-thumb {
+        width: 15px;
+        height: 15px;
+        background: #ff80db;
+        cursor: pointer;
+        z-index:999;
+        }
+        .transferDialogTrayContainer{
+            display: flex;
+            width: 100%;
+            height: auto;
+            border-radius: 10px 10px 0px 0px;
+            justify-content: space-around;
+        }
+        .sliderContainer img{
+            width: 22px;
+            height:22px;
+            opacity: 0.5;
+        }
+        .transferDialogTray{
+            display: flex;
+            width: 90%;
+            height: 70%;
+            border-radius: 10px;
+            margin:8px;
+            text-align: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-around;
+            align-items: center;
+            color:white;
+        }
+        .color{
+            background: rgb(255 47 47 / 80%);
+        }
+        .colorDarker{
+            background: rgba(193, 35, 35, 0.8);
+        }
+        .transferDialogTitle{
+            font-family: system-ui;
+            font-size: 90%;
+        }
+        .transferDialogDetails .transferDialogTitle{
+            margin-left: 10px;
+            margin-top: 6px;
+            margin-bottom: 0px;
+        }
+        .transferDialogDetails
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 90%;
+        }
+        .transferChart{
+            width:100%;
+            max-width:600px;
+            padding-top: 5px;
+        }
+        .hide{
+            display: none !important;
+        }
+        </style>
+</head>
+<body style="display: flex;flex-direction: row;">
+<div id="detailsID" class="transferDialogContainer color hide">
+    <div class="transferDialogTrayContainer" style="height: 100%;">
+        <div class="transferDialogTray transferDialogDetails colorDarker"> 
+            <p class="transferDialogTitle">Name: index.html</p>
+            <p class="transferDialogTitle">From: C:/Windows</p>
+            <p class="transferDialogTitle">To: C:/User/Desktop</p>
+            <p class="transferDialogTitle">Est. Time: 1h 30min</p>
+            <p class="transferDialogTitle">Transfer rate: 900Mb/s</p>
+        </div>
+    </div>
+</div>
+<div class="transferDialogContainer" style="width: 239px;">
+    <div class="transferDialogTrayContainer color">
+        <div class="transferDialogTray colorDarker">
+            <canvas id="transferChartID" class="transferChart hide"></canvas> 
+            <p id="transferingTextID" class="transferDialogTitle">Transfering files.... /index.html</p>
+        </div>
+    </div>
+    <div style="display: flex;flex-direction: row;">
+        <div class="sliderContainer" style="margin: 5px;width: 74%;">
+            <span class="sliderTrack color" style="width: 38.75px;"></span>
+            <input type="range" min="1" max="100" value="50" class="slider" id="myRange" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)">
+        </div>
+        <div id="progressTextID" style="margin: auto;">37%</div>
+    </div>
+    <div class="transferDialogFlexContainer">
+        <div class="transferDialogButton color" style="width: 115px;">
+            <div style="text-wrap: nowrap;" onclick="displayDetails();">Expand Details</div>
+        </div>
+        <div class="transferDialogButton color">
+            <div>Cancel</div>
+        </div>
+    </div>
+    <input type="color" oninput="console.log(hexToRgbA(this.value))" value="rgba(0,0,0 / 100)" style="width:85%;border:none;position: absolute;width: 30px;">
+</div>
+    <script>
+        var detailsHidden=true;
+        var detailsElement=document.getElementById("detailsID");
+        var progressTextElemenet=document.getElementById("progressTextID");
+        var transferingTextElemenet=document.getElementById("transferingTextID");
+        var transferChartElement=document.getElementById("transferChartID");
+        var styleElement=document.getElementsByTagName("style");
+        var oldStyle=styleElement[0].innerHTML;
+        function sliderTrackChange(el){
+            /* console.log(el.parentElement.children[0]); */
+            el.parentElement.children[0].style.width=((el.offsetWidth/100)*el.value)+'px';
+            progressTextElemenet.innerHTML=el.value+"%";
+        }
+        function hexToRgbA(hex){
+            var c;
+            if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                c= hex.substring(1).split('');
+                if(c.length== 3){
+                    c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+                }
+                c= '0x'+c.join('');
+                color='rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',0.8)';
+                colorDarker='rgba('+[((c>>16)&255)*0.75, ((c>>8)&255)*0.75, (c&255)*0.75].join(',')+',0.8)';
+                colorChange(color,colorDarker);
+                return color+" "+colorDarker;
+            }
+            throw new Error('Bad Hex');
+        }
+        function colorChange(color,colorDarker){
+            styleElement[0].innerHTML=oldStyle;
+            var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .transferDialogButton.color:hover{ background-color: '+colorDarker+' }';
+            oldStyle=styleElement[0].innerHTML;
+            styleElement[0].innerHTML=oldStyle+css;
+            console.log(styleElement[0]);
+        }
+        function displayDetails(){
+            if(detailsHidden==true){
+            detailsElement.classList.remove("hide");
+            transferChartElement.classList.remove("hide");
+            transferingTextElemenet.classList.add("hide");
+            detailsHidden=false;
+            }
+            else if(detailsHidden==false){
+            detailsElement.classList.add("hide");
+            transferChartElement.classList.add("hide");
+            transferingTextElemenet.classList.remove("hide");
+            detailsHidden=true;
+            }
+        }
+    </script>
+    <script>
+        const x = [100,200,300,400,500,600,700,800,900,1000];
+        var transferChart=new Chart("transferChartID", {
+          type: "line",
+          data: {
+            labels: x,
+            datasets: [{ 
+              data: [860,1140,1060,1060,1070,1110,1330,2210,7830,2478],
+              borderColor: "rgba(88,88,88,1)",
+              fill: true,
+              borderWidth:1,
+              backgroundColor:"rgba(33,33,33,1)"
+            }]
+          },
+          options: {
+        scales: {
+        xAxes: [{
+            display:false,
+            gridLines: {
+                color: "rgba(0, 0, 0, 0)",
+                value:"rgba(0, 0, 0, 0)"
+            }
+        }],
+        yAxes: [{
+            display:false,
+            gridLines: {
+                color: "rgba(0, 0, 0, 0)",
+            }   
+        }],
+    },
+    legend:{display:false}
+},
+        });
+        </script>
+</body>
+</html>
