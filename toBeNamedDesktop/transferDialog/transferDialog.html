@@ -7,7 +7,6 @@
     <title>Transfer Dialog</title>
     <style>
         body{
-            background: antiquewhite;
         }
         .transferDialogContainer{
             display: block;
@@ -156,11 +155,12 @@
 <div id="detailsID" class="transferDialogContainer color hide">
     <div class="transferDialogTrayContainer" style="height: 100%;">
         <div class="transferDialogTray transferDialogDetails colorDarker"> 
-            <p class="transferDialogTitle">Name: index.html</p>
-            <p class="transferDialogTitle">From: C:/Windows</p>
-            <p class="transferDialogTitle">To: C:/User/Desktop</p>
-            <p class="transferDialogTitle">Est. Time: 1h 30min</p>
-            <p class="transferDialogTitle">Transfer rate: 900Mb/s</p>
+            <p class="transferDialogTitle" id="transferNameID">File: </p>
+            <p class="transferDialogTitle" id="transferFromID">From: C:/Windows</p>
+            <p class="transferDialogTitle" id="transferToID">To: C:/User/Desktop</p>
+            <p class="transferDialogTitle" id="transferEstID">Est. Time: 1h 30min</p>
+            <p class="transferDialogTitle" id="transferTimeSpentID">Time spent: 1h 30min</p>
+            <p class="transferDialogTitle" id="transferRateID">Transfer rate: 900Mb/s</p>
         </div>
     </div>
 </div>
@@ -174,7 +174,7 @@
     <div style="display: flex;flex-direction: row;">
         <div class="sliderContainer" style="margin: 5px;width: 74%;">
             <span class="sliderTrack color" style="width: 38.75px;"></span>
-            <input type="range" min="1" max="100" value="50" class="slider" id="myRange" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)">
+            <input type="range" min="1" max="100" value="50" class="slider" id="progressBarID"  oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)">
         </div>
         <div id="progressTextID" style="margin: auto;">37%</div>
     </div>
@@ -194,6 +194,7 @@
         var progressTextElemenet=document.getElementById("progressTextID");
         var transferingTextElemenet=document.getElementById("transferingTextID");
         var transferChartElement=document.getElementById("transferChartID");
+        var progressBarElement=document.getElementById('progressBarID');
         var styleElement=document.getElementsByTagName("style");
         var oldStyle=styleElement[0].innerHTML;
         function sliderTrackChange(el){
@@ -239,13 +240,15 @@
         }
     </script>
     <script>
-        const x = [100,200,300,400,500,600,700,800,900,1000];
+        /* const x = [100,200,300,400,500,600,700,800,900,1000]; */
+        const x = [];
         var transferChart=new Chart("transferChartID", {
           type: "line",
           data: {
             labels: x,
             datasets: [{ 
-              data: [860,1140,1060,1060,1070,1110,1330,2210,7830,2478],
+              /* data: [860,1140,1060,1060,1070,1110,1330,2210,7830,2478], */
+              data: [],
               borderColor: "rgba(33,33,33,0.5)",
               fill: true,
               radius: 0,
@@ -334,13 +337,76 @@
     legend:{display:false}
 },
         });
-function addData(label, newData) {
+function addChartData(label, newData) {
     transferChart.data.labels.push(label);
     transferChart.data.datasets.forEach((dataset) => {
     dataset.data.push(newData);
     });
     transferChart.update();
 }
+const fs = require('fs');
+async function copy(sourceFile,destFile) 
+{
+
+fs.stat(sourceFile, function(err, stat){
+  const filesize = stat.size
+  let bytesCopied = 0;
+  let bufferR=0; 
+  let bufferPrevious=0;
+  let bufferChunk=0;
+  let secondsPassed=0;
+  let timeTotalEst=0;
+  let timeAverageEst=0;
+  let transferAverage=0;
+  let transferEstElement=document.getElementById("transferEstID");
+  let transferRateElement=document.getElementById("transferRateID");
+  document.getElementById("transferToID").innerHTML="To: "+destFile;
+  document.getElementById("transferFromID").innerHTML="From: "+sourceFile;
+  const readStream = fs.createReadStream(sourceFile)
+  readStream.on('data', function(buffer){
+    bufferR =bufferR+ buffer.length;
+  })
+  readStream.on('end', function(){
+    clearInterval(refreshIntervalId);
+    chartDataRefresh(bufferChunk,bufferR,true);
+    console.log("done copying");
+  })
+  function chartDataRefresh(bufferChunk,bufferR,isDone){
+        secondsPassed++;
+        bufferChunk=bufferR-bufferPrevious;
+        bufferPrevious=bufferR;
+        transferSpeed=Math.round(bufferChunk/(1024*1024));
+        transferProgress=Math.round(bufferR/(1024*1024));
+        transferEst=Math.round(filesize/bufferChunk);
+        timeTotalEst+=transferEst;
+        transferAverage+=transferSpeed;
+        timeAverageEst=timeTotalEst/secondsPassed;
+        addChartData(transferProgress,transferSpeed);
+/*         transferChart.data.datasets[0].data.push(transferSpeed);
+        transferChart.data.labels.push(transferProgress);
+        transferChart.update(); */
+        document.getElementById("transferRateID");
+        transferEstElement.innerText="Est. time: "+Math.round(timeAverageEst-secondsPassed)+" seconds";
+        transferRateElement.innerText="Transfer rate: "+transferSpeed+" MB/s speed";
+        console.log(transferProgress+"MB done");
+        console.log(transferSpeed+"MB speed");
+        console.log(Math.round(timeAverageEst-secondsPassed)+"sec Est. time");
+        let prcentage = ((bufferR/filesize)*100).toFixed(2);
+        progressBarElement.value=Math.round(prcentage);
+        sliderTrackChange(progressBarElement);
+        document.getElementById("transferTimeSpentID").innerHTML="Time spent: "+secondsPassed+" seconds";
+        if(isDone==true){
+            transferEstElement.innerText="Est. time: 0 seconds";
+            transferRateElement.innerText="Average transfer rate: "+Math.round(transferAverage/secondsPassed)+" MB/s speed";
+        }
+}
+  var refreshIntervalId=setInterval(() => {
+    chartDataRefresh(bufferChunk,bufferR,false);
+}, 1000);
+  readStream.pipe(fs.createWriteStream(destFile));
+});
+      };
+copy('copyTest.iso','copyTest_done.iso');
         </script>
 </body>
 </html>
