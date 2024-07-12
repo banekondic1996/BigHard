@@ -12,5 +12,6 @@ It's not Microsoft, it's BigHard
   ![image](https://github.com/user-attachments/assets/8f30f32a-460a-41b7-9875-ef83c41192f9)
   File transfer window:
   ![image](https://github.com/user-attachments/assets/f92b7268-8bae-445c-a989-61017b5e0e74)
-  Audio control via keyboard:
-  ![image](https://github.com/user-attachments/assets/c7f2e37b-49bf-4f01-a0f6-cd6cdcfd35f9)
+  Audio control via keyboard and calendar:
+  ![image](https://github.com/user-attachments/assets/3a60c4f1-282f-4d3b-acb7-fe86fdf5a91f)
+
