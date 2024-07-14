@@ -49,28 +49,34 @@
             text-align: center;
         }
         .slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 22px;
-            background: #c9c9c900;
-            border-radius: 10px;
+        -webkit-appearance: none;
+        width: 100%;
+        height: 20px;
+        background: #d3d3d3;
+        outline: none;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+        margin: 10px;
+        border-radius: 10px;
         }
     
         .slider:hover {
         opacity: 1;
         }
          .sliderTrack{
-            appearance: none;
-            width: 15px;
-            height: 15px;
-            background: rgb(248 125 166 / 44%);
-            cursor: pointer;
-            position: absolute;
-            border-radius: 10px;
-            margin: 3px;
-            z-index: 0;
-            pointer-events: none;
-            min-width: 10px;
+            -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: rgb(248 125 166 / 44%);;
+        cursor: pointer;
+        position: absolute;
+        border-radius: 10px;
+        margin: 13px;
+        z-index: 0;
+        pointer-events: none;
+        max-width: 170px; 
+        min-width: 10px;
          }
         .slider::-webkit-slider-thumb {
         -webkit-appearance: none;
@@ -256,17 +262,10 @@
 	left: 0;
 	top: 0;
 }
-</style>
-</head>
+</style><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="use-credentials"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swa"></head>
 <body style="display: flex;width: 100%;flex-wrap: nowrap;">
     
     <div class="WindowContainer" style="">
-        <div class="resizers">
-            <div class="resizer top-left"></div>
-            <div class="resizer top-right"></div>
-            <div class="resizer bottom-left"></div>
-            <div class="resizer bottom-right"></div>
-          </div>
             <div class="WindowBar">
         <div class="buttonsHolder" onclick="" style="
         display: flex;
@@ -314,20 +313,10 @@
         </div>
         <div style="display: flex;flex-direction: row;justify-content: center;">
             <div class="sliderContainer" style="margin: 13px;width: 85%;">
-                <div style="
-                   position: relative;
-                   display: flex;
-                   width: 100%;
-                   height: 22px;
-                   background: #b8b8b8;
-                   outline: none;
-                   transition: opacity .2s;
-                   border-radius: 10px;
-                   align-items: center;
-               "><input type="range" min="1" max="100" value="50" class="slider" id="progressBarID" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)" style="display: flex;/* position: absolute; */">
-               <span class="sliderTrack color" style="display: flex;width: 98%;"></span></div>
-                           </div>
-            <div id="progressTextID" style="margin: auto;margin-right: 27px;margin-left: 5px;width:20px">37%</div>
+                <span class="sliderTrack color" style="width: 38.75px;"></span>
+                <input type="range" min="1" max="100" value="50" class="slider" id="progressBarID" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)">
+            </div>
+            <div id="progressTextID" style="margin: auto;margin-right: 5px;margin-left: 5px;">37%</div>
         </div>
         <div class="transferDialogFlexContainer">
             <div class="transferDialogButton color" style="width: 115px;">
@@ -351,9 +340,8 @@
             var oldStyle=styleElement[0].innerHTML;
             function sliderTrackChange(el){
                 /* console.log(el.parentElement.children[0]); */
-                el.parentElement.children[1].style.width="calc("+(el.value)+"% - 8px)";
+                el.parentElement.children[0].style.width=((el.offsetWidth/100)*el.value)+'px';
                 progressTextElemenet.innerHTML=el.value+"%";
-                console.log("calc("+el.value+"% - 8px)");
             }
             function hexToRgbA(hex){
                 var c;
@@ -447,7 +435,7 @@
                         if (tooltipModel.body) {
                             const titleLines = tooltipModel.title || [];
                             const bodyLines = tooltipModel.body.map(getBody);
-                            let innerHtml = '<thead style="">';
+                            let innerHtml = '<thead>';
       /*                       titleLines.forEach(function(title) {
                                 innerHtml += '<tr><th>' + title + '</th></tr>';
                             }); */
@@ -470,7 +458,6 @@
                         tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 29 + 'px';
                         tooltipEl.style.padding = tooltipModel.padding + 'px ' + tooltipModel.padding + 'px';
                         tooltipEl.style.pointerEvents = 'none';
-                        tooltipEl.style.zIndex = '999';
                     }
                 },
             scales: {
@@ -491,7 +478,6 @@
         legend:{display:false}
     },
             });
-  /*   var canvasBCR = transferChartElement.getBoundingClientRect(); */
     function addChartData(label, newData) {
         transferChart.data.labels.push(label);
         transferChart.data.datasets.forEach((dataset) => {
@@ -517,7 +503,6 @@
       let transferEstElement=document.getElementById("transferEstID");
       let transferRateElement=document.getElementById("transferRateID");
       let transferDialogButtonElement=document.getElementById("transferDialogButtonID");
-      /* var eventChart=new MouseEvent("click", {clientX: canvasBCR.left + 777, clientY: canvasBCR.top + 144}); */
       document.getElementById("transferToID").innerHTML="To: "+destFile;
       document.getElementById("transferFromID").innerHTML="From: "+sourceFile;
       const readStream = fs.createReadStream(sourceFile)
@@ -531,7 +516,6 @@
       readStream.on('end', function(){
         clearInterval(refreshIntervalId);
         chartDataRefresh(bufferChunk,bufferR,true);
-/*         transferChartElement.dispatchEvent(eventChart); */
         console.log("done copying");
       })
       function chartDataRefresh(bufferChunk,bufferR,isDone){
