@@ -8,7 +8,6 @@ body {
   place-items: center;
   font-family: var(--font-family);
   overflow: hidden;
-  background: gray;
   width: 100%;
 }
 .container {
@@ -22,7 +21,7 @@ body {
 .calendar {
   height: auto;
   width: 100%;
-  background-color: white;
+  background-color: #242424c2;
   border-radius: 25px;
   overflow: hidden;
   margin: 0px;
@@ -300,8 +299,12 @@ body {
 }
 @media (max-width:375px) {
   .month-list>div{
-
-margin: 5px 0px;
-
+   margin: 5px 0px;
+   }
 }
+.darkMode{
+filter:invert(1);
+}
+.darkModeText{
+color:white;
 }

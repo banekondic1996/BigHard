@@ -19,7 +19,8 @@
             display: flex;
             width: 96%;
             height: 32px;
-            background-color: #f0f0f099;
+            background-color: #353535ba;
+            /* background-color: #ffffffba; */
             position: absolute;
             /* cursor: ns-resize; */
             align-items: center;
@@ -126,12 +127,42 @@
         }
         .hide
         {
-            /* display: none!important; */
+            display: none!important;
             opacity: 0;
             transition: cubic-bezier(0.4, 0, 1, 1) 0.3s;
         }
         .unHideSlowly{
-            transition: ease-in 1s;
+            transition: ease-in 5s;
+        }
+        #searchOverlayID{
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background: #0000008f;
+            position: absolute;
+            backdrop-filter: blur(1px);
+            text-align: center;
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+        }
+        #searchOverlayID input{
+            border-radius: 14px;
+            width: 100%;
+            height: 30px;
+            background: rgb(255 255 255);
+            border-style: none;
+        }
+        #searchBarID{
+            margin: auto;
+            width: 30%;
+            height: auto;
+            top: 20%;
+            left: auto;
+            position: absolute;
+        }
+        .darkMode{
+            filter:invert();
         }
     </style>
 </head>
@@ -165,28 +196,33 @@
 <!--    ---------Webviews START(change to tag and inject it in future)------------------ -->
 <webview id="transferDialogID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 1050px;height: 477px;bottom: 178;display: block;" partition="trusted" src="/transferDialog/transferDialog.html" type=""></webview>
 <webview id="mediaCenterID" onmouseenter="mouseLeftObject.mediaCenter=false" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 177px;left:600px;bottom:94px;display: block;" partition="trusted" src="/volumeControl/mediaCenter.html" type=""></webview>
-<webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 427px;left:1200px;bottom:94px;display: block;background:black" partition="trusted" src="/calendar/calendar.html" type=""></webview>
+<webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 427px;left:1200px;bottom:94px;display: block;" partition="trusted" src="/calendar/calendar.html" type=""></webview>
 <webview id="controlCenterID" onmouseenter="mouseLeftObject.controlCenter=false" onmouseleave="mouseLeftObject.controlCenter=true"  class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 350px;height: 507px;bottom: 78px;display: block;" partition="trusted" src="/controlCenter/controlcenter.html" type=""></webview>
-<webview id="edgyID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;display: block;" partition="trusted" src="/edgy/edgy.html" type=""></webview>
+<webview id="sideBarID" onmouseenter="mouseLeftObject.sideBar=false" onmouseleave="mouseLeftObject.sideBar=true" class="hide" allowtransparency style="position: absolute;z-index: 10000;display: block;height: 427px;width:420px;height: calc(100% - 200px);right:0px;top:100px" partition="trusted" src="/edgy/edgy.html" type=""></webview>
 <!--    ---------Webviews END(change to tag and inject it in future)------------------ -->
 <!--    ---------Bar START(add options to change orientation in future)------------------ -->
 <div id="barResizeID"></div>
 <div id="barID">
-    <img class='taskbutton' src="/icons/toggle.png" onclick="openControlCenter();"></img>
-    <img class="taskbutton" src="/icons/sidebar.png" onclick="openSideBar()">
-    <img class="taskbutton" src="/icons/search.png" onclick="openSearch()">
+    <img class='taskbutton darkMode' src="/icons/toggle.png" onclick="openControlCenter();"></img>
+    <img class="taskbutton darkMode" src="/icons/sidebar.png" onclick="openSideBar()">
+    <img class="taskbutton darkMode" src="/icons/search.png" onclick="openSearch()">
     <div id="barAppsID" style="display: flex;align-items: center;margin:auto;height: 100%;">
         <img class="taskbutton" src="/icons/repeat.png" onclick="getBarIcons()">
         <img id='iconTest'src="">
     </div>
-    <div id="barClockID" onclick="openCalendar()" style=""></div>
+    <div id="barClockID" class="darkMode" onclick="openCalendar()" style=""></div>
 </div>
 <!--    ---------Bar END(add options to change orientation in future)------------------ -->
+<!--    -----------------------Search START--------------------------------------------- --> 
+<div id="searchOverlayID" class="searchOverlay hide" onclick="openSearch();">
+    <div id="searchBarID"><input type="text" name="" id="searchOverlayInputID" placeholder="Search or run program"></div>
+</div>  
+<!--    -----------------------Search END--------------------------------------------- --> 
 <script>
          console.log("width="+window.innerWidth);
          let AppProcessID=nw.process.ppid;
          let barElement=document.getElementById('barAppsID');
-
+         var colorMain="background-color: #353535ba;";
          var win=nw.Window.get();
          win.setAlwaysOnTop(true);
          var iconExtractor = require('icon-extractor');
@@ -196,7 +232,6 @@
          var volume=new PowerShell.PowerShell;
          var RunningProcessList;
          var num=0;
-         var mediaCenterWebView=document.getElementById("mediaCenterID");
 //////////////////////////////////////// Volume changign script
         volume.invokeCommand("C:/Users/X.000000000000000000/VolumeAndMute.ps1");
 //////////////////////////////////////// Running get processes 
@@ -293,7 +328,7 @@ function getBarIcons()
         startTime(); //turn on the clock in bar
 ////////////////////////////////////////
 var mouseLeftObject={};
-var mouseLeftObject={calendar:true,controlCenter:true,runningAppsThumbnail:true,bar:true,mediaCenter:true};
+var mouseLeftObject={calendar:true,controlCenter:true,runningAppsThumbnail:true,bar:true,mediaCenter:true,sideBar:true};
 document.addEventListener('DOMContentLoaded', function () 
         {   
             var isResizing = false;
@@ -361,42 +396,88 @@ document.addEventListener('DOMContentLoaded', function ()
             }
             //////////////////////////////////////// Calendar functions
             var calendarOn=false;
+            var sideBarWasOn=false;
             let calendarElement=document.getElementById("calendarID");
             function openCalendar()
             {
                 if (calendarOn==false)
                 {
                     calendarOn=true;
-                    calendarElement.classList.remove("hide");;
+                    calendarElement.classList.remove("hide");
+                    if(sideBarOn==true)
+                    {
+                        sideBarWasOn=true;
+                        openSideBar();
+                    }
                 }
-                else if (calendarOnOn==true)
-                {
+                else if (calendarOn==true)
+                {   
+                    if(sideBarWasOn==true)
+                    {
+                        openSideBar();
+                    }
                     /* controlWindow.window.close(); */
                     calendarOn=false;
                     calendarElement.classList.add("hide");
                 }
             }
             //////////////////////////////////////// Sidebar functions
-            var sidebarOn=false;
-            let sidebarElement=document.getElementById("edgyID");
+            var sideBarOn=false;
+            let sideBarElement=document.getElementById("sideBarID");
             function openSideBar()
             {
-                if (sidebarOn==false)
+                if (sideBarOn==false)
                 {
-                    sidebarOn=true;
-                    sideElement.classList.remove("hide");;
+                    sideBarOn=true;
+                    sideBarElement.classList.remove("hide");;
                 }
-                else if (controlWindowOn==true)
+                else if (sideBarOn==true)
                 {
                     /* controlWindow.window.close(); */
-                    sidebarOn=false;
-                    sidebarElement.classList.add("hide");
+                    sideBarOn=false;
+                    sideBarElement.classList.add("hide");
                 }
             }
             //////////////////////////////////////// Search functions
+            var searchOverlayOn=false;
+            let searchOverlayElement=document.getElementById("searchOverlayID");
+            let searchOverlayInputElement=document.getElementById("searchOverlayInputID");
             function openSearch()
             {
-                
+                if (searchOverlayOn==false)
+                {
+                    searchOverlayOn=true;
+                    searchOverlayElement.classList.remove("hide");
+                    searchOverlayInputElement.focus();
+                }
+                else if (searchOverlayOn==true)
+                {
+                    /* controlWindow.window.close(); */
+                    searchOverlayOn=false;
+                    searchOverlayElement.classList.add("hide");
+                }
+            }
+            //////////////////////////////////////// Media functions
+            var mediaCenterOn=false;
+            let mediaCenterElement=document.getElementById("mediaCenterID");
+            function openMediaCenter()
+            {
+                if (mediaCenterOn==false)
+                {
+                    mediaCenterOn=true;
+                    mediaCenterElement.classList.remove("hide");
+                    setTimeout(function(){
+                        mediaCenterOn=false;
+                        mediaCenterElement.classList.add("hide");
+                    },2000);
+                }
+                else if (mediaCenterOn==true)
+                {
+        /*             setTimeout(function(){
+                        mediaCenterOn=false;
+                        mediaCenterElement.classList.add("hide");
+                    },4000); */
+                }
             }
 ////////////////////////////////////////
 //////////////////////////////////////// File copying testing function, now in seperate file
@@ -437,12 +518,12 @@ document.addEventListener('DOMContentLoaded', function ()
 ////////////////////////////////////////// Global key bindings START
 document.addEventListener("keydown", (event) => 
         {
-            //To add keyboard langugage keyboard shortcut, copy/cut/paste shortcut, edgy bar shortcut, 
+            //To add keyboard langugage keyboard shortcut, copy/cut/paste shortcut, edgy sideBar shortcut, 
             //print screen shortcut (create tool for screen capture also : shadow wholescreen like in windows 10 snip/sketh)
             //print screen shortcut double press captures the whole screen
-            if(event.code=='AudioVolumeMute'){volume.invokeCommand('[audio]::Volume='+0.00+';')}
-            if(event.code=='AudioVolumeUp'){volume.invokeCommand('[audio]::Volume=[audio]::Volume+'+0.01+';')}
-            if(event.code=='AudioVolumeDown'){volume.invokeCommand('[audio]::Volume=[audio]::Volume-'+0.01+';')}
+            if(event.code=='AudioVolumeMute'){openMediaCenter();volume.invokeCommand('[audio]::Volume='+0.00+';')}
+            if(event.code=='AudioVolumeUp'){openMediaCenter();volume.invokeCommand('[audio]::Volume=[audio]::Volume+'+0.01+';')}
+            if(event.code=='AudioVolumeDown'){openMediaCenter();volume.invokeCommand('[audio]::Volume=[audio]::Volume-'+0.01+';')}
             if(event.code=='Fn+F3'){} 
             if(event.code=='ArrowDown'){}
             console.log(event);

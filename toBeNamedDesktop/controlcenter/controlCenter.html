@@ -8,7 +8,8 @@
     <style>
     .controlCenterContainer{
         display: block;
-        background: rgb(255 255 255 / 70%);
+        background-color: #353535ba;
+        /* background-color: #ffffffba; */
         width: 300px;
         height:450px;
         border-radius: 12px;
@@ -45,7 +46,7 @@
     -webkit-appearance: none;
     width: 70%;
     height: 20px;
-    background: #d3d3d3;
+    background: #979797;
     outline: none;
     -webkit-transition: .2s;
     transition: opacity .2s;
@@ -126,10 +127,13 @@
         opacity: 0.8;
     }
     .color{
-        background: rgb(255 47 47 / 80%);
+        background: rgba(199,199,199,0.8);
     }
     .colorDarker{
         background: rgba(193, 35, 35, 0.8);
+    }
+    .darkMode{
+    filter:invert(1);
     }
     </style>
 </head>
@@ -148,18 +152,18 @@
         </div>
         <div class="sliderContainer">
             <div>
-                <img src='brightness.png'>
+                <img class="darkMode" src='brightness.png'>
                 <span class="sliderTrack color"></span>
                 <input type="range" min="1" max="100" value="0" class="slider" id="myRange" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)">
             </div>
           </div>
             <div class="sliderContainer">
-                <img src='sound.png'  onclick="muteVolume()">
+                <img class="darkMode" src='sound.png'  onclick="muteVolume()">
                 <span class="sliderTrack color"></span>
                 <input type="range" min="1" max="100" value="50" class="slider" id="myRange" oninput="sliderTrackChange(this);changeVolume(this.value)" onchange="sliderTrackChange(this)">
             </div>
-    <div class="trayContainer color">
-        <div class="tray colorDarker"> </div>
+    <div class="trayContainer colorDarker">
+        <div class="tray color"> </div>
     </div>
     <input type="color" oninput="console.log(hexToRgbA(this.value))" value="rgba(0,0,0 / 100)" style="width:85%;border:none;position: absolute;width: 30px;">
     </div>
@@ -187,7 +191,7 @@
         }
         var styleElement=document.getElementsByTagName("style");
         var oldStyle=styleElement[0].innerHTML;
-        colorChange("rgba(168,168,168,0.8);","rgba(126,126,126,0.8);");
+        colorChange("rgba(199,199,199,0.8);","rgba(168,168,168,0.8);");
         function sliderTrackChange(el){
             console.log(el.parentElement.children[1]);
             el.parentElement.children[1].style.width=((el.offsetWidth/100)*el.value)+'px'
@@ -201,7 +205,7 @@
                 }
                 c= '0x'+c.join('');
                 color='rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',0.8)';
-                colorDarker='rgba('+[((c>>16)&255)*0.75, ((c>>8)&255)*0.75, (c&255)*0.75].join(',')+',0.8)';
+                colorDarker='rgba('+[((c>>16)&255)*0.6, ((c>>8)&255)*0.6, (c&255)*0.6].join(',')+',0.8)';
                 colorChange(color,colorDarker);
                 return color+" "+colorDarker;
             }
