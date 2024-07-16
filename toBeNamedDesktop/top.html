@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>top</title>
+    <style>
+        body 
+        {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: none;
+        }
+        #barID 
+        {
+            max-height: 100px;
+            min-height: 22px;
+            display: flex;
+            width: 96%;
+            height: 32px;
+            background-color: #f0f0f099;
+            position: absolute;
+            /* cursor: ns-resize; */
+            align-items: center;
+            bottom: 45px;
+            border-radius: 18px;
+            overflow: hidden;
+            padding-inline: 1%;
+            margin-inline: 1%;
+            user-select: none;
+            backdrop-filter: blur(2px);
+        }   
+        #iconTask
+        {
+            height:auto;
+            width:22px;
+            margin-left: 6px;
+        }
+       .taskbutton{
+            margin-inline-end: 5px;
+            height: 40%;
+            aspect-ratio: 1/1;
+            background: #00000021;
+            border-radius: 100%;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .taskbutton:hover
+        {
+            background: #00000037;
+        }  
+        #barResizeID
+        {
+            background: rgba(0, 0, 0, 0.01);
+            display: flex;
+            width: 96%;
+            height: 40px;
+            position: absolute;
+            /* cursor: ns-resize; */
+            align-items: center;
+            bottom: 45px;
+            border-radius: 18px;
+            overflow: hidden;
+            padding-inline: 1%;
+            margin-inline: 1%;
+            cursor:n-resize;
+        }
+        #barClockID
+        {
+            display: flex;
+            height: 40%;
+            background: #0000001a;
+            border-radius: 24px;
+            padding: 4px;
+            padding-inline: 10px;
+            font-size: 14px;
+        /*    font-size: 12px;
+            font-family: system-ui; */
+            align-items: center;
+        }
+        .contextMenu
+        {
+            display: none;
+            position: absolute;
+            /* width: 134px; */
+            /* height: 271px; */
+            background-color: rgb(228, 228, 228);
+            opacity: 0.8;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 222;
+            /* text-align: center; */
+            left: 116px;
+            top: 50px;
+        }
+        .contextMenu tr td
+        {
+            border-radius: 10px;
+            /* text-align: center; */
+            text-wrap: nowrap;
+            padding: 8px;
+        }
+        .contextMenu tr td:hover
+        {
+            background:rgb(124, 124, 124);
+            text-align: center;
+        }
+        .icons
+        {
+            display: flex;
+            background: #fffefe;
+            padding: 6px;
+        }
+        .contextMenu tr th img:hover
+        {
+            border-radius: 100%;
+            background:rgb(236, 236, 236);
+        }
+        .contextMenu tr th img
+        {
+            padding:5px;
+        }
+        .hide
+        {
+            display: none!important;
+        }
+    </style>
+</head>
+<body>
+<!--    ---------Context menu START(change to tag menu in future)------------------ -->
+    <div class="contextMenu" id="contextMenuID">
+        <table style="width: 100%;display: flex;">
+            <tbody style="width: 100%;display: flex;flex-direction: row;align-items: center;">
+                <tr onclick="">
+                    <th style="display: flex;flex-direction: column;">
+                        <div class="icons" style="display: flex;">
+                            <img alt="Copy" src="/icons/copy.png" style="height: 24px;">
+                        </div>
+                        <div class="icons" style="display: flex;">
+                            <img alt="Cut" src="/icons/cut.png" style="height: 24px;margin: auto;"></div>
+                        <div class="icons" style="display: flex;">
+                            <img alt="Paste" src="/icons/paste.png" style="height: 24px;"></div>
+                        <div class="icons" style="display: flex;" onmouseenter="console.log('hell');">
+                            <img alt="Respawn" src="/icons/reload.png" style="height: 24px;" ></div>
+                        <div class="icons" style="display: flex;">
+                            <img alt="Settings" src="/icons/settings.png" style="height: 24px;">
+                        </div><div class="icons" style="display: flex;">
+                            <img  alt="New" src="/icons/add.png" style="height: 24px;">
+                        </div>
+                    </th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+<!--    ---------Context menu END(change to tag menu in future)------------------ -->
+<!--    ---------Webviews START(change to tag and inject it in future)------------------ -->
+<webview id="transferDialogID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 1050px;height: 477px;bottom: 178;display: block;" partition="trusted" src="/transferDialog/transferDialog.html" type=""></webview>
+<webview id="mediaCenterID" onmouseenter="mouseLeftObject.mediaCenter=false" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 177px;left:600px;bottom:94px;display: block;" partition="trusted" src="/volumeControl/mediaCenter.html" type=""></webview>
+<webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 427px;left:1200px;bottom:94px;display: block;" partition="trusted" src="/calendar/calendar.html" type=""></webview>
+<webview id="controlCenterID" onmouseenter="mouseLeftObject.controlCenter=false" onmouseleave="mouseLeftObject.controlCenter=true"  class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 350px;height: 507px;bottom: 78px;display: block;" partition="trusted" src="/controlCenter/controlcenter.html" type=""></webview>
+<webview id="edgyID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;display: block;" partition="trusted" src="/edgy/edgy.html" type=""></webview>
+<!--    ---------Webviews END(change to tag and inject it in future)------------------ -->
+<!--    ---------Bar START(add options to change orientation in future)------------------ -->
+<div id="barResizeID"></div>
+<div id="barID">
+    <img class='taskbutton' src="/icons/toggle.png" onclick="openControlCenter();"></img>
+    <img class="taskbutton" src="/icons/sidebar.png" onclick="openSideBar()">
+    <img class="taskbutton" src="/icons/search.png" onclick="openSearch()">
+    <div id="barAppsID" style="display: flex;align-items: center;margin:auto;height: 100%;">
+        <img class="taskbutton" src="/icons/repeat.png" onclick="getBarIcons()">
+        <img id='iconTest'src="">
+    </div>
+    <div id="barClockID" onclick="openCalendar()" style=""></div>
+</div>
+<!--    ---------Bar END(add options to change orientation in future)------------------ -->
+<script>
+         console.log("width="+window.innerWidth);
+         let AppProcessID=nw.process.ppid;
+         let barElement=document.getElementById('barAppsID');
+
+         var win=nw.Window.get();
+         win.setAlwaysOnTop(true);
+         var iconExtractor = require('icon-extractor');
+         var PowerShell = require("node-powershell");
+         var ProcessRunningShell=new PowerShell.PowerShell;
+         var showORhideShell=new PowerShell.PowerShell;
+         var volume=new PowerShell.PowerShell;
+         var RunningProcessList;
+         var num=0;
+         var mediaCenterWebView=document.getElementById("mediaCenterID");
+//////////////////////////////////////// Volume changign script
+        volume.invokeCommand("C:/Users/X.000000000000000000/VolumeAndMute.ps1");
+//////////////////////////////////////// Running get processes 
+         ProcessRunningShell.invokeCommand("C:/Users/X.000000000000000000/procesess.ps1").then(result => 
+        {
+            const lines = result.raw.split('\n').map(line => line.trim()).filter(line => line !== "");
+            RunningProcessList = lines.map(line => 
+            {
+                const [id, title, path] = line.split(',').map(value => value.trim());
+                return {
+                    Id: id,
+                    MainWindowTitle: title,
+                    Path: path,
+                    Icon:""
+                };
+            });
+            RunningProcessList.forEach(element => 
+            {
+                
+            });
+            console.log(RunningProcessList);  
+            console.log(RunningProcessList.length);
+            console.log(result.raw); // "Operation succeeded!"
+            })
+            iconExtractor.emitter.on('icon', function(data)
+            {
+                RunningProcessList[num].Icon="data:image/png;base64,"+data.Base64ImageData+"";
+                refreshBarIcons();                            
+            });
+////////////////////////////////////////
+//////////////////////////////////////// Delaying getting icons in bar, cause it needs time
+function getBarIcons()
+        {
+            var len=RunningProcessList.length;
+            var time=100;
+            if(num<len)
+            {
+                for(let i=0;i<len;i++)
+                {
+                    setTimeout(() => 
+                    {
+                    console.log("Delayed for 100 ms.");
+                    getBarIcon(i);
+                    }, time);
+                    time=time+100;
+                }
+            }
+        }
+//////////////////////////////////////// Fetch icons for bar icons
+        function getBarIcon(numB){ 
+            num=numB;
+           /*  iconExtractor.emitter.on('icon', function(data)
+                            {
+                                RunningProcessList[num].Icon="data:image/png;base64,"+data.Base64ImageData+"";
+                            }); */
+            iconExtractor.getIcon("",RunningProcessList[num].Path.replace(/\\/g, '/'));           
+        }
+//////////////////////////////////////// Refresh icons in bar       
+        function refreshBarIcons(){
+            barElement.innerHTML="";
+            RunningProcessList.forEach(element => 
+            {
+                barElement.innerHTML=barElement.innerHTML+`<img class="taskbutton" id='`+element.Id+`' src="`+element.Icon+`" title="`+element.MainWindowTitle+`" onclick='showORhideAPP(`+element.Id+`)'>`;
+            });  
+        }
+////////////////////////////////////////  Maximize/minimize apps based on process id
+        function showORhideAPP(processID){
+            console.log("Trying to show: "+processID);
+            showORhideShell.invokeCommand("C:/Users/X.000000000000000000/procesessB.ps1 -Style 'SHOWDEFAULT' -processID "+processID+"");
+        }
+//////////////////////////////////////// Bar clock function
+        let monthsList=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        function startTime() {
+            const today = new Date();
+            let month=today.getMonth();
+            let date=today.getDate();
+            let h = today.getHours();
+            let m = today.getMinutes();
+            m = checkTime(m);
+            document.getElementById('barClockID').innerHTML =  date+" "+monthsList[month]+" "+ h + ":" + m ;
+            setTimeout(startTime, 60000);
+            }
+//////////////////////////////////////// Bar clock function
+        function checkTime(i) {
+            if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+            return i;
+            }
+////////////////////////////////////////
+        const os = require('node:os'); //To get OS info
+        win.resizeTo(1920,1080); //Only if its FHD res screen, in final it should be fullscreen always
+        /*  win.enterKioskMode(); */
+
+        /* win.showDevTools(); */ //Won't work without NW.JS SDK downloaded seperatly and putting it in node_modules/nw
+        startTime(); //turn on the clock in bar
+////////////////////////////////////////
+var mouseLeftObject={};
+var mouseLeftObject={calendar:true,controlCenter:true,runningAppsThumbnail:true,bar:true,mediaCenter:true};
+document.addEventListener('DOMContentLoaded', function () 
+        {   
+            var isResizing = false;
+            var lastY;
+            var lastX;
+            var mouseDown=false;
+            var resizableBarBorder = document.getElementById('barResizeID');
+            var resizableBar = document.getElementById('barID');
+            var contextMenuElement = document.getElementById('contextMenuID');
+            resizableBarBorder.addEventListener('mousedown', function (e) 
+            {
+                e.stopPropagation();
+                isResizing = true;
+                lastY = e.clientY;
+                /* lastX = e.clientX; */
+            });
+            ////////////////////////////////////////
+            resizableBarBorder.addEventListener('mousemove', function (e) {console.log(e.srcElement.style.cursor);});
+            ////////////////////////////////////////
+            function activateContextMenu(e){
+                contextMenuElement.style.display="block";
+                contextMenuElement.style.left=e.clientX+"px";
+                contextMenuElement.style.top=e.clientY+"px";
+            }
+            ////////////////////////////////////////
+            document.addEventListener('mousemove', function (e) 
+            {
+                if (isResizing) 
+                {
+                    var deltaY = e.clientY - lastY;
+                    var contentHeight = resizableBar.offsetHeight;
+                    resizableBarBorder.style.height = (contentHeight - deltaY)+5 + 'px';
+                    resizableBar.style.height = (contentHeight - deltaY) + 'px';
+                    lastY = e.clientY;
+                 /*    var deltaX = e.clientX - lastX;
+                    var contentWidth = resizableBar.offsetWidth;
+                    resizableBarBorder.style.width = (contentWidth  - deltaX)+5 + 'px';
+                    resizableBar.style.width = (contentWidth - deltaX) + 'px';
+                    lastX = e.clientX; */
+                }
+            });
+            ////////////////////////////////////////
+            document.addEventListener('mouseup', function () 
+            {
+                isResizing = false;
+                mouseDown=false;
+                console.log("mouseup");
+            });
+        });
+            //////////////////////////////////////// Control center functions
+            var controlWindowOn=false;
+            let controlCenterElement=document.getElementById("controlCenterID");
+            function openControlCenter()
+            {
+                if (controlWindowOn==false)
+                {
+                    controlCenterElement.classList.remove("hide");
+                    controlWindowOn=true;
+                }
+                else if (controlWindowOn==true)
+                {
+                    controlCenterElement.classList.add("hide");
+                    controlWindowOn=false;
+                }
+            }
+            //////////////////////////////////////// Calendar functions
+            var calendarOn=false;
+            let calendarElement=document.getElementById("calendarID");
+            function openCalendar()
+            {
+                if (calendarOn==false)
+                {
+                    calendarOn=true;
+                    calendarElement.classList.remove("hide");;
+                }
+                else if (controlWindowOn==true)
+                {
+                    /* controlWindow.window.close(); */
+                    calendarOn=false;
+                    calendarElement.classList.add("hide");
+                }
+            }
+            //////////////////////////////////////// Sidebar functions
+            var sidebarOn=false;
+            let sidebarElement=document.getElementById("edgyID");
+            function openSideBar()
+            {
+                if (sidebarOn==false)
+                {
+                    sidebarOn=true;
+                    sideElement.classList.remove("hide");;
+                }
+                else if (controlWindowOn==true)
+                {
+                    /* controlWindow.window.close(); */
+                    sidebarOn=false;
+                    sidebarElement.classList.add("hide");
+                }
+            }
+            //////////////////////////////////////// Search functions
+            function openSearch()
+            {
+                
+            }
+////////////////////////////////////////
+//////////////////////////////////////// File copying testing function, now in seperate file
+    /* const fs = require('fs');
+    async function copy() 
+    {
+        const sourceFile = 'copyTest.iso'
+        const destFile = 'copyTest_done.iso'
+        fs.stat(sourceFile, function(err, stat){
+        const filesize = stat.size
+        let bytesCopied = 0
+        let bufferR=0; 
+        const readStream = fs.createReadStream(sourceFile)
+        
+        readStream.on('data', function(buffer)
+        {
+            bufferR =bufferR+ buffer.length;
+        })
+
+        readStream.on('end', function()
+        {
+            console.log("done");
+            console.timeEnd('copying')
+        })
+
+        setInterval(() => 
+        {
+            let prcentage = ((bufferR/filesize)*100).toFixed(2)
+            console.log(prcentage+'%') 
+        }
+        , 1000);
+        readStream.pipe(fs.createWriteStream(destFile));
+        });
+            };
+        copy(); */
+
+//////////////////////////////////////////
+////////////////////////////////////////// Global key bindings START
+document.addEventListener("keydown", (event) => 
+        {
+            //To add keyboard langugage keyboard shortcut, copy/cut/paste shortcut, edgy bar shortcut, 
+            //print screen shortcut (create tool for screen capture also : shadow wholescreen like in windows 10 snip/sketh)
+            //print screen shortcut double press captures the whole screen
+            if(event.code=='AudioVolumeUp'){volume.invokeCommand('[audio]::Volume='+0.00+';')}
+            if(event.code=='AudioVolumeUp'){volume.invokeCommand('[audio]::Volume=[audio]::Volume+'+0.01+';')}
+            if(event.code=='AudioVolumeDown'){volume.invokeCommand('[audio]::Volume=[audio]::Volume-'+0.01+';')}
+            if(event.code=='Fn+F3'){} 
+            if(event.code=='ArrowDown'){}
+            console.log(event);
+        });
+</script>
+<script src="./Sortable.js"></script>
+<script>
+    ////////////////////////////////////////// Making icons in bar sortable
+    new Sortable(barElement, 
+    {
+    animation: 200,
+    ghostClass: 'blue-background-class'
+    });
+/*   new Sortable(dragableIcons , {
+    animation: 200,
+    ghostClass: 'blue-background-class'
+  }); */
+  </script>
+</body>
+</html>

@@ -300,13 +300,8 @@ height:auto;width:22px;margin-left: 6px;
 "></div>
     </div> -->
 
-    <div id="desktopID" style="
-    position: absolute;
-    display: block;
-    height: 100%;
-    width: 100%;">
+    <div id="desktopID" style="position: absolute;display: block;height: 100%;width: 100%;">
     <div id="desktopGridID" class="desktopGrid" style="display: flex;height: 93%;width: 100%;margin: auto;flex-direction: row;flex-wrap: wrap;align-items: center;justify-content: center;">
-
         <div class="desktopIcon" draggable="false"><div id="desktopIcon1" class="desktopIconIn"><img src="/chrome.png" alt=""><div class="desktopIconInText">Google Chrome</div></div></div>
     <div class="desktopIcon" style=""><div class="desktopIconIn"><img src="/chrome.png" alt=""><div class="desktopIconInText">Google Chrome</div></div></div><div class="desktopIcon" style="" draggable="false"><div class="desktopIconIn"><img src="/chrome.png" alt=""><div class="desktopIconInText">Google Chrome</div></div></div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div>
     <div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" draggable="false" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">1</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div>
@@ -336,6 +331,7 @@ height:auto;width:22px;margin-left: 6px;
          console.log("width="+window.innerWidth);
          let AppProcessID=nw.process.ppid;
          let barElement=document.getElementById('barAppsID');
+
          let desktopGridElement=document.getElementById('desktopGridID');
          let desktopGridHeight=desktopGridElement.offsetHeight;
          let desktopGridWidth=desktopGridElement.offsetWidth;
@@ -362,7 +358,7 @@ height:auto;width:22px;margin-left: 6px;
          var iconExtractor = require('icon-extractor');
          var PowerShell = require("node-powershell");
 
-         var bottomShell=new PowerShell.PowerShell;
+         var bottomShell=new PowerShell.PowerShell; //make window stay on bottom
          /* var Grid=[]; */
          
          var ProcessRunningShell=new PowerShell.PowerShell;
@@ -512,7 +508,6 @@ height:auto;width:22px;margin-left: 6px;
             var mouseDown=false;
             var resizableBarBorder = document.getElementById('barResizeID');
             var resizableBar = document.getElementById('barID');
-
             var contextMenuElement = document.getElementById('contextMenuID');
 
             ////////////////////////////////////////
@@ -526,6 +521,7 @@ height:auto;width:22px;margin-left: 6px;
             ////////////////////////////////////////
             resizableBarBorder.addEventListener('mousemove', function (e) {console.log(e.srcElement.style.cursor);});
             ////////////////////////////////////////
+           
             document.addEventListener('contextmenu', function(e) 
             {
                 contextMenuElement.style.display="block";
@@ -696,22 +692,23 @@ for(let i=0;dragableIcons.length;i++){
                 document.onmousemove = null;
             }
         }
-//////////////////////////////////////// Control center function 
+//////////////////////////////////////// Edgy bar function 
 /* var windowEdgyOpt = { "title": "Edgy", "frame": false, "fullscreen": true, "transparent": true, "resizable": true, "position":"center","show": true, "always_on_top": true };
 nw.Window.open("/edgy/edgy.html",windowEdgyOpt,function(newWindow) {
                         edgyWindow = newWindow;
                     }); */
-    var controlWindowOn=false;
-    let controlCenterElement=document.getElementById("controlCenterID");
-    windowOpts = { "title": "Control Center", "frame": false, "fullscreen": false, "transparent": true, "width": 340, "height": 503, "resizable": false, "show": true, "always_on_top": true };
+ //////////////////////////////////////// Control center function  
+    /* windowOpts = { "title": "Control Center", "frame": false, "fullscreen": false, "transparent": true, "width": 340, "height": 503, "resizable": false, "show": true, "always_on_top": true };
     var CmediaWindow=nw.Window.open("/controlCenter/controlcenter.html",windowOpts,function(newWindow) 
         {
             controlWindow = newWindow;
             controlWindow .window.moveTo(511,587);
             controlWindow.setAlwaysOnTop=true;
             controlWindowOn=true;
-        });
-    //////////////////////////////////////// Control center function   
+        }); */
+//////////////////////////////////////// Control center function
+    var controlWindowOn=false;
+    let controlCenterElement=document.getElementById("controlCenterID");    
     /* var windowOpts = {}; */
     function openControlCenter()
     {
@@ -741,12 +738,6 @@ nw.Window.open("/edgy/edgy.html",windowEdgyOpt,function(newWindow) {
     {
         if (calendarOn==false)
         {
-    /*         windowOpts = { "title": "Control Center", "frame": false, "fullscreen": false, "transparent": true, "width": 340, "height": 503, "resizable": false, "show": true, "always_on_top": true };
-                nw.Window.open("/controlCenter/controlcenter.html",windowOpts,function(newWindow) {
-                            controlWindow = newWindow;
-                            controlWindow .window.moveTo(15,287)
-                            controlWindowOn=true;
-                        }); */
             calendarOn=true;
             calendarElement.style.display="block";
         }

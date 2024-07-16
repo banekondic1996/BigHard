@@ -5,115 +5,118 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Desk</title>
 <style>
-            body {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            background:url('imgT.jpg'); 
-            background-repeat: no-repeat;
-  			background-size: cover;     
-            }
-    #select {
-            display: none;
-            background: #0000005c;
-            position: absolute;
-            border-radius: 12px;
-            left: 184px;
-            top: 211px;
-            transform-origin: left top;
-            z-index: 999;
-           /*  height: 171px;
-            width: 136px; */
-        }
-        .desktopIcon{
-    display: flex;
-    background-color:rgb(255 51 51 / 22%);
-    width: 60px;
-    height: 60px;
-    margin: 3px;
-    padding: 5px;
-    user-select: none;
-}
-.desktopIconIn{
-    border-radius: 5px;
-    height: 60px;
-    width: 60px;
-    flex-direction: column;
-    align-items: center;
-    margin: auto;
-    overflow: hidden;
-    text-align-last: center;
-    user-select: all;
-    -webkit-user-drag: element;
-    position: absolute;
-    cursor: move;
-    z-index: 10;
-}
-.desktopIconIn:hover{
-    background-color: rgba(255, 255, 255, 0.268);
-    height: auto;
-}
-.desktopIconIn:active{
-    background-color: rgba(255, 255, 255, 0.452);
-    height: auto;
-}
-.desktopIconIn img{
-    user-select: none;
-    height: 42px;
-    width: 42px;
-    user-select: none;
-    -webkit-user-drag: none;
-}
-.desktopIconInText{
-    margin-top: -6px;
-    text-align: center;
-    color: white;
-    text-shadow: 1px 1px 3px #7c7c7c;
-    text-overflow: clip;
-    user-select: none;
-    -webkit-user-drag: none;
-}
-.icons{
-    display: flex;
-    background: #fffefe;
-    padding: 6px;
-  }
-.contextMenu{
-    display: none;
-    position: absolute;
-    /* width: 134px; */
-    /* height: 271px; */
-    background-color: rgb(228, 228, 228);
-    opacity: 0.8;
-    border: none;
-    border-radius: 10px;
-    overflow: hidden;
-    z-index: 222;
-    /* text-align: center; */
-    left: 116px;
-    top: 50px;
-  }
-  .contextMenu tr td{
-    border-radius: 10px;
-    /* text-align: center; */
-    text-wrap: nowrap;
-    padding: 8px;
-  }
-  .contextMenu tr td:hover{
-    background:rgb(124, 124, 124);
-    text-align: center;
-  }
-  .contextMenu tr th img:hover{
-    border-radius: 100%;
-    background:rgb(236, 236, 236);
-  }
-  .contextMenu tr th img{
+    body 
+    {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        background:url('imgT.jpg'); 
+        background-repeat: no-repeat;
+        background-size: cover;     
+    }
+    #select 
+    {
+        display: none;
+        background: #0000005c;
+        position: absolute;
+        border-radius: 12px;
+        left: 184px;
+        top: 211px;
+        transform-origin: left top;
+        z-index: 999;
+        /*  height: 171px;
+        width: 136px; */
+    }
+    .desktopIcon{
+        display: flex;
+        background-color:rgb(255 51 51 / 22%);
+        width: 60px;
+        height: 60px;
+        margin: 3px;
+        padding: 5px;
+        user-select: none;
+    }
+    .desktopIconIn
+    {
+        border-radius: 5px;
+        height: 60px;
+        width: 60px;
+        flex-direction: column;
+        align-items: center;
+        margin: auto;
+        overflow: hidden;
+        text-align-last: center;
+        user-select: all;
+        -webkit-user-drag: element;
+        position: absolute;
+        cursor: move;
+        z-index: 10;
+    }
+    .desktopIconIn:hover{
+        background-color: rgba(255, 255, 255, 0.268);
+        height: auto;
+    }
+    .desktopIconIn:active{
+        background-color: rgba(255, 255, 255, 0.452);
+        height: auto;
+    }
+    .desktopIconIn img{
+        user-select: none;
+        height: 42px;
+        width: 42px;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+    .desktopIconInText{
+        margin-top: -6px;
+        text-align: center;
+        color: white;
+        text-shadow: 1px 1px 3px #7c7c7c;
+        text-overflow: clip;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+    .icons{
+        display: flex;
+        background: #fffefe;
+        padding: 6px;
+    }
+    .contextMenu{
+        display: none;
+        position: absolute;
+        /* width: 134px; */
+        /* height: 271px; */
+        background-color: rgb(228, 228, 228);
+        opacity: 0.8;
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+        z-index: 222;
+        /* text-align: center; */
+        left: 116px;
+        top: 50px;
+    }
+    .contextMenu tr td{
+        border-radius: 10px;
+        /* text-align: center; */
+        text-wrap: nowrap;
+        padding: 8px;
+    }
+    .contextMenu tr td:hover{
+        background:rgb(124, 124, 124);
+        text-align: center;
+    }
+    .contextMenu tr th img:hover{
+        border-radius: 100%;
+        background:rgb(236, 236, 236);
+    }
+    .contextMenu tr th img{
         padding:5px;
-  }
-
+    }
 </style>
 </head>
 <body>
+<!--    ---------Context menu START(change to tag menu in future)------------------ -->
     <div class="contextMenu" id="contextMenuID">
         <table style="width: 100%;display: flex;">
         <tbody style="width: 100%;display: flex;flex-direction: row;align-items: center;">
@@ -136,14 +139,10 @@
         </tr>
         </tbody></table>
         </div>
-
-        <div id="desktopID" style="
-        position: absolute;
-        display: block;
-        height: 100%;
-        width: 100%;">
+<!--    ---------Context menu END(change to tag menu in future)------------------ -->
+<!--    ---------DesktopGrid START(------------------ -->
+        <div id="desktopID" style="position: absolute;display: block;height: 100%;width: 100%;"></div>
         <div id="desktopGridID" class="desktopGrid" style="display: flex;height: 93%;width: 100%;margin: auto;flex-direction: row;flex-wrap: wrap;align-items: center;justify-content: center;">
-    
             <div class="desktopIcon" draggable="false"><div id="desktopIcon1" class="desktopIconIn"><img src="/chrome.png" alt=""><div class="desktopIconInText">Google Chrome</div></div></div>
         <div class="desktopIcon" style=""><div class="desktopIconIn"><img src="/chrome.png" alt=""><div class="desktopIconInText">Google Chrome</div></div></div><div class="desktopIcon" style="" draggable="false"><div class="desktopIconIn"><img src="/chrome.png" alt=""><div class="desktopIconInText">Google Chrome</div></div></div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div>
         <div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" draggable="false" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">1</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div>
@@ -156,9 +155,10 @@
         <div class="desktopIcon" draggable="false" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">1</div><div class="desktopIcon" style=""><div class="desktopIconIn"><img src="/empty_trash.png" alt=""><div class="desktopIconInText">Mr. Bin</div></div></div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="" draggable="false">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div><div class="desktopIcon" style="">2</div>
         </div>
     </div>
+    <!--    ---------Desktop Grid END------------------ -->
+<!--    ---------Selection START(change to tag menu in future)------------------ -->
 <div id="select"></div>
-
-
+<!--    ---------Selection END(change to tag menu in future)------------------ -->
 <script>
     console.log("width="+window.innerWidth);
     let AppProcessID=nw.process.ppid;
@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function ()
         /* e.preventDefault(); */
     }, false);
     ////////////////////////////////////////
-    ////////////////////////////////////////
+    //////////////////////////////////////// There's also document.mouseup=null in dragElement function
     document.addEventListener('mouseup', function () 
     {
         isResizing = false;
@@ -371,14 +371,14 @@ function dragElement(elmnt)
                 elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
                 elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
             }
-            ////////////////////////////////////////
+            //////////////////////////////////////// Not even i know how i made this now, but i was calculating a lot
             function closeDragElement() 
             {
-                var cell=Math.round((elmnt.offsetTop)/82)*20+(Math.round((76+elmnt.offsetLeft)/76))-1;
+                var cell=Math.round((elmnt.offsetTop)/82)*20+(Math.round((76+elmnt.offsetLeft)/76))-1; //76px and 82px which has to be adjusted for other sizes
                 console.log("the element offsetTop= "+elmnt.offsetTop);
                 console.log("the element offsetLeft= "+elmnt.offsetLeft);
-                console.log("the element row= "+Math.round((76+elmnt.offsetTop)/76));
-                console.log("the element column= "+Math.round((76+elmnt.offsetLeft)/76));
+                console.log("the element row= "+Math.round((76+elmnt.offsetTop)/76)); //76px which has to be adjusted for other sizes
+                console.log("the element column= "+Math.round((76+elmnt.offsetLeft)/76)); //76px which has to be adjusted for other sizes
                 console.log("Cell ="+cell);
             /*   elmnt.style.top=desktopGridElement.children[cell].offsetTop+"px";
                 elmnt.style.left=desktopGridElement.children[cell].offsetLeft+"px"; */
