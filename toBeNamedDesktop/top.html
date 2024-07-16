@@ -126,7 +126,12 @@
         }
         .hide
         {
-            display: none!important;
+            /* display: none!important; */
+            opacity: 0;
+            transition: cubic-bezier(0.4, 0, 1, 1) 0.3s;
+        }
+        .unHideSlowly{
+            transition: ease-in 1s;
         }
     </style>
 </head>
@@ -160,7 +165,7 @@
 <!--    ---------Webviews START(change to tag and inject it in future)------------------ -->
 <webview id="transferDialogID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 1050px;height: 477px;bottom: 178;display: block;" partition="trusted" src="/transferDialog/transferDialog.html" type=""></webview>
 <webview id="mediaCenterID" onmouseenter="mouseLeftObject.mediaCenter=false" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 177px;left:600px;bottom:94px;display: block;" partition="trusted" src="/volumeControl/mediaCenter.html" type=""></webview>
-<webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 427px;left:1200px;bottom:94px;display: block;" partition="trusted" src="/calendar/calendar.html" type=""></webview>
+<webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 427px;left:1200px;bottom:94px;display: block;background:black" partition="trusted" src="/calendar/calendar.html" type=""></webview>
 <webview id="controlCenterID" onmouseenter="mouseLeftObject.controlCenter=false" onmouseleave="mouseLeftObject.controlCenter=true"  class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 350px;height: 507px;bottom: 78px;display: block;" partition="trusted" src="/controlCenter/controlcenter.html" type=""></webview>
 <webview id="edgyID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;display: block;" partition="trusted" src="/edgy/edgy.html" type=""></webview>
 <!--    ---------Webviews END(change to tag and inject it in future)------------------ -->
@@ -364,7 +369,7 @@ document.addEventListener('DOMContentLoaded', function ()
                     calendarOn=true;
                     calendarElement.classList.remove("hide");;
                 }
-                else if (controlWindowOn==true)
+                else if (calendarOnOn==true)
                 {
                     /* controlWindow.window.close(); */
                     calendarOn=false;
@@ -435,7 +440,7 @@ document.addEventListener("keydown", (event) =>
             //To add keyboard langugage keyboard shortcut, copy/cut/paste shortcut, edgy bar shortcut, 
             //print screen shortcut (create tool for screen capture also : shadow wholescreen like in windows 10 snip/sketh)
             //print screen shortcut double press captures the whole screen
-            if(event.code=='AudioVolumeUp'){volume.invokeCommand('[audio]::Volume='+0.00+';')}
+            if(event.code=='AudioVolumeMute'){volume.invokeCommand('[audio]::Volume='+0.00+';')}
             if(event.code=='AudioVolumeUp'){volume.invokeCommand('[audio]::Volume=[audio]::Volume+'+0.01+';')}
             if(event.code=='AudioVolumeDown'){volume.invokeCommand('[audio]::Volume=[audio]::Volume-'+0.01+';')}
             if(event.code=='Fn+F3'){} 
