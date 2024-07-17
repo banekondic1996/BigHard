@@ -26,7 +26,6 @@
             align-items: center;
             bottom: 45px;
             border-radius: 18px;
-            overflow: hidden;
             padding-inline: 1%;
             margin-inline: 1%;
             user-select: none;
@@ -40,11 +39,11 @@
         }
        .taskbutton{
             margin-inline-end: 5px;
-            height: 40%;
+            height: 50%;
             aspect-ratio: 1/1;
             background: #00000021;
             border-radius: 100%;
-            padding: 5px;
+            padding: 3px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -164,6 +163,64 @@
         .darkMode{
             filter:invert();
         }
+
+        /* Settings panel START */
+        .xInputs {
+            margin: 0px;
+            padding: 0px;
+            left: 6%;
+            z-index: 9000;
+            position: absolute;
+            display: none;
+            background: rgb(0 0 0 / 86%);
+            flex-direction: column;
+            border-radius: 12px;
+            contain: content;
+        }
+        .inputAddButtonId{
+            display: flex;
+            padding: 10px;
+            flex-direction: row;
+        }
+        .inputAddButtonId input[type=button]{
+            width: 42px;
+            height: 23px;
+            margin: 2px;
+            border-radius: 24px;
+            /* font-size: larger; */
+            border: none;
+            margin-top: 12px;
+            color: #292929;
+        }
+        .inputAddButtonId input[type=button]:hover{
+            opacity: 80%;
+        }
+        .inputAddButtonId input[type=button]:active{
+            opacity: 50%;
+        }
+        .settingsRow{
+            margin-top:10px
+        }
+        .appThumb{
+            top: -200px;
+            display: flex;
+            position: absolute;
+            background: rgba(41, 41, 41, 0.33);
+            height:200px;
+            width:300px;
+            border-radius: 14px;
+            opacity: 1;
+/*             left:100px;
+            bottom:100px; */
+        }
+        .appThumb img{
+            margin: auto;
+            height: 50px;
+            width: 50px;
+            background: white;
+            z-index: 9999;
+            border-radius: 11px;
+        }
     </style>
 </head>
 <body>
@@ -203,7 +260,7 @@
 <!--    ---------Bar START(add options to change orientation in future)------------------ -->
 <div id="barResizeID"></div>
 <div id="barID">
-    <img class='taskbutton darkMode' src="/icons/toggle.png" onclick="openControlCenter();"></img>
+    <img class='taskbutton darkMode' src="/icons/toggle.png" oncontextmenu="openSettings()" onclick="openControlCenter();"></img>
     <img class="taskbutton darkMode" src="/icons/sidebar.png" onclick="openSideBar()">
     <img class="taskbutton darkMode" src="/icons/search.png" onclick="openSearch()">
     <div id="barAppsID" style="display: flex;align-items: center;margin:auto;height: 100%;">
@@ -212,6 +269,20 @@
     </div>
     <div id="barClockID" class="darkMode" onclick="openCalendar()" style=""></div>
 </div>
+<!--    -----------------------Settings START--------------------------------------------- --> 
+<div class="xInputs" id="settingsContainerId" style="display: none; top: 30%; left: 45%; color: white; font: -webkit-control;">
+    <div class="inputAddButtonId" style="flex-direction: column;padding: 14px;margin-inline: 5px;">
+     <div class="settingsRow" style="align-self: auto;font: -webkit-control;margin-bottom: 15px;font-size: medium;">Settings:</div> 
+     <div class="settingsRow" style="align-self: flex-end;"><span>Bar color: <input type="color" name="" id="barColorId" oninput="tabBars.style.background=this.value+'55';"> </span></div>
+     <div class="settingsRow" style="align-self: flex-end;"><span>Buttons color: <input type="color" name="" id="buttonsColorId" oninput="changeButtonsColor(this.value)"> </span></div>
+     <div class="settingsRow" style="align-self: flex-end;"><span>Hover bar color: <input type="color" name="" id="HoverBarColorId" oninput="hoverBars.style.background=this.value+'55';hoverBars.style.display='flex';hoverBars.style.marginTop='75vh';" onchange="hoverBars.style.display='none';hoverBars.style.marginTop='0px'"> </span></div>
+     <div class="settingsRow" style="margin-top: 15px;align-self: center;"><span>Bar transparency: </span></div>
+     <div class="settingsRow" style="align-self: center;"><span><input type="range" min="0" max="0.99" step="0.01" name="" id="barTransparencyId" oninput="var color=tabBars.style.background;var colorSliced=color.slice(0, color.lastIndexOf(','));tabBars.style.background=colorSliced+','+this.value+')'"> </span></div>
+     <input type="button" style="width:82px;background:rgb(255, 255, 255);margin-top: 20px;
+     align-self: center;" value="close" onclick="this.parentElement.parentElement.style.display='none';">
+    </div>
+  </div>
+<!--    -----------------------Ssettings END--------------------------------------------- --> 
 <!--    ---------Bar END(add options to change orientation in future)------------------ -->
 <!--    -----------------------Search START--------------------------------------------- --> 
 <div id="searchOverlayID" class="searchOverlay hide" onclick="openSearch();">
@@ -219,6 +290,13 @@
 </div>  
 <!--    -----------------------Search END--------------------------------------------- --> 
 <script>
+        const { listOpenWindows } = require('@josephuspaye/list-open-windows');
+
+        // Get the list of open windows
+        const RunningProcessList = listOpenWindows();
+
+        // Do something with the list
+         RunningProcessList.forEach(console.log);
          console.log("width="+window.innerWidth);
          let AppProcessID=nw.process.ppid;
          let barElement=document.getElementById('barAppsID');
@@ -227,20 +305,29 @@
          win.setAlwaysOnTop(true);
          var iconExtractor = require('icon-extractor');
          var PowerShell = require("node-powershell");
-         var ProcessRunningShell=new PowerShell.PowerShell;
+         /* var ProcessRunningShell=new PowerShell.PowerShell; */
          var showORhideShell=new PowerShell.PowerShell;
          var volume=new PowerShell.PowerShell;
-         var RunningProcessList;
+         /* var RunningProcessList=windows; */
          var num=0;
 //////////////////////////////////////// Volume changign script
         volume.invokeCommand("C:/Users/X.000000000000000000/VolumeAndMute.ps1");
-//////////////////////////////////////// Running get processes 
+//////////////////////////////////////// Running get processes (regex needs fixing)
+ /*        var isBannedPath=false; //Jokes on you Microsoft
+        var bannedPaths=([
+            "C:\\Windows\\system32\\ApplicationFrameHost.exe",
+            "C:\\Program Files\\WindowsApps\\Microsoft.WindowsCalculator",
+            "C:\\Windows\\SystemApps\\MicrosoftWindows.Client.CBS_cw5n1h2txyewy\\TextInputHost.exe",
+            "C:\Windows\SystemApps\ShellExperienceHost"
+            ]);
          ProcessRunningShell.invokeCommand("C:/Users/X.000000000000000000/procesess.ps1").then(result => 
         {
+            var BreakException = {};
             const lines = result.raw.split('\n').map(line => line.trim()).filter(line => line !== "");
             RunningProcessList = lines.map(line => 
             {
                 const [id, title, path] = line.split(',').map(value => value.trim());
+                if(isBannedPath==false)
                 return {
                     Id: id,
                     MainWindowTitle: title,
@@ -248,14 +335,23 @@
                     Icon:""
                 };
             });
-            RunningProcessList.forEach(element => 
+            RunningProcessList.forEach((el,index) => 
             {
-                
+                isBannedPath=false;
+                bannedPaths.some((element,index)=>{
+                    var pattern = new RegExp(element.toString().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+                    if(isBannedPath==false){isBannedPath=pattern.test(el.Path);}if(isBannedPath==true)
+                    {console.log("one is banned"+el.Path+": Index :" +index+" for pattern: "+pattern);return true;}});
+                if(isBannedPath==true){
+                    RunningProcessList.splice(index,1);
+                    console.log("\nPopin' this shit "+el.Path+index)
+                }
             });
+            console.log("Final process list:");
             console.log(RunningProcessList);  
             console.log(RunningProcessList.length);
             console.log(result.raw); // "Operation succeeded!"
-            })
+            }) */
             iconExtractor.emitter.on('icon', function(data)
             {
                 RunningProcessList[num].Icon="data:image/png;base64,"+data.Base64ImageData+"";
@@ -266,7 +362,7 @@
 function getBarIcons()
         {
             var len=RunningProcessList.length;
-            var time=100;
+            var time=300;
             if(num<len)
             {
                 for(let i=0;i<len;i++)
@@ -283,24 +379,71 @@ function getBarIcons()
 //////////////////////////////////////// Fetch icons for bar icons
         function getBarIcon(numB){ 
             num=numB;
-           /*  iconExtractor.emitter.on('icon', function(data)
-                            {
-                                RunningProcessList[num].Icon="data:image/png;base64,"+data.Base64ImageData+"";
-                            }); */
-            iconExtractor.getIcon("",RunningProcessList[num].Path.replace(/\\/g, '/'));           
+
+            iconExtractor.getIcon("",RunningProcessList[num].processPath.replace(/\\/g, '/'));           
         }
-//////////////////////////////////////// Refresh icons in bar       
-        function refreshBarIcons(){
+//////////////////////////////////////// Refresh icons in bar   
+        var barRunningApps=[];
+        function dewIt()
+        {
+        RunningProcessList.forEach(element=>{
             barElement.innerHTML="";
-            RunningProcessList.forEach(element => 
-            {
-                barElement.innerHTML=barElement.innerHTML+`<img class="taskbutton" id='`+element.Id+`' src="`+element.Icon+`" title="`+element.MainWindowTitle+`" onclick='showORhideAPP(`+element.Id+`)'>`;
-            });  
+            if(barRunningApps.includes(element.processPath)){
+                var indexOfProcess=barRunningApps.indexOf(element.processPath);
+                console.log("double window"+element.processPath);
+                console.log(barElement.children[indexOfProcess]);
+            }
+            else{
+            barRunningApps.push(element.processPath);
+            console.log(element.icon);
+            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`'><img class="taskbutton" id='`+element.processId+`' src="`+element.Icon+`" title="`+element.caption+`" onclick='showORhideAPP(`+element.processId+`)'></div>`;
+            }
+            
+        });
+        }
+        function refreshBarIcons(){
+            barRunningApps=[];
+            barElement.innerHTML="";
+            RunningProcessList.forEach(element=>{
+            if (element.Icon==undefined){
+                element.Icon='/icons/testWindow.png'
+            }
+            if(barRunningApps.includes(element.processPath)){
+                var indexOfProcess=barRunningApps.indexOf(element.processPath);
+        /*         console.log("double window"+element.processPath);
+                console.log("child");
+                console.log(barElement.children[indexOfProcess]); */
+                barElement.children[indexOfProcess].children[0].innerHTML+=`<img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
+                barElement.children[indexOfProcess].children[1].outerHTML=`<img id='`+element.processId+`' src="`+element.Icon+`" onmouseover="showAppThumb(this.parentElement,event);" style="height:100%;width:100%">`
+            }
+            else{
+            barRunningApps.push(element.processPath);
+            var index=barRunningApps.length-1;
+            console.log(element.icon);
+            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`' class='taskbutton' title="`+element.caption+`" onmouseleave="this.children[0].classList.add('hide')"><div class="appThumb hide" onmouseleave="hideAppThumb(`+index+`);">s</div><img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)' style='height:100%;width:100%'></div>`;
+            barElement.children[index].children[0].innerHTML+=`<img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
+            }
+            
+        });
+        }
+////////////////////////////////////////  
+        function hideAppThumb(index){
+            barElement.children[index].children[0].classList.add('hide');
+        }
+////////////////////////////////////////  
+        function showAppThumb(element,event){
+            var index=Array.prototype.findIndex.call(barElement.children, (c) => c === element);
+            console.log("showAppThumb:"+index)
+/*             console.log(event);
+            console.log("Position left:"+ parseInt(event.clientX+200)+"px")
+            barElement.children[index].children[0].style.left=parseInt(event.clientX+200)+"px";
+            barElement.children[index].children[0].style.top=parseInt(event.clientY+200)+"px"; */
+            barElement.children[index].children[0].classList.remove('hide');
         }
 ////////////////////////////////////////  Maximize/minimize apps based on process id
-        function showORhideAPP(processID){
-            console.log("Trying to show: "+processID);
-            showORhideShell.invokeCommand("C:/Users/X.000000000000000000/procesessB.ps1 -Style 'SHOWDEFAULT' -processID "+processID+"");
+        function showORhideAPP(processId){
+            console.log("Trying to show: "+processId);
+            showORhideShell.invokeCommand("C:/Users/X.000000000000000000/procesessB.ps1 -Style 'SHOWDEFAULT' -processID "+processId+"");
         }
 //////////////////////////////////////// Bar clock function
         let monthsList=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -378,108 +521,113 @@ document.addEventListener('DOMContentLoaded', function ()
                 console.log("mouseup");
             });
         });
-            //////////////////////////////////////// Control center functions
-            var controlWindowOn=false;
-            let controlCenterElement=document.getElementById("controlCenterID");
-            function openControlCenter()
-            {
-                if (controlWindowOn==false)
-                {
-                    controlCenterElement.classList.remove("hide");
-                    controlWindowOn=true;
-                }
-                else if (controlWindowOn==true)
-                {
-                    controlCenterElement.classList.add("hide");
-                    controlWindowOn=false;
-                }
-            }
-            //////////////////////////////////////// Calendar functions
-            var calendarOn=false;
-            var sideBarWasOn=false;
-            let calendarElement=document.getElementById("calendarID");
-            function openCalendar()
-            {
-                if (calendarOn==false)
-                {
-                    calendarOn=true;
-                    calendarElement.classList.remove("hide");
-                    if(sideBarOn==true)
-                    {
-                        sideBarWasOn=true;
-                        openSideBar();
-                    }
-                }
-                else if (calendarOn==true)
-                {   
-                    if(sideBarWasOn==true)
-                    {
-                        openSideBar();
-                    }
-                    /* controlWindow.window.close(); */
-                    calendarOn=false;
-                    calendarElement.classList.add("hide");
-                }
-            }
-            //////////////////////////////////////// Sidebar functions
-            var sideBarOn=false;
-            let sideBarElement=document.getElementById("sideBarID");
-            function openSideBar()
-            {
-                if (sideBarOn==false)
-                {
-                    sideBarOn=true;
-                    sideBarElement.classList.remove("hide");;
-                }
-                else if (sideBarOn==true)
-                {
-                    /* controlWindow.window.close(); */
-                    sideBarOn=false;
-                    sideBarElement.classList.add("hide");
-                }
-            }
-            //////////////////////////////////////// Search functions
-            var searchOverlayOn=false;
-            let searchOverlayElement=document.getElementById("searchOverlayID");
-            let searchOverlayInputElement=document.getElementById("searchOverlayInputID");
-            function openSearch()
-            {
-                if (searchOverlayOn==false)
-                {
-                    searchOverlayOn=true;
-                    searchOverlayElement.classList.remove("hide");
-                    searchOverlayInputElement.focus();
-                }
-                else if (searchOverlayOn==true)
-                {
-                    /* controlWindow.window.close(); */
-                    searchOverlayOn=false;
-                    searchOverlayElement.classList.add("hide");
-                }
-            }
-            //////////////////////////////////////// Media functions
-            var mediaCenterOn=false;
-            let mediaCenterElement=document.getElementById("mediaCenterID");
-            function openMediaCenter()
-            {
-                if (mediaCenterOn==false)
-                {
-                    mediaCenterOn=true;
-                    mediaCenterElement.classList.remove("hide");
-                    setTimeout(function(){
-                        mediaCenterOn=false;
-                        mediaCenterElement.classList.add("hide");
-                    },2000);
-                }
-                else if (mediaCenterOn==true)
-                {
-        /*             setTimeout(function(){
-                        mediaCenterOn=false;
-                        mediaCenterElement.classList.add("hide");
-                    },4000); */
-                }
-            }
+//////////////////////////////////////// Control center functions
+var controlWindowOn=false;
+let controlCenterElement=document.getElementById("controlCenterID");
+function openControlCenter()
+{
+    if (controlWindowOn==false)
+    {
+        controlCenterElement.classList.remove("hide");
+        controlWindowOn=true;
+    }
+    else if (controlWindowOn==true)
+    {
+        controlCenterElement.classList.add("hide");
+        controlWindowOn=false;
+    }
+}
+//////////////////////////////////////// Calendar functions
+var calendarOn=false;
+var sideBarWasOn=false;
+let calendarElement=document.getElementById("calendarID");
+function openCalendar()
+{
+    if (calendarOn==false)
+    {
+        calendarOn=true;
+        calendarElement.classList.remove("hide");
+        if(sideBarOn==true)
+        {
+            sideBarWasOn=true;
+            openSideBar();
+        }
+    }
+    else if (calendarOn==true)
+    {   
+        if(sideBarWasOn==true)
+        {
+            openSideBar();
+        }
+        /* controlWindow.window.close(); */
+        calendarOn=false;
+        calendarElement.classList.add("hide");
+    }
+}
+//////////////////////////////////////// Sidebar functions
+var sideBarOn=false;
+let sideBarElement=document.getElementById("sideBarID");
+function openSideBar()
+{
+    if (sideBarOn==false)
+    {
+        sideBarOn=true;
+        sideBarElement.classList.remove("hide");;
+    }
+    else if (sideBarOn==true)
+    {
+        /* controlWindow.window.close(); */
+        sideBarOn=false;
+        sideBarElement.classList.add("hide");
+    }
+}
+//////////////////////////////////////// Search functions
+var searchOverlayOn=false;
+let searchOverlayElement=document.getElementById("searchOverlayID");
+let searchOverlayInputElement=document.getElementById("searchOverlayInputID");
+function openSearch()
+{
+    if (searchOverlayOn==false)
+    {
+        searchOverlayOn=true;
+        searchOverlayElement.classList.remove("hide");
+        searchOverlayInputElement.focus();
+    }
+    else if (searchOverlayOn==true)
+    {
+        /* controlWindow.window.close(); */
+        searchOverlayOn=false;
+        searchOverlayElement.classList.add("hide");
+    }
+}
+//////////////////////////////////////// Media functions
+var mediaCenterOn=false;
+let mediaCenterElement=document.getElementById("mediaCenterID");
+function openMediaCenter()
+{
+    if (mediaCenterOn==false)
+    {
+        mediaCenterOn=true;
+        mediaCenterElement.classList.remove("hide");
+        setTimeout(function(){
+            mediaCenterOn=false;
+            mediaCenterElement.classList.add("hide");
+        },2000);
+    }
+    else if (mediaCenterOn==true)
+    {
+/*             setTimeout(function(){
+            mediaCenterOn=false;
+            mediaCenterElement.classList.add("hide");
+        },4000); */
+    }
+}
 ////////////////////////////////////////
+//////////////////////////////////////// Settings for colors
+function openSettings()
+{
+    document.getElementById('settingsContainerId').style.display='flex';
+}
 //////////////////////////////////////// File copying testing function, now in seperate file
     /* const fs = require('fs');
     async function copy() 
@@ -516,7 +664,7 @@ document.addEventListener('DOMContentLoaded', function ()
 
 //////////////////////////////////////////
 ////////////////////////////////////////// Global key bindings START
-document.addEventListener("keydown", (event) => 
+/* document.addEventListener("keydown", (event) => 
         {
             //To add keyboard langugage keyboard shortcut, copy/cut/paste shortcut, edgy sideBar shortcut, 
             //print screen shortcut (create tool for screen capture also : shadow wholescreen like in windows 10 snip/sketh)
@@ -527,7 +675,25 @@ document.addEventListener("keydown", (event) =>
             if(event.code=='Fn+F3'){} 
             if(event.code=='ArrowDown'){}
             console.log(event);
-        });
+        }); */
+   /*Global shortcut key*/
+ /* var option = {
+  key : "AudioVolumeUp",
+  active : function() {
+    console.log("Global desktop keyboard shortcut: " + this.key + " active."); 
+  },
+  failed : function(msg) {
+    // :(, fail to register the |key| or couldn't parse the |key|.
+    console.log(msg);
+  }
+};
+
+// Create a shortcut with |option|.
+var shortcut = new nw.Shortcut(option);
+
+// Register global desktop shortcut, which can work without focus.
+nw.App.registerGlobalHotKey(shortcut);
+  /*Global shortcut key END*/ 
 </script>
 <script src="./Sortable.js"></script>
 <script>
