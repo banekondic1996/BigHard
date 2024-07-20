@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elve desktop</title>
+<style>
+    body{
+        color:red;
+        font-size:20px;
+        font-weight: bold;
+    }
+</style>
+</head>
+<body>
+<p style="background: rgba(202, 202, 202, 0.355);text-align: center;">Running......</p>
+<script>
+    //For multiple screens, spawn one app on each screen, then copy elements if element is offset on one screen when dragging to 
+    //another screen
+    var win=nw.Window.get();
+    var WindowOptionsDesk;
+    var WindowOptionsTop;
+    windowOptionsDesk = { "title": "Desk", "frame": false, "fullscreen": true, "transparent": false, "resizable": false, "show": true, "always_on_top": false };
+    var deskWindow=nw.Window.open("/desk.html",windowOptionsDesk,function(newWindow)
+    {
+        deskWindow = newWindow;
+        deskWindow.setAlwaysOnTop=false;
+        deskWindowOn=true;
+    });
+    windowOptionsTop = { "title": "Top", "frame": false, "fullscreen": true, "transparent": true, "resizable": false, "show": true, "always_on_top": true };
+    var topWindow=nw.Window.open("/top.html",windowOptionsTop,function(newWindow)
+    {
+        topWindow = newWindow;
+        topWindow .window.moveTo(511,587);
+        topWindow.setAlwaysOnTop=true;
+        topWindowOn=true;
+    });
+    
+</script>
+</body>
+</html>

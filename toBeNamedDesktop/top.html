@@ -11,6 +11,12 @@
             padding: 0;
             overflow: hidden;
             background: none;
+            padding: 1px;
+            display: flex;
+            place-content: center;
+            flex-direction: row;
+            width: 100%;
+            height: 100%;
         }
         #barID 
         {
@@ -19,7 +25,7 @@
             display: flex;
             width: 96%;
             height: 32px;
-            background-color: #353535ba;
+            background: rgba(5, 5, 5, 0.35);
             /* background-color: #ffffffba; */
             position: absolute;
             /* cursor: ns-resize; */
@@ -27,9 +33,13 @@
             bottom: 45px;
             border-radius: 18px;
             padding-inline: 1%;
-            margin-inline: 1%;
+            /* margin-inline: 1%; */
             user-select: none;
             backdrop-filter: blur(2px);
+            margin: auto;
+            bottom: 38px;
+            margin-right:1px;
+           /*  left: 0px; */
         }   
         #iconTask
         {
@@ -61,18 +71,18 @@
             position: absolute;
             /* cursor: ns-resize; */
             align-items: center;
-            bottom: 45px;
+            bottom: 38px;
             border-radius: 18px;
             overflow: hidden;
             padding-inline: 1%;
-            margin-inline: 1%;
+            /* margin-inline: 1%; */
             cursor:n-resize;
+            margin:0px;
         }
         #barClockID
         {
             display: flex;
             height: 40%;
-            background: #0000001a;
             border-radius: 24px;
             padding: 4px;
             padding-inline: 10px;
@@ -146,11 +156,14 @@
             align-items: center;
         }
         #searchOverlayID input{
-            border-radius: 14px;
+            border-radius: 55px;
             width: 100%;
-            height: 30px;
+            height: 35px;
             background: rgb(255 255 255);
             border-style: none;
+            outline: none;
+            padding-inline: 15px;
+            box-shadow: 0px 0px 8px 2px #cbcbcb99;
         }
         #searchBarID{
             margin: auto;
@@ -163,7 +176,9 @@
         .darkMode{
             filter:invert();
         }
-
+        .darkModeText{
+            color:white;
+        }
         /* Settings panel START */
         .xInputs {
             margin: 0px;
@@ -207,9 +222,11 @@
             position: absolute;
             background: rgba(41, 41, 41, 0.33);
             height:200px;
-            width:300px;
+            width: auto;
+            min-width: 290px;
             border-radius: 14px;
             opacity: 1;
+            padding:5px;
 /*             left:100px;
             bottom:100px; */
         }
@@ -217,9 +234,134 @@
             margin: auto;
             height: 50px;
             width: 50px;
-            background: white;
+            background: rgba(255, 255, 255, 0.599);
             z-index: 9999;
             border-radius: 11px;
+        }
+        .appThumb img:hover{
+            background: rgba(128, 128, 128, 0.707);
+            /* scale:1.3; */
+        }
+        #trayIconsID{
+            display: flex;
+            height: 40%;
+            width: auto;
+            margin-right: 5px;
+            border-radius: 24px;
+            padding: 4px;
+            padding-inline: 10px;
+            font-size: 14px;
+            align-items: center;
+        }
+            .appTrayContainer{
+            display: flex;
+            width: 100%;
+            height: 10%;
+            background:rgb(113 113 113 / 58%);
+            border-radius: 0px 0px 10px 10px;
+            margin-top: 37px;
+        }
+        .appTray{
+            background:rgb(113, 113, 113);
+            width: 90%;
+            height: 70%;
+            border-radius: 10px;
+            margin:auto;
+        }
+        #appMenuContainerID{
+            background: rgb(0 0 0 / 64%);
+            width: 370px;
+            height: 450px;
+            border-radius: 14px;
+            position: absolute;
+            top: 200px;
+            left: 974px;
+            contain: content;
+            display: flex;
+            flex-direction: column;
+        }
+        #appMenuID{
+            display: flex;
+            height: 100%;
+            width: 100%;
+            flex-wrap: wrap;
+            position: relative;
+            flex-direction: row;
+            /* align-content: center; */
+            gap: 14px;
+            overflow: hidden;
+            justify-content: flex-start;
+            padding: 13px;
+        }
+        .appMenuIconContainer{
+            background: rgb(0 0 0 / 64%);
+            width: 472px;
+            height: 420px;
+            border-radius: 14px;
+            position: absolute;
+            top: 361px;
+            left: 421px;
+            contain: content;
+            display: flex;
+            flex-direction: column;
+            cursor: auto;
+            user-select: none;
+            border: 4px solid #96969680;
+        }
+        .appMenuIconContainer:hover{
+            background: #5b5b5b;
+            border-radius: 14px;
+            /* contain: inline-size; */
+            /* height: auto; */
+        }
+        #appMenuShortcutsID{
+            height: 100%;
+            width: 100%;
+            height: 44px;
+            /* background: #a9a9a97a; */
+            position: relative;
+            display: flex;
+            color: white;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+        }
+        #appMenuShortcutsID div{
+            opacity: 0.2;
+        }
+        #appMenuShortcutsID div:hover{
+            opacity: 0.4;
+        }
+        .appMenuIcon{
+            width: 48px;
+            height: 48px;
+        }
+        #appMenuPages{
+            color: white;
+            height: 100%;
+            width: 100%;
+            height: 32px;
+            /* background: #a9a9a97a; */
+            position: relative;
+            display: flex;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+        }
+        .active{
+            opacity: 1 !important;
+        }
+        .colorBackground{
+
+        }
+        .colorDarker{
+         background:black;   
+        }
+        .color{
+            background:rgba(176,176,176,0.60);
         }
     </style>
 </head>
@@ -252,43 +394,183 @@
 <!--    ---------Context menu END(change to tag menu in future)------------------ -->
 <!--    ---------Webviews START(change to tag and inject it in future)------------------ -->
 <webview id="transferDialogID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 1050px;height: 477px;bottom: 178;display: block;" partition="trusted" src="/transferDialog/transferDialog.html" type=""></webview>
+<webview id="appMenuID" onmouseenter="" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 711px;height: 877px;left:600px;bottom:94px;display: block;" partition="trusted" src="/appMenu/appMenu.html" type=""></webview>
 <webview id="mediaCenterID" onmouseenter="mouseLeftObject.mediaCenter=false" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 177px;left:600px;bottom:94px;display: block;" partition="trusted" src="/volumeControl/mediaCenter.html" type=""></webview>
 <webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 427px;left:1200px;bottom:94px;display: block;" partition="trusted" src="/calendar/calendar.html" type=""></webview>
-<webview id="controlCenterID" onmouseenter="mouseLeftObject.controlCenter=false" onmouseleave="mouseLeftObject.controlCenter=true"  class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 350px;height: 507px;bottom: 78px;display: block;" partition="trusted" src="/controlCenter/controlcenter.html" type=""></webview>
-<webview id="sideBarID" onmouseenter="mouseLeftObject.sideBar=false" onmouseleave="mouseLeftObject.sideBar=true" class="hide" allowtransparency style="position: absolute;z-index: 10000;display: block;height: 427px;width:420px;height: calc(100% - 200px);right:0px;top:100px" partition="trusted" src="/edgy/edgy.html" type=""></webview>
+<webview id="controlCenterID" onmouseenter="mouseLeftObject.controlCenter=false" onmouseleave="mouseLeftObject.controlCenter=true"  class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 350px;height: 410px;bottom: 75px;display: block;" partition="trusted" src="/controlCenter/controlcenter.html" type=""></webview>
+<webview id="sideBarID" onmouseenter="mouseLeftObject.sideBar=false" onmouseleave="mouseLeftObject.sideBar=true" class="hide" allowtransparency style="position: absolute;z-index: 10000;display: block;height: 427px;width:420px;height: calc(100% - 200px);right:2px;top:100px" partition="trusted" src="/edgy/edgy.html" type=""></webview>
 <!--    ---------Webviews END(change to tag and inject it in future)------------------ -->
 <!--    ---------Bar START(add options to change orientation in future)------------------ -->
 <div id="barResizeID"></div>
-<div id="barID">
-    <img class='taskbutton darkMode' src="/icons/toggle.png" oncontextmenu="openSettings()" onclick="openControlCenter();"></img>
-    <img class="taskbutton darkMode" src="/icons/sidebar.png" onclick="openSideBar()">
-    <img class="taskbutton darkMode" src="/icons/search.png" onclick="openSearch()">
+<div id="barID" class="colorBackground">
+    <div id="trayIconsID" class="color darkMode"></div>
+    <img class='taskbutton color darkMode' src="/icons/toggle.png" oncontextmenu="openSettings()" onclick="openControlCenter(event);"></img>
+    <img class="taskbutton color darkMode" src="/icons/sidebar.png" onclick="openSideBar()">
+    <img class="taskbutton color darkMode" src="/icons/search.png" onclick="openSearch();">
     <div id="barAppsID" style="display: flex;align-items: center;margin:auto;height: 100%;">
-        <img class="taskbutton" src="/icons/repeat.png" onclick="getBarIcons()">
+        <img class="taskbutton color darkMode" src="/icons/repeat.png" onclick="getBarIcons()">
         <img id='iconTest'src="">
     </div>
-    <div id="barClockID" class="darkMode" onclick="openCalendar()" style=""></div>
+    <div id="barClockID" class="color darkMode" onclick="openCalendar(event)" style=""></div>
 </div>
+<!--    ---------Bar END(add options to change orientation in future)------------------ -->
+<!--    -----------------------Tray START--------------------------------------------- --> 
+<div class="appTrayContainer colorDarker">
+    <div class="appTray color"> </div>
+</div>
+<!--    -----------------------Tray END--------------------------------------------- --> 
 <!--    -----------------------Settings START--------------------------------------------- --> 
 <div class="xInputs" id="settingsContainerId" style="display: none; top: 30%; left: 45%; color: white; font: -webkit-control;">
     <div class="inputAddButtonId" style="flex-direction: column;padding: 14px;margin-inline: 5px;">
      <div class="settingsRow" style="align-self: auto;font: -webkit-control;margin-bottom: 15px;font-size: medium;">Settings:</div> 
-     <div class="settingsRow" style="align-self: flex-end;"><span>Bar color: <input type="color" name="" id="barColorId" oninput="tabBars.style.background=this.value+'55';"> </span></div>
-     <div class="settingsRow" style="align-self: flex-end;"><span>Buttons color: <input type="color" name="" id="buttonsColorId" oninput="changeButtonsColor(this.value)"> </span></div>
-     <div class="settingsRow" style="align-self: flex-end;"><span>Hover bar color: <input type="color" name="" id="HoverBarColorId" oninput="hoverBars.style.background=this.value+'55';hoverBars.style.display='flex';hoverBars.style.marginTop='75vh';" onchange="hoverBars.style.display='none';hoverBars.style.marginTop='0px'"> </span></div>
-     <div class="settingsRow" style="margin-top: 15px;align-self: center;"><span>Bar transparency: </span></div>
-     <div class="settingsRow" style="align-self: center;"><span><input type="range" min="0" max="0.99" step="0.01" name="" id="barTransparencyId" oninput="var color=tabBars.style.background;var colorSliced=color.slice(0, color.lastIndexOf(','));tabBars.style.background=colorSliced+','+this.value+')'"> </span></div>
+     <div class="settingsRow" style="align-self: flex-end;">
+        <span>Panels color: 
+            <input type="color" name="" id="barColorId" oninput="resizableBar.style.background=this.value+'33';"> </span>
+        </div>
+     <div class="settingsRow" style="align-self: flex-end;">
+        <span>Accent color: 
+            <input type="color" name="" id="buttonsColorId" oninput="acentColorChange(this.value)"> 
+        </span></div>
+     <div class="settingsRow" style="align-self: flex-end;">
+        <span>Shadows: 
+            <input type="color" name="" id="barColorId" oninput="resizableBar.style.boxShadow='0px 0px 4px 1px'+ this.value+'66';"> 
+        </span>
+    </div>
+     <input type="button" style="width:150px;background:rgb(255, 255, 255);margin-top: 20px;
+     align-self: center;" value="Disable shadows" onclick="resizableBar.style.boxShadow=''">
+     <div class="settingsRow" style="margin-top: 15px;align-self: center;">
+        <span>Bar transparency: 
+     </span>
+    </div>
+     <div class="settingsRow" style="align-self: center;">
+        <span>
+            <input type="range" min="0" max="0.99" step="0.01" name="" id="barTransparencyId" oninput="var color=resizableBar.style.background;var colorSliced=color.slice(0, color.lastIndexOf(','));resizableBar.style.background=colorSliced+','+this.value+')'"> 
+        </span>
+    </div>
+     <div class="settingsRow" style="margin-top: 15px;align-self: center;">
+        <span>Bar width: 
+        </span>
+    </div>
+     <div class="settingsRow" style="align-self: center;">
+        <span>
+            <input type="range" min="30" max="98" step="1" name="" id="barWidthId" oninput="if(this.value<35){resizableBar.style.width='auto'}else{resizableBar.style.width=this.value+'%'}"> 
+        </span>
+    </div>
+     <div class="settingsRow" style="margin-top: 15px;align-self: center;">
+        <span>Bar border radius: 
+        </span>
+    </div>
+     <div class="settingsRow" style="align-self: center;">
+        <span>
+            <input type="range" min="0" max="30" step="1" name="" id="barBorderRadiusId" oninput="resizableBar.style.borderRadius=this.value+'px'"> 
+        </span>
+    </div>
      <input type="button" style="width:82px;background:rgb(255, 255, 255);margin-top: 20px;
      align-self: center;" value="close" onclick="this.parentElement.parentElement.style.display='none';">
     </div>
   </div>
-<!--    -----------------------Ssettings END--------------------------------------------- --> 
-<!--    ---------Bar END(add options to change orientation in future)------------------ -->
+<!--    -----------------------Settings END--------------------------------------------- --> 
 <!--    -----------------------Search START--------------------------------------------- --> 
 <div id="searchOverlayID" class="searchOverlay hide" onclick="openSearch();">
     <div id="searchBarID"><input type="text" name="" id="searchOverlayInputID" placeholder="Search or run program"></div>
 </div>  
 <!--    -----------------------Search END--------------------------------------------- --> 
+<!--    -----------------------AppMenu START--------------------------------------------- --> 
+<div id="appMenuContainerID" class="hide">
+    <div id="appMenuShortcutsID">
+        <div style="
+            margin: 5px;
+        "   class="active">All apps</div>
+        <div style="
+            margin: 5px;
+        ">App lists</div>
+        <div style="
+            margin: 5px;
+        ">Pinned apps</div>
+            </div>
+<div id="appMenuID" class="darkModeText">
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/adobePhotoshop.svg" alt="">
+    <div>Adobe Photoshop</div>
+</div>
+<div class="appMenuIconContainer darkModeText">
+    <img class="appMenuIcon" src="propIcons/arduino.svg" alt="">
+    <div>Arduino</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/autodeskMaya.svg" alt="">
+    <div>Autodesk Maya</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/spotify.svg" alt="">
+    <div>Spotify</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/unity.svg" alt="">
+    <div>Unity</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/obs.svg" alt="">
+    <div>OBS Studio</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/twittex.svg" alt="">
+    <div>TwitteX</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/telegram.svg" alt="">
+    <div>Telegram</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/epicGames.svg" alt="">
+    <div>Epic Games</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/yahoo.svg" alt="">
+    <div>Yahoo Email</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/yandex.svg" alt="">
+    <div>Yandex</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/NSOPegasus.png" alt="">
+    <div>NSO Pegasus Control Center</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/googleFirebase.svg" alt="">
+    <div>Google Firebase</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/visualStudioCode.svg" alt="">
+    <div>Visual Studio Code</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/openedFolder.svg" alt="">
+    <div>Prop folder</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/voiceRecorder.svg" alt="">
+    <div>Voice Recorder</div>
+</div>
+<div class="appMenuIconContainer">
+    <img class="appMenuIcon" src="propIcons/eclipseIDE.svg" alt="">
+    <div>Eclipse Index</div>
+</div>
+</div>
+<div id="appPages" style="
+    color: white;
+    height: 32px;
+    width: 100%;
+    /* background: #a9a9a97a; */
+    position: relative;
+    display: flex;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+"><p style="background: #ffffffdb;border-radius:100%;aspect-ratio: 1/1;height: 9px;width: auto;"></p></div>
+</div>
+<!--    -----------------------AppMenu END--------------------------------------------- --> 
 <script>
         const { listOpenWindows } = require('@josephuspaye/list-open-windows');
 
@@ -382,7 +664,12 @@ function getBarIcons()
 
             iconExtractor.getIcon("",RunningProcessList[num].processPath.replace(/\\/g, '/'));           
         }
-//////////////////////////////////////// Refresh icons in bar   
+//////////////////////////////////////// Refresh icons in bar  
+        var pinnedPaths=['C://Windows//explorer.exe'];
+        barRunningApps+=pinnedPaths[0];
+        var pinnedAppsList=[`<div class='taskbutton color darkMode' onmouseleave="" onclick="openAppMenu()"><img src="/icons/apps.png" class="darkMode" onclick='' style='height:100%;width:100%'></div>`,`<div id="explorer" class="taskbutton color darkMode" title="top" onmouseover="showAppThumb(this,event);" onmouseleave="this.children[0].classList.add('hide')"><div class="appThumb hide darkMode" onmouseenter="mouseEnterObject.thumbnail=true" onmouseleave="hideAppThumb(0);"><img id="44608" src="/icons/explorer.png" onclick="openItem('C://Windows//explorer.exe')"></div><img id="44608" src="/icons/explorer.png" class="darkMode" onclick="openItem('C://Windows//explorer.exe')" style="height:100%;width:100%"></div>`]
+        var pinnedApps
+        pinnedApps=pinnedAppsList.join();
         var barRunningApps=[];
         function dewIt()
         {
@@ -396,7 +683,7 @@ function getBarIcons()
             else{
             barRunningApps.push(element.processPath);
             console.log(element.icon);
-            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`'><img class="taskbutton" id='`+element.processId+`' src="`+element.Icon+`" title="`+element.caption+`" onclick='showORhideAPP(`+element.processId+`)'></div>`;
+            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`'><img class="taskbutton color" id='`+element.processId+`' src="`+element.Icon+`" title="`+element.caption+`" onclick='showORhideAPP(`+element.processId+`)'></div>`;
             }
             
         });
@@ -414,21 +701,23 @@ function getBarIcons()
                 console.log("child");
                 console.log(barElement.children[indexOfProcess]); */
                 barElement.children[indexOfProcess].children[0].innerHTML+=`<img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
-                barElement.children[indexOfProcess].children[1].outerHTML=`<img id='`+element.processId+`' src="`+element.Icon+`" onmouseover="showAppThumb(this.parentElement,event);" style="height:100%;width:100%">`
+                barElement.children[indexOfProcess].children[1].outerHTML=`<img id='`+element.processId+`' class="darkMode" src="`+element.Icon+`" onmouseover="showAppThumb(this.parentElement,event);" style="height:100%;width:100%">`
             }
             else{
             barRunningApps.push(element.processPath);
             var index=barRunningApps.length-1;
             console.log(element.icon);
-            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`' class='taskbutton' title="`+element.caption+`" onmouseleave="this.children[0].classList.add('hide')"><div class="appThumb hide" onmouseleave="hideAppThumb(`+index+`);">s</div><img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)' style='height:100%;width:100%'></div>`;
-            barElement.children[index].children[0].innerHTML+=`<img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
+            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`' class='taskbutton color darkMode' title="`+element.caption+`" onmouseover="showAppThumb(this,event)" onmouseleave="this.children[0].classList.add('hide')"><div class="appThumb hide darkMode" onmouseenter="mouseEnterObject.thumbnail=true" onmouseleave="hideAppThumb(`+index+`);">s</div><img id='`+element.processId+`' src="`+element.Icon+`" class="darkMode" onclick='showORhideAPP(`+element.processId+`)' style='height:100%;width:100%'></div>`;
+            barElement.children[index].children[0].innerHTML+=`<img id='`+element.processId+`'  src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
             }
-            
         });
+        barElement.innerHTML=pinnedApps+barElement.innerHTML;
         }
 ////////////////////////////////////////  
         function hideAppThumb(index){
+            if(mouseEnterObject.thumbnail==false){
             barElement.children[index].children[0].classList.add('hide');
+        }
         }
 ////////////////////////////////////////  
         function showAppThumb(element,event){
@@ -444,6 +733,10 @@ function getBarIcons()
         function showORhideAPP(processId){
             console.log("Trying to show: "+processId);
             showORhideShell.invokeCommand("C:/Users/X.000000000000000000/procesessB.ps1 -Style 'SHOWDEFAULT' -processID "+processId+"");
+        }
+//////////////////////////////////////// Push new app into process list and into bar
+        function pushNewApp(){
+            
         }
 //////////////////////////////////////// Bar clock function
         let monthsList=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -472,6 +765,8 @@ function getBarIcons()
 ////////////////////////////////////////
 var mouseLeftObject={};
 var mouseLeftObject={calendar:true,controlCenter:true,runningAppsThumbnail:true,bar:true,mediaCenter:true,sideBar:true};
+var mouseEnterObject={thumbnail:false};
+var resizableBar = document.getElementById('barID');
 document.addEventListener('DOMContentLoaded', function () 
         {   
             var isResizing = false;
@@ -521,13 +816,37 @@ document.addEventListener('DOMContentLoaded', function ()
                 console.log("mouseup");
             });
         });
+//////////////////////////////////////// Open file function
+        function openItem(filePath){
+   /*  filePath= filePath.replace("/", "\\"); */
+    if(filePath.includes("shell:")){
+        const { exec } = require('child_process');
+        exec('start '+filePath+'', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error opening: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Standard error: ${stderr}`);
+            return;
+        }
+        console.log('Opened successfully');
+        });
+    }
+    console.log(filePath);
+    nw.Shell.openItem(filePath);
+}
 //////////////////////////////////////// Control center functions
 var controlWindowOn=false;
 let controlCenterElement=document.getElementById("controlCenterID");
-function openControlCenter()
+function openControlCenter(event)
 {
     if (controlWindowOn==false)
-    {
+    {   
+        if(event.clientX>200){
+        controlCenterElement.style.left=parseInt(event.clientX-150)+"px";
+        }
+        else {controlCenterElement.style.left=parseInt(event.clientX-50)+"px";}
         controlCenterElement.classList.remove("hide");
         controlWindowOn=true;
     }
@@ -541,10 +860,13 @@ function openControlCenter()
 var calendarOn=false;
 var sideBarWasOn=false;
 let calendarElement=document.getElementById("calendarID");
-function openCalendar()
+function openCalendar(event)
 {
+    console.log(event)
     if (calendarOn==false)
     {
+        if(window.screen.availWidth-event.clientX>200){calendarElement.style.left=parseInt(event.clientX-150)+"px";}
+        else {calendarElement.style.left=parseInt(window.screen.availWidth-330)+"px";}
         calendarOn=true;
         calendarElement.classList.remove("hide");
         if(sideBarOn==true)
@@ -622,12 +944,52 @@ function openMediaCenter()
         },4000); */
     }
 }
-////////////////////////////////////////
-//////////////////////////////////////// Settings for colors
+//////////////////////////////////////// darkModeOn not working for some reason.... Get's 3 elements of class darkMode, on each function call
+var darkModeIsOn=true;
+function darkModeOn(){
+    if (darkModeIsOn){
+        var darkModeElements=document.getElementsByClassName('darkMode');    
+    for(let i=0;i<darkModeElements.length;i++){
+        console.log("Removing element: "+i)
+        darkModeElements[i].classList.remove('darkMode');
+    }
+    darkModeIsOn=false;
+    }
+    else{
+
+    }
+}
+//////////////////////////////////////// Settings 
 function openSettings()
 {
     document.getElementById('settingsContainerId').style.display='flex';
 }
+//////////////////////////////////////// AppMenu
+var appMenuOn=false;
+let appMenuElement=document.getElementById('appMenuContainerID');
+function openAppMenu()
+{
+    if (appMenuOn==false)
+    {
+        appMenuOn=true;
+        appMenuElement.classList.remove("hide");
+    }
+    else if (appMenuOn==true)
+    {
+        appMenuOn=false;
+        appMenuElement.classList.add("hide");
+    }
+}
+//////////////////////////////////////// Settings for colors
+var styleElement=document.getElementsByTagName("style");
+var oldStyle=styleElement[0].innerHTML;
+function acentColorChange(color){
+            styleElement[0].innerHTML=oldStyle;
+            var css = '.color{background-color: '+color+'b8'+'}';
+            oldStyle=styleElement[0].innerHTML;
+            styleElement[0].innerHTML=oldStyle+css;
+            console.log(styleElement[0]);
+        }
 //////////////////////////////////////// File copying testing function, now in seperate file
     /* const fs = require('fs');
     async function copy() 

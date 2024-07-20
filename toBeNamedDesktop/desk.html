@@ -49,7 +49,6 @@
         user-select: all;
         -webkit-user-drag: element;
         position: absolute;
-        cursor: move;
         z-index: 10;
     }
     .desktopIconIn:hover{
@@ -132,7 +131,7 @@
         <div class="icons" style="display: flex;" onmouseenter="console.log('hell');">
         <img alt="Respawn" src="/icons/reload.png" style="height: 24px;" ></div>
         <div class="icons" style="display: flex;">
-         <img alt="Settings" src="/icons/settings.png" style="height: 24px;">
+         <img alt="Settings" src="/icons/settings.png" onclick="openItem('shell:ControlPanelFolder')" style="height: 24px;">
         </div><div class="icons" style="display: flex;">
          <img  alt="New" src="/icons/add.png" style="height: 24px;">
         </div></th>
@@ -171,20 +170,36 @@
         name:"Google Chrome",
         icon:"/chrome.png",
         gridPosition:0,
+        path:"C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
     },
     {
         name:"Google Chrome",
         icon:"/chrome.png",
         gridPosition:1,
+        path:"C:/Program Files/BraveSoftware/Brave-Browser/Application/brave.exe"
+    }, 
+    {
+        name:"Test Window",
+        icon:"/icons/testWindow.png",
+        gridPosition:60,
+        path:""
+    },
+    {
+        name:"Settings",
+        icon:"/icons/settingsDesk.png",
+        gridPosition:80,
+        path:"shell:ControlPanelFolder"
     },
     {
         name:"Mr. Bin",
         icon:"/empty_trash.png",
         gridPosition:179,
+        path:"shell:RecycleBinFolder"
     }
 
     ];
     const os = require('node:os'); //To get OS info
+    const { exec } = require('child_process');
     var win=nw.Window.get();
     var iconExtractor = require('icon-extractor');
     var PowerShell = require("node-powershell");
@@ -211,11 +226,31 @@
         {
             if(el.gridPosition>=0)
             {
-                desktopGridElement.children[el.gridPosition].innerHTML=`<div class="desktopIconIn"><img src="`+el.icon+`" alt=""><div class="desktopIconInText">`+el.name+`</div></div>`;
+                desktopGridElement.children[el.gridPosition].innerHTML=`<div class="desktopIconIn" ondblclick="console.log('`+el.path+`');openItem('`+el.path+`')"><img src="`+el.icon+`" alt=""><div class="desktopIconInText">`+el.name+`</div></div>`;
                 dragElement(desktopGridElement.children[el.gridPosition].children[0]);
             }
         });
     }
+//////////////////////////////////////// 
+function openItem(filePath){
+   /*  filePath= filePath.replace("/", "\\"); */
+    if(filePath.includes("shell:")){
+        const { exec } = require('child_process');
+        exec('start '+filePath+'', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error opening: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Standard error: ${stderr}`);
+            return;
+        }
+        console.log('Opened successfully');
+        });
+    }
+    console.log(filePath);
+    nw.Shell.openItem(filePath);
+}
 ////////////////////////////////////////        
     function hideDesktopIcons(){spawnDesktopGrid();}
 ////////////////////////////////////////
@@ -259,8 +294,10 @@ document.addEventListener('DOMContentLoaded', function ()
     });
     ///////////////////////////////////////
     document.addEventListener('mousedown', function () 
-    {
+    {   
+        if(event.target.className!="contextMenu"){
         contextMenuElement.style.display="none";
+        }
         if (event.target.className != "desktopIconIn")
         {
             console.log("mousedown");
@@ -342,6 +379,7 @@ function closest(array, num)
 function dragElement(elmnt) 
         {
             var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            console.log(elmnt);
             elmnt.onmousedown = dragMouseDown;
             ////////////////////////////////////////
             function dragMouseDown(e) 
