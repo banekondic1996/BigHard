@@ -1,13 +1,14 @@
 <html lang="en" style="width:100%"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="Chart.js"></script>
+    <script src="test_files/Chart.js"></script>
     <title>Transfer Dialog</title>
     <style>
         body{
             width: 100%;
         }
-        .transferDialogContainer{
+        .fileManagerContainer{
             display: block;
             background: rgb(255 255 255 / 70%);
             width: 400px;
@@ -19,7 +20,7 @@
             flex-wrap: wrap;
             padding: 0px;
         }
-        .transferDialogButton{
+        .fileManagerButton{
             display: flex;
             background: rgb(248 125 166 / 44%);
             border-radius: 12px;
@@ -32,13 +33,13 @@
             color:white;
             margin: 2px;
         }
-        .transferDialogButton img{
+        .fileManagerButton img{
             width: auto;
             height: 22px;
            /*  mix-blend-mode: overlay; */
             opacity: 0.5;
         }
-        .transferDialogFlexContainer{
+        .fileManagerFlexContainer{
             display: flex;
             flex-direction: row;
             flex-wrap: nowrap;
@@ -96,7 +97,7 @@
         cursor: pointer;
         z-index:999;
         }
-        .transferDialogTrayContainer{
+        .fileManagerTrayContainer{
             display: flex;
             width: 98.5%;
             height: calc(100% - 72px);
@@ -113,7 +114,7 @@
             height:22px;
             opacity: 0.5;
         }
-        .transferDialogTray{
+        .fileManagerTray{
             display: flex;
             width: 100%;
             height: auto;
@@ -133,16 +134,16 @@
         .colorDarker{
             background: rgba(193, 35, 35, 0.8);
         }
-        .transferDialogTitle{
+        .fileManagerTitle{
             font-family: system-ui;
             font-size: 90%;
         }
-        .transferDialogDetails .transferDialogTitle{
+        .fileManagerDetails .fileManagerTitle{
             margin-left: 10px;
             margin-top: 6px;
             margin-bottom: 0px;
         }
-        .transferDialogDetails
+        .fileManagerDetails
         {
             display: flex;
             flex-direction: column;
@@ -219,458 +220,106 @@
 .windowButton:hover{
     scale:1.2;
 }
-        </style>
-<style type="text/css">/* Chart.js */
-/*
- * DOM element rendering detection
- * https://davidwalsh.name/detect-node-insertion
- */
-@keyframes chartjs-render-animation {
-	from { opacity: 0.99; }
-	to { opacity: 1; }
-}
-
-.chartjs-render-monitor {
-	animation: chartjs-render-animation 0.001s;
-}
-
-/*
- * DOM element resizing detection
- * https://github.com/marcj/css-element-queries
- */
-.chartjs-size-monitor,
-.chartjs-size-monitor-expand,
-.chartjs-size-monitor-shrink {
-	position: absolute;
-	direction: ltr;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-	pointer-events: none;
-	visibility: hidden;
-	z-index: -1;
-}
-
-.chartjs-size-monitor-expand > div {
-	position: absolute;
-	width: 1000000px;
-	height: 1000000px;
-	left: 0;
-	top: 0;
-}
-
-.chartjs-size-monitor-shrink > div {
-	position: absolute;
-	width: 200%;
-	height: 200%;
-	left: 0;
-	top: 0;
-}
-</style><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="use-credentials"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swa"><style type="text/css">/* Chart.js */
-/*
- * DOM element rendering detection
- * https://davidwalsh.name/detect-node-insertion
- */
-@keyframes chartjs-render-animation {
-	from { opacity: 0.99; }
-	to { opacity: 1; }
-}
-
-.chartjs-render-monitor {
-	animation: chartjs-render-animation 0.001s;
-}
-
-/*
- * DOM element resizing detection
- * https://github.com/marcj/css-element-queries
- */
-.chartjs-size-monitor,
-.chartjs-size-monitor-expand,
-.chartjs-size-monitor-shrink {
-	position: absolute;
-	direction: ltr;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-	pointer-events: none;
-	visibility: hidden;
-	z-index: -1;
-}
-
-.chartjs-size-monitor-expand > div {
-	position: absolute;
-	width: 1000000px;
-	height: 1000000px;
-	left: 0;
-	top: 0;
-}
-
-.chartjs-size-monitor-shrink > div {
-	position: absolute;
-	width: 200%;
-	height: 200%;
-	left: 0;
-	top: 0;
-}
-</style><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="use-credentials"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swa"><style type="text/css">/* Chart.js */
-/*
- * DOM element rendering detection
- * https://davidwalsh.name/detect-node-insertion
- */
-@keyframes chartjs-render-animation {
-	from { opacity: 0.99; }
-	to { opacity: 1; }
-}
-
-.chartjs-render-monitor {
-	animation: chartjs-render-animation 0.001s;
-}
-
-/*
- * DOM element resizing detection
- * https://github.com/marcj/css-element-queries
- */
-.chartjs-size-monitor,
-.chartjs-size-monitor-expand,
-.chartjs-size-monitor-shrink {
-	position: absolute;
-	direction: ltr;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-	pointer-events: none;
-	visibility: hidden;
-	z-index: -1;
-}
-
-.chartjs-size-monitor-expand > div {
-	position: absolute;
-	width: 1000000px;
-	height: 1000000px;
-	left: 0;
-	top: 0;
-}
-
-.chartjs-size-monitor-shrink > div {
-	position: absolute;
-	width: 200%;
-	height: 200%;
-	left: 0;
-	top: 0;
-}
-</style><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="use-credentials"><link rel="preconnect" href="https://fonts.gstatic.com"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Mulish:wght@200;300;400;500;600;700;800;900&amp;display=swa"><style type="text/css">/* Chart.js */
-/*
- * DOM element rendering detection
- * https://davidwalsh.name/detect-node-insertion
- */
-@keyframes chartjs-render-animation {
-	from { opacity: 0.99; }
-	to { opacity: 1; }
-}
-
-.chartjs-render-monitor {
-	animation: chartjs-render-animation 0.001s;
-}
-
-/*
- * DOM element resizing detection
- * https://github.com/marcj/css-element-queries
- */
-.chartjs-size-monitor,
-.chartjs-size-monitor-expand,
-.chartjs-size-monitor-shrink {
-	position: absolute;
-	direction: ltr;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-	pointer-events: none;
-	visibility: hidden;
-	z-index: -1;
-}
-
-.chartjs-size-monitor-expand > div {
-	position: absolute;
-	width: 1000000px;
-	height: 1000000px;
-	left: 0;
-	top: 0;
-}
-
-.chartjs-size-monitor-shrink > div {
-	position: absolute;
-	width: 200%;
-	height: 200%;
-	left: 0;
-	top: 0;
-}
-</style><style type="text/css">/* Chart.js */
-/*
- * DOM element rendering detection
- * https://davidwalsh.name/detect-node-insertion
- */
-@keyframes chartjs-render-animation {
-	from { opacity: 0.99; }
-	to { opacity: 1; }
-}
-
-.chartjs-render-monitor {
-	animation: chartjs-render-animation 0.001s;
-}
-
-/*
- * DOM element resizing detection
- * https://github.com/marcj/css-element-queries
- */
-.chartjs-size-monitor,
-.chartjs-size-monitor-expand,
-.chartjs-size-monitor-shrink {
-	position: absolute;
-	direction: ltr;
-	left: 0;
-	top: 0;
-	right: 0;
-	bottom: 0;
-	overflow: hidden;
-	pointer-events: none;
-	visibility: hidden;
-	z-index: -1;
-}
-
-.chartjs-size-monitor-expand > div {
-	position: absolute;
-	width: 1000000px;
-	height: 1000000px;
-	left: 0;
-	top: 0;
-}
-
-.chartjs-size-monitor-shrink > div {
-	position: absolute;
-	width: 200%;
-	height: 200%;
-	left: 0;
-	top: 0;
-}
 #detailsID{
     width: auto;
 }
 </style></head>
 <body style="display: flex;width: 100%;flex-wrap: nowrap;margin: 0px;/* padding: 4px; */">
-    <div class="resizersBox" style="
-    position: absolute;
-    display: flex;
-    width: 100%;
-    height: 100%;
-    padding: auto;
-    margin: 0px;
-">
-    <div class="resizer top-left" style="
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    left: 0px;
-    top: 0px;
-    cursor: nw-resize;
-"></div>
-    <div class="resizer top" style="
-    position: absolute;
-    width: calc(100% - 100px);
-    height: 30px;
-    left: 50px;
-    top: 0px;
-    cursor: n-resize;
-"></div>       
-            
-            
-            
-          <div class="resizer bottom" style="
-    position: absolute;
-    width: calc(100% - 80px);
-    height: 30px;
-    left: 40px;
-    bottom: 4px;
-    cursor: s-resize;
-"></div><div class="resizer top-right" style="
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    right: 0px;
-    top: 0px;
-    cursor: ne-resize;
-    transition: cursor 2s;
-"></div><div class="resizer right" style="
-    position: absolute;
-    width: 30px;
-    height: calc(100% - 80px);
-    right: 0px;
-    top: 40px;
-    cursor: e-resize;
-    transition: cursor 2s;
-"></div><div class="resizer left" style="
-    position: absolute;
-    width: 30px;
-    height: calc(100% - 80px);
-    left: 0px;
-    top: 40px;
-    cursor: w-resize;
-    transition: cursor 2s;
-"></div><div class="resizer bottom-left" style="
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    left: 0px;
-    bottom: 4px;
-    cursor: nw-resize;
-"></div>
-</div>
     <div class="WindowContainer" style="">
-
-            <div class="WindowBar">
-        <div class="buttonsHolder" onclick="" style="
-        display: flex;
-        left: 10px;
-        width: auto;
-        flex-wrap: nowrap;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        color: white;
-        -webkit-text-stroke-color: #dadada;
-        max-width: 170px;
-    "><div style="
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        margin: auto;
-        position: absolute;
-    ">This is Title</div></div><div class="buttonsHolder" onclick="" style="
-    display: flex;
-    left: 196px;
-    width: auto;
-    flex-wrap: nowrap;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    color: white;
-    -webkit-text-stroke-color: #dadada;
-    max-width: 170px;
-    "><div style="
-        display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        margin: auto;
-        position: absolute;
-    ">This is Title</div></div>
+      <!--   <div class="WindowBar">
+            <div class="buttonsHolder" onclick="" style="display: flex;left: 10px;width: auto;flex-wrap: nowrap;flex-direction: row;
+            justify-content: center;align-items: center;color: white;-webkit-text-stroke-color: #dadada;max-width: 170px;">
+                <div style="display: flex;flex-direction: row;flex-wrap: nowrap;margin: auto;position: absolute;">This is Title</div>
+            </div>
+            <div class="buttonsHolder" onclick="" style="display: flex;left: 196px;width: auto;flex-wrap: nowrap;flex-direction: row;
+            justify-content: center;align-items: center;color: white;-webkit-text-stroke-color: #dadada;max-width: 170px;">
+                <div style="display: flex;flex-direction: row;flex-wrap: nowrap;margin: auto;position: absolute;">This is Title</div>
+            </div>
+            <div class="buttonsHolder" onclick="" style=""></div>
+            <div class="windowButton" onclick="" style="right: 69px;top: 9.5px;position: absolute;background: #c3c3c3;"></div>
+            <div class="windowButton" onclick="" style="right: 48px;top: 9.5px;background: #fff49b;"></div>
+            <div class="windowButton" onclick="" style="font-size: 7px;right: 27px;top: 9.5px;background: #cbff9b;"></div>
+            <div class="windowButton" onclick="" style="right: 6px;top: 9.5px;background: #ff9b9b;"></div>
+        </div> -->
         
-                <div class="buttonsHolder" onclick="" style=""></div>
-                <div class="windowButton" onclick="" style="right: 69px;top: 9.5px;position: absolute;background: #c3c3c3;"></div>
-                <div class="windowButton" onclick="" style="right: 48px;top: 9.5px;background: #fff49b;"></div>
-                <div class="windowButton" onclick="" style="font-size: 7px;right: 27px;top: 9.5px;background: #cbff9b;"></div>
-            <div class="windowButton" onclick="" style="right: 6px;top: 9.5px;background: #ff9b9b;"></div></div>
-            
-        <div id="detailsID" class="transferDialogContainer color" style="margin-right: 10px;flex-direction: column;width: 272px;">
-        <div class="transferDialogTrayContainer" style="height: 100%;width: auto;flex-direction: column;">
-            <div class="transferDialogTray transferDialogDetails colorDarker" style="justify-content: flex-start;flex-direction: row;flex-wrap: wrap;"> 
-                <li style="list-style-type: none;background: #f75151;width: 94%;/* text-align: left; */border-radius: 12px;margin: 5px;width: 43px;">
-                    <ul style="margin: auto;padding: 10px;">Ho</ul>
-                   </li>
-                   <li style="list-style-type: none;background: #f75151;width: 94%;/* text-align: left; */border-radius: 12px;margin: 5px;width: 47px;">
-                    <ul style="margin: auto;padding: 10px;">Do</ul>
-                   </li>
-                   <li style="list-style-type: none;background: #f75151;width: 94%;/* text-align: left; */border-radius: 12px;margin: 5px;width: 42px;">
-                    <ul style="margin: auto;padding: 10px;">Ma</ul>
-                   </li>
-                   <li style="list-style-type: none;background: #f75151;width: 94%;/* text-align: left; */border-radius: 12px;margin: 5px;width: 40px;">
-                    <ul style="margin: auto;padding: 10px;">Mu</ul>
-                   </li>
-                   <li style="list-style-type: none;background: #f75151;width: 94%;/* text-align: left; */border-radius: 12px;margin: 5px;">
-                    <ul style="margin: auto;padding: 10px;">Dic pics</ul>
-                    <ul style="margin: auto;padding: 10px;">Dic pics</ul>
-                   </li>
+        <div id="detailsID" class="fileManagerContainer color" style="margin-right: 10px;flex-direction: column;width: 272px;">
+            <div class="fileManagerTrayContainer" style="height: 100%;width: auto;flex-direction: column;">
+                <div class="fileManagerTray fileManagerDetails colorDarker" style="justify-content: flex-start;flex-direction: row;flex-wrap: wrap;padding: auto;flex-basis: content;"> 
+                    <li style="list-style-type: none;/*! background: #f75151; *//*! width: 94%; *//* text-align: left; *//*! border-radius: 12px; *//*! margin: 5px; *//*! width: 43px; *//*! list-style-type: ; */display: flex;flex-wrap: wrap;margin: auto;width: 150px;">
+                        <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                            <img src="../icons/fileExplorer/home.png" style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;">
+                        </ul>
+                        <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                            <img src="../icons/fileExplorer/computer.png" style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;">
+                        </ul>
+                        <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                            <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/download.png">
+                        </ul>
+                        <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                            <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/video.png">
+                        </ul>
+                        <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                            <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/picture.png">
+                        </ul><ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                            <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/download.png">
+                        </ul>
+                    </li>
+                </div>
+            <div class="fileManagerTray fileManagerDetails colorDarker"> 
+                <p class="fileManagerTitle" id="transferNameID">File: </p>
+                <p class="fileManagerTitle" id="transferFromID">From: C:/Windows</p>
+                <p class="fileManagerTitle" id="transferToID">To: C:/User/Desktop</p>
+                <p class="fileManagerTitle" id="transferEstID">Est. Time: 1h 30min</p>
+                <p class="fileManagerTitle" id="transferTimeSpentID">Time spent: 1h 30min</p>
+                <p class="fileManagerTitle" id="transferRateID">Transfer rate: 900Mb/s</p>
             </div>
-            <div class="transferDialogTray transferDialogDetails colorDarker"> 
-                <p class="transferDialogTitle" id="transferNameID">File: </p>
-                <p class="transferDialogTitle" id="transferFromID">From: C:/Windows</p>
-                <p class="transferDialogTitle" id="transferToID">To: C:/User/Desktop</p>
-                <p class="transferDialogTitle" id="transferEstID">Est. Time: 1h 30min</p>
-                <p class="transferDialogTitle" id="transferTimeSpentID">Time spent: 1h 30min</p>
-                <p class="transferDialogTitle" id="transferRateID">Transfer rate: 900Mb/s</p>
+            <div class="fileManagerTray fileManagerDetails colorDarker" style="height: 250px;"> 
+                <p class="fileManagerTitle" id="transferNameID">File name: Chrome </p>
+                <p class="fileManagerTitle" id="transferFromID">File size: 200Mb</p>
+                <p class="fileManagerTitle" id="transferToID">Last modified: 02/03/1997 </p>
+                <p class="fileManagerTitle" id="transferEstID">Last accessed: 02/03/2024</p>
+                <p class="fileManagerTitle" id="transferTimeSpentID">Created on: 01/03/1997</p>
+                <p class="fileManagerTitle" id="transferRateID">File extension: .exe</p>
             </div>
-            <div class="transferDialogTray transferDialogDetails colorDarker" style="height: 250px;"> 
-                <p class="transferDialogTitle" id="transferNameID">File name: Chrome </p>
-                <p class="transferDialogTitle" id="transferFromID">File size: 200Mb</p>
-                <p class="transferDialogTitle" id="transferToID">Last modified: 02/03/1997 </p>
-                <p class="transferDialogTitle" id="transferEstID">Last accessed: 02/03/2024</p>
-                <p class="transferDialogTitle" id="transferTimeSpentID">Created on: 01/03/1997</p>
-                <p class="transferDialogTitle" id="transferRateID">File extension: .exe</p>
-            </div>
-        </div>
-    </div><div class="transferDialogContainer" style="width: 100%;">
-        <div class="transferDialogFlexContainer">
-            <div class="transferDialogButton color" style="
-    width: 70px;
-">
+        </div>  
+    </div>
+    
+    <div class="fileManagerContainer" style="width: 100%;">
+        <div class="fileManagerFlexContainer">
+            <div class="fileManagerButton color" style="width: 70px;">
                 <div style="text-wrap: nowrap;" onclick="displayDetails();">&lt;</div>
             </div>
-            <div class="transferDialogButton color" style="
-    width: 70px;
-">
-                <div id="transferDialogButtonID">&gt;</div>
+            <div class="fileManagerButton color" style="width: 70px;">
+                <div id="fileManagerButtonID">&gt;</div>
             </div>
-        <div class="transferDialogButton color" style="
-    width: 100%;
-">
-                <input type="text" style="width: 100%;height: 29px;border-radius: 7px;border-color: white;border-style: solid;margin: auto;margin-inline: 4px;">
-            </div><div class="transferDialogButton color" style="
-    width: auto;
-    padding-inline: 5px;
-">
-                <div id="transferDialogButtonID" style="
-">Settings</div>
-            </div><div class="transferDialogButton color" style="
-    width: auto;
-    padding-inline: 5px;
-">
-                <div id="transferDialogButtonID">View</div>
-            </div><div class="transferDialogButton color" style="
-    width: 40%;
-">
+            <div class="fileManagerButton color" style="width: 100%;">
+                <input type="text" value="C:/windows/file/explorer" style="width: 100%;height: 29px;border-radius: 7px;border-color: white;border-style: solid;margin: auto;margin-inline: 4px;">
+            </div>
+            <div class="fileManagerButton color" style="width: auto;padding-inline: 5px;">
+                <div id="fileManagerButtonID" style="">Settings</div>
+            </div>
+            <div class="fileManagerButton color" style="width: auto;padding-inline: 5px;">
+                <div id="fileManagerButtonID">View</div>
+            </div>
+            <div class="fileManagerButton color" style="width: 40%;">
                 <input type="text" style="width: 100%;height: 29px;border-radius: 7px;border-color: white;border-style: solid;margin: auto;margin-inline: 4px;" placeholder="Search">
-            </div></div><div class="transferDialogTrayContainer color">
-            <div class="transferDialogTray colorDarker" style="
-">
-        <img src="test2.PNG" alt="" style="/* mix-blend-mode: normal; */height: 100%;width: 100%;">
-                
             </div>
         </div>
-        
-        
-        
-    </div></div>
+            <div class="fileManagerTrayContainer color">
+                <div class="fileManagerTray colorDarker" style="">
+                    <img src="test_files/test2.PNG" alt="" style="/* mix-blend-mode: normal; */height: 100%;width: 100%;">
+                </div>
+            </div>
+    </div>
+</div>
     
         <script>
-            var detailsHidden=true;
-            var detailsElement=document.getElementById("detailsID");
-            var progressTextElemenet=document.getElementById("progressTextID");
-            var transferingTextElemenet=document.getElementById("transferingTextID");
-            var transferChartElement=document.getElementById("transferChartID");
+          /*   var progressTextElemenet=document.getElementById("progressTextID");
             var progressBarElement=document.getElementById('progressBarID');
-            var styleElement=document.getElementsByTagName("style");
-            var oldStyle=styleElement[0].innerHTML;
             function sliderTrackChange(el){
-                /* console.log(el.parentElement.children[0]); */
                 el.parentElement.children[0].style.width=((el.offsetWidth/100)*el.value)+'px';
                 progressTextElemenet.innerHTML=el.value+"%";
-            }
+            } */
             function hexToRgbA(hex){
                 var c;
                 if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
@@ -688,201 +337,10 @@
             }
             function colorChange(color,colorDarker){
                 styleElement[0].innerHTML=oldStyle;
-                var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .transferDialogButton.color:hover{ background-color: '+colorDarker+' }';
+                var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .fileManagerButton.color:hover{ background-color: '+colorDarker+' }';
                 oldStyle=styleElement[0].innerHTML;
                 styleElement[0].innerHTML=oldStyle+css;
                 console.log(styleElement[0]);
             }
-            function displayDetails(){
-                if(detailsHidden==true){
-                detailsElement.classList.remove("hide");
-                transferChartElement.classList.remove("hide");
-                transferingTextElemenet.classList.add("hide");
-                detailsHidden=false;
-                }
-                else if(detailsHidden==false){
-                detailsElement.classList.add("hide");
-                transferChartElement.classList.add("hide");
-                transferingTextElemenet.classList.remove("hide");
-                detailsHidden=true;
-                }
-            }
         </script>
-        <script>
-            /* const x = [100,200,300,400,500,600,700,800,900,1000]; */
-            const x = [];
-            var transferChart=new Chart("transferChartID", {
-              type: "line",
-              data: {
-                labels: x,
-                datasets: [{ 
-                  /* data: [860,1140,1060,1060,1070,1110,1330,2210,7830,2478], */
-                  data: [],
-                  borderColor: "rgba(33,33,33,0.5)",
-                  fill: true,
-                  radius: 0,
-                  pointBackgroundColor: 'rgb(255, 99, 132)',
-                  pointHoverBackgroundColor: '#fff',
-                  borderWidth:1,
-                  backgroundColor:"rgba(33,33,33,1)"
-                }]
-              },
-              options: {
-                tooltips: {
-                intersect: false,
-                mode: 'nearest',
-                enabled: false,
-                position: 'nearest',
-                custom: function(context) {
-                        // Tooltip Element
-                        let tooltipEl = document.getElementById('chartjs-tooltip');
-                        // Create element on first render
-                        if (!tooltipEl) {
-                            tooltipEl = document.createElement('div');
-                            tooltipEl.id = 'chartjs-tooltip';
-                            tooltipEl.innerHTML = '<table></table>';
-                            document.body.appendChild(tooltipEl);
-                        }
-                        // Hide if no tooltip
-                        const tooltipModel = context;
-                        if (tooltipModel.opacity === 0) {
-                            tooltipEl.style.opacity = 0;
-                            return;
-                        }
-                        // Set caret Position
-                        tooltipEl.classList.remove('above', 'below', 'no-transform');
-                        if (tooltipModel.yAlign) {
-                            tooltipEl.classList.add(tooltipModel.yAlign);
-                        } else {
-                            tooltipEl.classList.add('no-transform');
-                        }
-                        function getBody(bodyItem) {
-                            return bodyItem.lines;
-                        }
-                        // Set Text
-                        if (tooltipModel.body) {
-                            const titleLines = tooltipModel.title || [];
-                            const bodyLines = tooltipModel.body.map(getBody);
-                            let innerHtml = '<thead>';
-      /*                       titleLines.forEach(function(title) {
-                                innerHtml += '<tr><th>' + title + '</th></tr>';
-                            }); */
-                            innerHtml += '</thead><tbody>'; 
-                            bodyLines.forEach(function(body, i) {
-                                const span = '<span style="background:rgba(33,33,33,0.5);border-radius:12px;padding:5px;color:white">' + body + 'MB/s</span>';
-                                innerHtml += '<tr><td>' + span + '</td></tr><tr><td style="color:rgba(255,255,255,1);">●</td></tr>';
-                            });
-                            innerHtml += '</tbody>';
-                            let tableRoot = tooltipEl.querySelector('table');
-                            tableRoot.innerHTML = innerHtml;
-                            console.log(innerHtml);
-                        }
-                        console.log(context);
-                        const position = transferChart.canvas.getBoundingClientRect();
-                        // Display, position, and set styles for font
-                        tooltipEl.style.opacity = 1;
-                        tooltipEl.style.position = 'absolute';
-                        tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX - 7 + 'px';
-                        tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 29 + 'px';
-                        tooltipEl.style.padding = tooltipModel.padding + 'px ' + tooltipModel.padding + 'px';
-                        tooltipEl.style.pointerEvents = 'none';
-                    }
-                },
-            scales: {
-            xAxes: [{
-                display:false,
-                gridLines: {
-                    color: "rgba(0, 0, 0, 0)",
-                    value:"rgba(0, 0, 0, 0)"
-                }
-            }],
-            yAxes: [{
-                display:false,
-                gridLines: {
-                    color: "rgba(0, 0, 0, 0)",
-                }   
-            }],
-        },
-        legend:{display:false}
-    },
-            });
-    function addChartData(label, newData) {
-        transferChart.data.labels.push(label);
-        transferChart.data.datasets.forEach((dataset) => {
-        dataset.data.push(newData);
-        });
-        transferChart.update();
-    }
-    const fs = require('fs');
-    async function copy(sourceFile,destFile) 
-    {
-    
-    fs.stat(sourceFile, function(err, stat){
-     
-      const filesize = stat.size
-      let bytesCopied = 0;
-      let bufferR=0; 
-      let bufferPrevious=0;
-      let bufferChunk=0;
-      let secondsPassed=0;
-      let timeTotalEst=0;
-      let timeAverageEst=0;
-      let transferAverage=0;
-      let transferEstElement=document.getElementById("transferEstID");
-      let transferRateElement=document.getElementById("transferRateID");
-      let transferDialogButtonElement=document.getElementById("transferDialogButtonID");
-      document.getElementById("transferToID").innerHTML="To: "+destFile;
-      document.getElementById("transferFromID").innerHTML="From: "+sourceFile;
-      const readStream = fs.createReadStream(sourceFile)
-      readStream.on('data', function(buffer){
-        bufferR =bufferR+ buffer.length;
-      })
-      readStream.on('error', function(event){
-        clearInterval(refreshIntervalId);
-        console.log("error in processing transfer");
-      })
-      readStream.on('end', function(){
-        clearInterval(refreshIntervalId);
-        chartDataRefresh(bufferChunk,bufferR,true);
-        console.log("done copying");
-      })
-      function chartDataRefresh(bufferChunk,bufferR,isDone){
-            console.log(readStream);
-            secondsPassed++;
-            bufferChunk=bufferR-bufferPrevious;
-            bufferPrevious=bufferR;
-            transferSpeed=Math.round(bufferChunk/(1024*1024));
-            transferProgress=Math.round(bufferR/(1024*1024));
-            transferEst=Math.round(filesize/bufferChunk);
-            timeTotalEst+=transferEst;
-            transferAverage+=transferSpeed;
-            timeAverageEst=timeTotalEst/secondsPassed;
-            addChartData(transferProgress,transferSpeed);
-    /*         transferChart.data.datasets[0].data.push(transferSpeed);
-            transferChart.data.labels.push(transferProgress);
-            transferChart.update(); */
-            document.getElementById("transferRateID");
-            transferEstElement.innerText="Est. time: "+Math.round(timeAverageEst-secondsPassed)+" seconds";
-            transferRateElement.innerText="Transfer rate: "+transferSpeed+" MB/s speed";
-            console.log(transferProgress+"MB done");
-            console.log(transferSpeed+"MB speed");
-            console.log(Math.round(timeAverageEst-secondsPassed)+"sec Est. time");
-            let prcentage = ((bufferR/filesize)*100).toFixed(2);
-            progressBarElement.value=Math.round(prcentage);
-            sliderTrackChange(progressBarElement);
-            document.getElementById("transferTimeSpentID").innerHTML="Time spent: "+secondsPassed+" seconds";
-            if(isDone==true){
-                transferEstElement.innerText="Est. time: 0 seconds";
-                transferRateElement.innerText="Average transfer rate: "+Math.round(transferAverage/secondsPassed)+" MB/s speed";
-                transferDialogButtonElement.innerHTML="Close";
-            }
-    }
-      var refreshIntervalId=setInterval(() => {
-        chartDataRefresh(bufferChunk,bufferR,false);
-    }, 1000);
-      readStream.pipe(fs.createWriteStream(destFile));
-    });
-          };
-    copy('copyTest.iso','copyTest_done.iso');
-            </script>
 </body></html>

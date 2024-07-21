@@ -1,0 +1,618 @@
+<html lang="en" style="width:100%"><head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="test_files/Chart.js"></script>
+        <title>Transfer Dialog</title>
+        <style>
+            body{
+               /*  width: 100%; */
+                width: 648px;
+                max-width: 100%;
+                display: flex;
+                flex-wrap: nowrap;
+                margin: 0px;
+                /* padding: 4px; */
+            }
+            .sliderContainer{
+                text-align: center;
+            }
+            .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 16px;
+            background: #d3d3d3;
+            outline: none;
+            -webkit-transition: .2s;
+            transition: opacity .2s;
+            margin: 2px;
+            border-radius: 10px;
+            }
+            .slider:hover {
+            opacity: 1;
+            }
+             .sliderTrack{
+            -webkit-appearance: none;
+            appearance: none;
+            width: 90px;
+            height: 11px;
+            background: rgb(248 125 166 / 44%);;
+            cursor: pointer;
+            position: absolute;
+            border-radius: 10px;
+            margin: 2px;
+            z-index: 0;
+            pointer-events: none;
+            min-width: 10px;
+             }
+            .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #ff80db00;
+            cursor: pointer;
+            border-radius: 100%;
+            z-index:999;
+            }
+        
+            .slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            background: #ff80db;
+            cursor: pointer;
+            z-index:999;
+            }
+            .color{
+                background: rgb(255 47 47 / 80%);
+            }
+            .colorDarker{
+                background: rgba(193, 35, 35, 0.8);
+            }
+            .hide{
+                display: none !important;
+            }
+            #windowContainerID{
+                position: absolute;
+                width: 647px;
+                height: 552px;
+                margin: 0px;
+            }
+            .windowContent{
+                display: flex;
+                width: 100%;
+                height: 100%;
+                background: #c6c6c663;
+                border-radius: 14px;
+                /* backdrop-filter: blur(11px); */
+                box-shadow: 0px 0px 20px 6px #00000038;
+                z-index: 999;
+                flex-direction: row;
+                /* padding: 7px; */
+                justify-content: flex-start;
+                min-width: 472px;
+                margin: 10px;
+                position: absolute;
+            }
+            /* .WindowBar{
+                background-color: #f0f0f099;
+                height: 32px;
+                width: 100%;
+            }
+            .WindowContentInside{
+                width: 100%;
+                height: 100%;
+                background:white;
+            } */
+            .buttonsHolder{
+                right: 0px;
+                top: 5px;
+                position: absolute;
+                background: #27272745;
+                width: 81px;
+                height: 13px;
+                margin-inline-end: 5px;
+                border-radius: 18px;
+                padding: 5px;
+                padding-top: 4px;
+            }
+            .windowMainButtons{
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                align-content: center;
+                align-items: center;
+                text-align: center;
+            }
+            .windowTabTitleButton{
+                display: flex;
+                width: auto;
+                flex-wrap: nowrap;
+                flex-direction: row;
+                justify-content: center;
+                align-items: center;
+                color: white;
+                -webkit-text-stroke-color: #dadada;
+                max-width: 170px;
+            }
+            .windowTabTitleText{
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                margin: auto;
+                position: absolute;
+            }
+            .windowButton{
+                margin-inline-end: 5px;
+                width: 4px;
+                height: 4px;
+                aspect-ratio: 1/1;
+                border-radius: 100%;
+                padding: 5px;
+                display: block;
+                align-items: center;
+                justify-content: center;
+                /* position: absolute;*/
+            }
+            .windowButton:hover{
+                scale:1.2;
+            }
+            #detailsID{
+                width: auto;
+            }
+            #resizersBoxID{
+                position: absolute;
+                display: flex;
+                width: calc(100% + 20px);
+                height: calc(100% + 26px);
+            }
+            .resizer-horizontal{
+                position: absolute;
+                width: 30px;
+                height: calc(100% - 80px);
+                right: 0px;
+                top: 40px;
+            }
+            .resizer-vertical{
+                position: absolute;
+                width: calc(100% - 100px);
+                height: 30px;
+                left: 50px;
+                transition: cursor 2s;
+            }
+            .resizer-corner{
+                position: absolute;
+                width: 30px;
+                height: 30px;
+                transition: cursor 2s;
+            }
+            .fileManagerContainer{
+                display: block;
+                background: rgb(255 255 255 / 70%);
+                width: 400px;
+                height: auto;
+                border-radius: 12px;
+                user-select: none;
+                margin-top: 37px;
+                flex-direction: column;
+                flex-wrap: wrap;
+                padding: 0px;
+                margin-inline: 8px;
+                margin-bottom: 10px;
+            }
+            .fileManagerButton{
+                display: flex;
+                background: rgb(248 125 166 / 44%);
+                border-radius: 12px;
+                width: 42px;    
+                height: 37px;
+                margin-bottom: 10px;
+                text-align: center;
+                justify-content: center;
+                align-items: center;
+                color:white;
+                margin: 2px;
+            }
+            .fileManagerButton img{
+                width: auto;
+                height: 22px;
+            /*  mix-blend-mode: overlay; */
+                opacity: 0.5;
+            }
+            .fileManagerFlexContainer{
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                padding: 7px;
+                justify-content: flex-start;
+                align-content: center;
+            }
+            .fileManagerTrayContainer{
+                display: flex;
+                width: 98.5%;
+                height: calc(100% - 72px);
+                border-radius: 10px 10px 10px 10px;
+                align-content: center;
+                flex-wrap: nowrap;
+                justify-content: center;
+                position: relative;
+                contain: content;
+                margin:auto;
+            }
+            .fileManagerTray{
+                display: flex;
+                width: 100%;
+                height: auto;
+                border-radius: 10px;
+                text-align: center;
+                flex-direction: row;
+                justify-content: space-around;
+                align-items: center;
+                color: white;
+                margin: 3px;
+                flex-wrap: nowrap;
+                contain:content;
+            }
+            .color{
+                background: rgb(255 47 47 / 80%);
+            }
+            .colorDarker{
+                background: rgba(193, 35, 35, 0.8);
+            }
+            .fileManagerTitle{
+                font-family: system-ui;
+                font-size: 90%;
+            }
+            .fileManagerDetails .fileManagerTitle{
+                margin-left: 10px;
+                margin-top: 6px;
+                margin-bottom: 0px;
+            }
+            .fileManagerDetails
+            {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                height: 90%;
+                width: auto;
+            }
+            .hide{
+                display: none !important;
+            }
+           /*  --------------------------------------List 1 Styles START-----------------------------------------*/
+           #appMenuID{
+            display: flex;
+            height: 100%;
+            width: 100%;
+            flex-wrap: wrap;
+            position: relative;
+            flex-direction: row;
+            /* align-content: center; */
+            gap: 14px;
+            overflow: auto;
+            justify-content: flex-start;
+            padding: 13px;
+            align-content: first baseline;
+        }
+        .appMenuIconContainer{
+            contain: content;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2px;
+            height: 82px;
+            width: 62px;
+            padding: 5px;
+            text-align: center;
+            text-shadow: 1px 1px 6px #606060ab;
+            user-select: none;
+        }
+        .appMenuIconContainer:hover{
+            background: #5b5b5b;
+            border-radius: 14px;
+            /* contain: inline-size; */
+            /* height: auto; */
+        }
+        #appMenuShortcutsID{
+            height: 100%;
+            width: 100%;
+            height: 44px;
+            /* background: #a9a9a97a; */
+            position: relative;
+            display: flex;
+            color: white;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+        }
+        #appMenuShortcutsID div{
+            opacity: 0.2;
+        }
+        #appMenuShortcutsID div:hover{
+            opacity: 0.4;
+        }
+        .appMenuIcon{
+            width: 48px;
+            height: 48px;
+        }
+        #appMenuPages{
+            color: white;
+            height: 100%;
+            width: 100%;
+            height: 32px;
+            /* background: #a9a9a97a; */
+            position: relative;
+            display: flex;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+        }
+        .active{
+            opacity: 1 !important;
+        }
+        /*  --------------------------------------List 1 Styles END-----------------------------------------*/
+    </style>
+    </head>
+    <body>
+    <!-- ----------------------------------------------Window Container START------------------------------------------------------------------>
+    <div id="windowContainerID">
+        <!-- ----------------------------------------------Resizers START------------------------------------------------------------------>
+        <div id="resizersBoxID">
+            <div class="resizer-corner" id="resizerTopLeftID" style="left: 0px;top: 0px;cursor: nw-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-vertical" id="resizerTopID"  style="top: 0px;cursor: n-resize;" onmousedown="resizeWindow(event)"></div>       
+            <div class="resizer-vertical" id="resizerBottomID" style="bottom: 4px;cursor: s-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-corner" id="resizerTopRightID" style="right: 0px;top: 0px;cursor: ne-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-horizontal" id="resizerRightID" style="right: 0px;cursor: e-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-horizontal" id="resizerLeftID" style="left: 0px;cursor: w-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-corner" id="resizerBottomLeftID" style="left: 0px;bottom: 4px;cursor: sw-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-corner" id="resizerBottomRightID" style="right: 0px;bottom: 4px;cursor: se-resize;"  onmousedown="resizeWindow(event)"></div>
+        </div>
+        <!-- ----------------------------------------------Resizers END------------------------------------------------------------------>
+        <!-- ----------------------------------------------Windows Content START------------------------------------------------------------------>
+        <div class="windowContent" id="windowContentID" onmousedown="resizeWindow(event)" style="">
+            <!-- ----------------------------------------------Top Bar START------------------------------------------------------------------>
+            <div class="WindowBar">
+                <div class="buttonsHolder windowTabTitleButton" onclick="" style="left: 10px;">
+                    <div class="windowTabTitleText" style="">Lighting</div>
+                </div>
+              <!--   <div class="buttonsHolder windowTabTitleButton" onclick="" style="left: 196px;">
+                    <div class="windowTabTitleText" style="">This is Title 2</div>
+                </div> -->
+                <!-- ----------------------------------------------Window main buttons START------------------------------------------------------------------>
+                <div class="buttonsHolder windowMainButtons" onclick="" style="">
+                    <div class="windowButton" onclick="" style="margin: auto;background: #c3c3c3;"></div>
+                    <div class="windowButton" onclick="" style="margin: auto;background: #fff49b;"></div>
+                    <div class="windowButton" onclick="" style="margin: auto;background: #cbff9b;"></div>
+                    <div class="windowButton" onclick="" style="margin: auto;background: #ff9b9b;"></div>  
+                </div>
+                <!-- ----------------------------------------------Window main buttons END------------------------------------------------------------------>
+            </div>
+            <!-- ----------------------------------------------Top Bar END------------------------------------------------------------------>
+            <div id="detailsID" class="fileManagerContainer color" style="margin-right: 10px;flex-direction: column;width: 272px;">
+                <div class="fileManagerTrayContainer" style="height: 100%;width: auto;flex-direction: column;">
+                    <div class="fileManagerTray fileManagerDetails colorDarker" style="justify-content: flex-start;flex-direction: row;flex-wrap: wrap;padding: auto;flex-basis: content;"> 
+                        <li style="list-style-type: none;/*! background: #f75151; *//*! width: 94%; *//* text-align: left; *//*! border-radius: 12px; *//*! margin: 5px; *//*! width: 43px; *//*! list-style-type: ; */display: flex;flex-wrap: wrap;margin: auto;width: 150px;">
+                            <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                                <img src="../icons/fileExplorer/home.png" style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;">
+                            </ul>
+                            <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                                <img src="../icons/fileExplorer/computer.png" style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;">
+                            </ul>
+                            <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                                <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/download.png">
+                            </ul>
+                            <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                                <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/video.png">
+                            </ul>
+                            <ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                                <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/picture.png">
+                            </ul><ul style="margin: auto;padding: auto;background: #f75151;/*! width: 94%; */text-align: left;border-radius: 12px;margin: 5px;width: 32px;display: flex;padding: 3px;text-align: center;">
+                                <img style="width: 22px;filter: invert(1);opacity: 0.5;margin: auto;" src="../icons/fileExplorer/download.png">
+                            </ul>
+                        </li>
+                    </div>
+                <!---------------------------------------- List 1 START------------------------------------------->
+                <div class="fileManagerTray fileManagerDetails colorDarker"> 
+                    
+                </div>
+                <!---------------------------------------- List 1 END------------------------------------------->
+                <!---------------------------------------- List 2 START------------------------------------------->
+                <div class="fileManagerTray fileManagerDetails colorDarker" style="height: 250px;"> 
+     
+                </div>
+                <!---------------------------------------- List 2 END------------------------------------------->
+            </div>  
+        </div>
+        <!--------------------------------------------- File manager right content START-------------------------------------------------->
+            <div class="fileManagerContainer" style="width: 100%;">
+                <!--------------------------------------------- File top bar START-------------------------------------------------->
+                <div class="fileManagerFlexContainer">
+                    <div class="fileManagerButton color" style="width: 70px;">
+                        <div style="text-wrap: nowrap;" onclick="displayDetails();"><img src="../icons/fileExplorer/backward.png" style="width: 18px;height:18px;filter: invert(1);opacity: 0.5;margin: auto;"></div>
+                    </div>
+                    <div class="fileManagerButton color" style="width: 70px;">
+                        <div id="fileManagerButtonID"><img src="../icons/fileExplorer/forward.png" style="width: 18px;height:18px;filter: invert(1);opacity: 0.5;margin: auto;"></div>
+                    </div>
+                    <div class="fileManagerButton color" style="width: 100%;">
+                        <input type="text" value="C:/windows/file/explorer" style="width: 100%;height: 29px;border-radius: 7px;border-color: white;border-style: solid;margin: auto;margin-inline: 4px;color:gray">
+                    </div>
+                    <div class="fileManagerButton color" style="width: auto;padding-inline: 5px;">
+                        <div id="fileManagerButtonID" style=""><img src="../icons/fileExplorer/settings.png" style="width: 18px;height:18px;filter: invert(1);opacity: 0.5;margin: auto;"></div>
+                    </div>
+                    <div class="fileManagerButton color" style="width: auto;padding-inline: 5px;">
+                        <div id="fileManagerButtonID"><img src="../icons/fileExplorer/order.png" style="width: 18px;height:18px;filter: invert(1);opacity: 0.5;margin: auto;"></div>
+                    </div>
+                    <div class="fileManagerButton color" style="width: 40%;">
+                        <input type="text" style="width: 100%;height: 29px;border-radius: 7px;border-color: white;border-style: solid;margin: auto;margin-inline: 4px;color:gray" placeholder="Search">
+                    </div>
+                </div>
+                <!--------------------------------------------- File top bar END-------------------------------------------------->
+                <!---------------------------------------- File manager main view START------------------------------------------->
+                <div class="fileManagerTrayContainer color">
+                    <div class="fileManagerTray colorDarker" style="">
+                        <div id="appMenuID" class="darkModeText">
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/adobePhotoshop.svg" alt="">
+                                <div>Adobe Photoshop</div>
+                            </div>
+                            <div class="appMenuIconContainer darkModeText">
+                                <img class="appMenuIcon" src="../propIcons/arduino.svg" alt="">
+                                <div>Arduino</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/autodeskMaya.svg" alt="">
+                                <div>Autodesk Maya</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/spotify.svg" alt="">
+                                <div>Spotify</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/unity.svg" alt="">
+                                <div>Unity</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/obs.svg" alt="">
+                                <div>OBS Studio</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/twittex.svg" alt="">
+                                <div>TwitteX</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/telegram.svg" alt="">
+                                <div>Telegram</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/epicGames.svg" alt="">
+                                <div>Epic Games</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/yahoo.svg" alt="">
+                                <div>Yahoo Email</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/yandex.svg" alt="">
+                                <div>Yandex</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/NSOPegasus.png" alt="">
+                                <div>NSO Pegasus Control Center</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/googleFirebase.svg" alt="">
+                                <div>Google Firebase</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/visualStudioCode.svg" alt="">
+                                <div>Visual Studio Code</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/openedFolder.svg" alt="">
+                                <div>Prop folder</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/voiceRecorder.svg" alt="">
+                                <div>Voice Recorder</div>
+                            </div>
+                            <div class="appMenuIconContainer">
+                                <img class="appMenuIcon" src="../propIcons/eclipseIDE.svg" alt="">
+                                <div>Eclipse Index</div>
+                            </div>
+                        </div>
+                        <!-- <img src="test_files/test2.PNG" alt="" style="/* mix-blend-mode: normal; */height: 100%;width: 100%;"> -->
+                    </div>
+                </div>
+                <!---------------------------------------- File manager main view END------------------------------------------->
+            </div>
+            <!--------------------------------------------- File manager right content END-------------------------------------------------->
+           <!--  <div class="sliderContainer" style="margin: 2px;width: 100px;position: absolute;right: 15px;bottom: 0px;">
+                <div style="position: relative;display: flex;width: 100%;height: 18px;background: #b8b8b8;
+                   outline: none;transition: opacity .2s;border-radius: 10px;align-items: center;">
+                   <input type="range" min="1" max="100" value="50" class="slider" id="progressBarID" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)" style="display: flex;/* position: absolute; */">
+                   <span class="sliderTrack color" style="display: flex;/*! width: 98%; */"></span>
+                </div>
+            </div> -->
+        </div>
+        <!-- ----------------------------------------------Windows Content END------------------------------------------------------------------>
+</div>
+<!-- ----------------------------------------------Windows Container END------------------------------------------------------------------>
+        <script>
+            /* ----------------------------------------------Window resizing START------------------------------------------------------------  */
+            let orgWidth=0;     let orgHeight=0;    let mousePosX=0;    let mousePosY=0;    let orgTop=0;   let orgLeft=0;  let source="";
+            let theWindow=document.getElementById("windowContainerID");
+            function resizeWindow(event){
+            source=event.srcElement.id;
+            event.preventDefault();
+            orgWidth=theWindow.offsetWidth;
+            orgHeight=theWindow.offsetHeight;
+            orgTop=theWindow.offsetTop;
+            orgLeft=theWindow.offsetLeft;
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+            mousePosX=event.clientX;
+            mousePosY=event.clientY;
+            console.log(event);
+            }
+            function resize(e){
+                const width = orgWidth+ (e.pageX - mousePosX);
+                const height=orgHeight+ (e.pageY - mousePosY);
+                if(source=="resizerBottomRightID")
+                {
+                    theWindow.style.width = width + 'px';
+                    theWindow.style.height = height + 'px';
+                    }
+                if(source=="resizerTopRightID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.width = orgWidth+(e.pageX - mousePosX) + 'px';
+                    theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                }
+                if(source=="resizerBottomLeftID")
+                {
+                    theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';;
+                    theWindow.style.height = height + 'px';
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                }
+                if(source=="resizerTopLeftID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                    theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';
+                    theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                    console.log(theWindow.style.offsetRight);
+                }
+                if(source=="resizerTopID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                }
+                if(source=="resizerBottomID")
+                {
+                    theWindow.style.height = height + 'px';
+                }
+                if(source=="resizerLeftID")
+                {
+                    theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';;
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                }
+                if(source=="resizerRightID")
+                {
+                    theWindow.style.width = orgWidth+(e.pageX - mousePosX) + 'px';
+                }
+                if(source=="windowContentID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                }
+            }
+            function stopResize() {
+            document.removeEventListener('mousemove', resize)
+            }
+            /* ----------------------------------------------Window resizing END------------------------------------------------------------  */
+        </script>
+    </body>
+</html>

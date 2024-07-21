@@ -1,0 +1,307 @@
+<html lang="en" style="width:100%"><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="test_files/Chart.js"></script>
+    <title>Transfer Dialog</title>
+    <style>
+        body{
+           /*  width: 100%; */
+            width: 648px;
+            max-width: 100%;
+            display: flex;
+            flex-wrap: nowrap;
+            margin: 0px;
+            /* padding: 4px; */
+        }
+        .sliderContainer{
+            text-align: center;
+        }
+        .slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 20px;
+        background: #d3d3d3;
+        outline: none;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+        margin: 10px;
+        border-radius: 10px;
+        }
+        .slider:hover {
+        opacity: 1;
+        }
+         .sliderTrack{
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: rgb(248 125 166 / 44%);;
+        cursor: pointer;
+        position: absolute;
+        border-radius: 10px;
+        margin: 13px;
+        z-index: 0;
+        pointer-events: none;
+        min-width: 10px;
+         }
+        .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: #ff80db00;
+        cursor: pointer;
+        border-radius: 100%;
+        z-index:999;
+        }
+    
+        .slider::-moz-range-thumb {
+        width: 15px;
+        height: 15px;
+        background: #ff80db;
+        cursor: pointer;
+        z-index:999;
+        }
+        .color{
+            background: rgb(255 47 47 / 80%);
+        }
+        .colorDarker{
+            background: rgba(193, 35, 35, 0.8);
+        }
+        .hide{
+            display: none !important;
+        }
+        #windowContainerID{
+            position: absolute;
+            width: 647px;
+            height: 552px;
+            margin: 0px;
+        }
+        .windowContent{
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background: #c6c6c663;
+            border-radius: 14px;
+            /* backdrop-filter: blur(11px); */
+            box-shadow: 0px 0px 20px 6px #00000038;
+            z-index: 999;
+            flex-direction: row;
+            /* padding: 7px; */
+            justify-content: flex-start;
+            min-width: 472px;
+            margin: 10px;
+            position: absolute;
+        }
+        /* .WindowBar{
+            background-color: #f0f0f099;
+            height: 32px;
+            width: 100%;
+        }
+        .WindowContentInside{
+            width: 100%;
+            height: 100%;
+            background:white;
+        } */
+        .buttonsHolder{
+            right: 0px;
+            top: 5px;
+            position: absolute;
+            background: #27272745;
+            width: 81px;
+            height: 13px;
+            margin-inline-end: 5px;
+            border-radius: 18px;
+            padding: 5px;
+            padding-top: 4px;
+        }
+        .windowMainButtons{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .windowTabTitleButton{
+            display: flex;
+            width: auto;
+            flex-wrap: nowrap;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            -webkit-text-stroke-color: #dadada;
+            max-width: 170px;
+        }
+        .windowTabTitleText{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            margin: auto;
+            position: absolute;
+        }
+        .windowButton{
+            margin-inline-end: 5px;
+            width: 4px;
+            height: 4px;
+            aspect-ratio: 1/1;
+            border-radius: 100%;
+            padding: 5px;
+            display: block;
+            align-items: center;
+            justify-content: center;
+            /* position: absolute;*/
+        }
+        .windowButton:hover{
+            scale:1.2;
+        }
+        #detailsID{
+            width: auto;
+        }
+        #resizersBoxID{
+            position: absolute;
+            display: flex;
+            width: calc(100% + 20px);
+            height: calc(100% + 26px);
+        }
+        .resizer-horizontal{
+            position: absolute;
+            width: 30px;
+            height: calc(100% - 80px);
+            right: 0px;
+            top: 40px;
+        }
+        .resizer-vertical{
+            position: absolute;
+            width: calc(100% - 100px);
+            height: 30px;
+            left: 50px;
+            transition: cursor 2s;
+        }
+        .resizer-corner{
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            transition: cursor 2s;
+        }
+</style></head>
+<body>
+    <!-- ----------------------------------------------Window Container START------------------------------------------------------------------>
+    <div id="windowContainerID">
+        <!-- ----------------------------------------------Resizers START------------------------------------------------------------------>
+        <div id="resizersBoxID">
+            <div class="resizer-corner" id="resizerTopLeftID" style="left: 0px;top: 0px;cursor: nw-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-vertical" id="resizerTopID"  style="top: 0px;cursor: n-resize;" onmousedown="resizeWindow(event)"></div>       
+            <div class="resizer-vertical" id="resizerBottomID" style="bottom: 4px;cursor: s-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-corner" id="resizerTopRightID" style="right: 0px;top: 0px;cursor: ne-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-horizontal" id="resizerRightID" style="right: 0px;cursor: e-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-horizontal" id="resizerLeftID" style="left: 0px;cursor: w-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-corner" id="resizerBottomLeftID" style="left: 0px;bottom: 4px;cursor: sw-resize;" onmousedown="resizeWindow(event)"></div>
+            <div class="resizer-corner" id="resizerBottomRightID" style="right: 0px;bottom: 4px;cursor: se-resize;"  onmousedown="resizeWindow(event)"></div>
+        </div>
+        <!-- ----------------------------------------------Resizers END------------------------------------------------------------------>
+         <!-- ----------------------------------------------Windows Content START------------------------------------------------------------------>
+        <div class="windowContent" id="windowContentID" onmousedown="resizeWindow(event)" style="">
+            <!-- ----------------------------------------------Top Bar START------------------------------------------------------------------>
+            <div class="WindowBar">
+                <div class="buttonsHolder windowTabTitleButton" onclick="" style="left: 10px;">
+                    <div class="windowTabTitleText" style="">This is Title</div>
+                </div>
+                <div class="buttonsHolder windowTabTitleButton" onclick="" style="left: 196px;">
+                    <div class="windowTabTitleText" style="">This is Title 2</div>
+                </div>
+                <!-- ----------------------------------------------Window main buttons START------------------------------------------------------------------>
+                <div class="buttonsHolder windowMainButtons" onclick="" style="">
+                    <div class="windowButton" onclick="" style="margin: auto;background: #c3c3c3;"></div>
+                    <div class="windowButton" onclick="" style="margin: auto;background: #fff49b;"></div>
+                    <div class="windowButton" onclick="" style="margin: auto;background: #cbff9b;"></div>
+                    <div class="windowButton" onclick="" style="margin: auto;background: #ff9b9b;"></div>  
+                </div>
+                <!-- ----------------------------------------------Window main buttons END------------------------------------------------------------------>
+            </div>
+            <!-- ----------------------------------------------Top Bar END------------------------------------------------------------------>
+        </div>
+        <!-- ----------------------------------------------Window Content END------------------------------------------------------------------>
+    </div>
+    <!-- ----------------------------------------------Window Container END------------------------------------------------------------------>
+        <script>
+        /* ----------------------------------------------Window resizing START------------------------------------------------------------  */
+           let orgWidth=0;  let orgHeight=0;    let mousePosX=0;    let mousePosY=0;    let orgTop=0;   let orgLeft=0;  let source="";
+           let theWindow=document.getElementById("windowContainerID");
+           function resizeWindow(event)
+           {
+            source=event.srcElement.id;
+            event.preventDefault();
+            orgWidth=theWindow.offsetWidth;
+            orgHeight=theWindow.offsetHeight;
+            orgTop=theWindow.offsetTop;
+            orgLeft=theWindow.offsetLeft;
+            document.addEventListener('mousemove', resize);
+            document.addEventListener('mouseup', stopResize);
+            mousePosX=event.clientX;
+            mousePosY=event.clientY;
+            console.log(event);
+           }
+           function resize(e)
+           {
+                const width = orgWidth+ (e.pageX - mousePosX);
+                const height=orgHeight+ (e.pageY - mousePosY);
+                if(source=="resizerBottomRightID")
+                { 
+                    theWindow.style.width = width + 'px'; 
+                    theWindow.style.height = height + 'px';
+                }
+                if(source=="resizerTopRightID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.width = orgWidth+(e.pageX - mousePosX) + 'px';
+                    theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                }
+                if(source=="resizerBottomLeftID")
+                {
+                    theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';;
+                    theWindow.style.height = height + 'px';
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                }
+                if(source=="resizerTopLeftID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                    theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';
+                    theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                    console.log(theWindow.style.offsetRight);
+                }
+                if(source=="resizerTopID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                }
+                if(source=="resizerBottomID")
+                {
+                    theWindow.style.height = height + 'px';
+                }
+                if(source=="resizerLeftID")
+                {
+                    theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';;
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                }
+                if(source=="resizerRightID")
+                {
+                    theWindow.style.width = orgWidth+(e.pageX - mousePosX) + 'px';
+                }
+                if(source=="windowContentID")
+                {
+                    theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                    theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                }
+            }
+            function stopResize() {
+            document.removeEventListener('mousemove', resize)
+            }
+            /* ----------------------------------------------Window resizing END------------------------------------------------------------  */
+        </script>
+  
+    </body>
+</html>
