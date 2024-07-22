@@ -1,5 +1,5 @@
-Linux distro, that runs web apps.
-It's not Microsoft, it's BigHard 
+Project for personal linux distro
+
 
 **Apps:** <br>
 1. Elve Desktop enviroment for Windows, Linux, can be transfered to MacOS also with some effort
