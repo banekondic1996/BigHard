@@ -1,8 +1,9 @@
-Linux distro, that runs web apps.
-It's not Microsoft, it's BigHard 
+# <img src="elvelogo.png" height="48px" width="auto"> Elve desktop
+**Elve Desktop enviroment** for Windows, Linux, can be transfered to MacOS also with some effort</br></br>
+Who the f' is cloning this? I haven't put all the files, like package.json back then... Now i have </br></br>
+**Important!** You have to download nw.js SDK and put it into "/node_modules/nw", otherwise app will crash trying to open dev tools
 
-**Apps:** <br>
-1. Elve Desktop enviroment for Windows, Linux, can be transfered to MacOS also with some effort
+
    
   Control center:
   ![image](https://github.com/user-attachments/assets/09bc74ed-b4af-4cf3-abcd-929e6b852991)
