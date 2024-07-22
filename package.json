@@ -1,7 +1,7 @@
 {
-  "name": "helloworld",
-  "main": "src/index.html",
-  "description": "A demo app to show how NW.js works",
+  "name": "Elve desktop",
+  "main": "toBeNamedDesktop/main.html",
+  "description": "Elve desktop",
   "scripts": {
     "start": "node index.js",
     "start-nw": "nw src/ --disable-gpu-compositing --force-cpu-draw",
