@@ -2,8 +2,8 @@ Project for personal linux distro, all files are in dev branch.
 This is not ready yet....
 
 
-**Apps:** <br>
-1. Elve Desktop enviroment for Windows, Linux, can be transfered to MacOS also with some effort
+
+**Elve - Desktop enviroment** for Windows, Linux, can be transfered to MacOS also with some effort
    
   Control center:
   ![image](https://github.com/user-attachments/assets/09bc74ed-b4af-4cf3-abcd-929e6b852991)
