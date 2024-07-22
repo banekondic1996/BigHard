@@ -1,0 +1,25 @@
+{
+  "name": "helloworld",
+  "main": "src/index.html",
+  "description": "A demo app to show how NW.js works",
+  "scripts": {
+    "start": "node index.js",
+    "start-nw": "nw src/ --disable-gpu-compositing --force-cpu-draw",
+    "build-nw": "nwbuild --platform win --arch x64 --outDir dist/src --glob=false src "
+  },
+  "dependencies": {
+    "@josephuspaye/list-open-windows": "^0.1.2",
+    "easy-volume": "^1.1.0",
+    "electron-bottom-window": "^1.0.3",
+    "fsprogress": "^1.0.0",
+    "hmc-win32": "^1.4.92",
+    "icon-extractor": "^1.0.3",
+    "node-powershell": "^5.0.1",
+    "nw": "^0.83.0",
+    "sortablejs": "^1.15.2"
+  },
+  "devDependencies": {
+    "nw-builder": "^4.5.3",
+    "nw-dev": "^3.0.1"
+  }
+}
