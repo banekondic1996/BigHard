@@ -1,4 +1,5 @@
-Project for personal linux distro
+Project for personal linux distro, all files are in dev branch. 
+This is not ready yet....
 
 
 **Apps:** <br>
