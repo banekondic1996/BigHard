@@ -1,6 +1,6 @@
 # <img src="elvelogo.png" height="48px" width="auto"> Elve desktop
-**Elve - Desktop enviroment** for Windows and Linux (NOT VIBE CODED!..Well not yet..)</br></br>
-Works with https://github.com/banekondic1996/glassd-compositor
+**Elve - Desktop enviroment** for Windows and Linux (NOT VIBE CODED!..Well not yet..)</br>
+Works with https://github.com/banekondic1996/glassd-compositor</br>
 **Why I'm i making this?** </br>
 Well project started the day i switched to Windows 11 and it was missing small taskbar option, </br>
 then i used StartItAllBack, but Microhard decided to ban that app and many other things related to updates, </br>
