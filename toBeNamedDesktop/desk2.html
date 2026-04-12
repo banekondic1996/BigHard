@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Desktop</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    overflow: hidden;
+    width: 100vw; height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    /* wallpaper set via JS from CFG */
+}
+
+#desktopGrid {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw; height: 100vh;
+}
+
+#select {
+    display: none;
+    background: rgba(74,158,255,0.2);
+    border: 1px solid rgba(74,158,255,0.8);
+    position: fixed;
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 5000;
+}
+
+/* ── Loading cursor ─────────────────────────────────────── */
+body.launching * { cursor: progress !important; }
+
+/* ── Icon ─────────────────────────────────────────────────── */
+/*
+  Structure:
+    .desktopIcon          — transparent absolute box (the grid cell hit area)
+      .iconInner          — visible box: hover/select highlight + padding
+        .iconImg          — image / emoji
+        .iconLabel        — filename text (always inside the inner box)
+*/
+.desktopIcon {
+    position: absolute;
+    cursor: default;
+    user-select: none;
+    z-index: 10;
+    /* transparent — no background here */
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+/* The visible inner box — sizes itself to content, centred in the cell */
+.desktopIcon .iconInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 5px 4px 5px;
+    border-radius: 8px;
+    /* width matches cell so label wraps correctly */
+    width: 100%;
+    transition: background 0.1s;
+}
+
+.desktopIcon:hover .iconInner { background: rgba(255,255,255,0.13); }
+.desktopIcon.selected .iconInner { background: rgba(74,158,255,0.38); }
+.desktopIcon.dragging { opacity: 0.25; z-index: 4999; }
+
+.desktopIcon .iconImg {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    overflow: hidden;
+    pointer-events: none;
+}
+.desktopIcon .iconImg img {
+    object-fit: cover;
+    display: block;
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+}
+.desktopIcon .iconEmoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    line-height: 1;
+}
+
+/* Label — always visible inside the highlight box */
+.desktopIcon .iconLabel {
+    margin-top: 4px;
+    color: white;
+    text-align: center;
+    text-shadow: 0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.8);
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    width: 100%;
+    pointer-events: none;
+    /* clamp to 2 lines when not selected */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* selected: show full label — no overflow trickery needed, it's inside the box */
+.desktopIcon.selected .iconLabel {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+}
+
+/* ghost */
+.gridGhost {
+    position: absolute;
+    border: 2px dashed rgba(74,158,255,0.75);
+    border-radius: 8px;
+    background: rgba(74,158,255,0.1);
+    pointer-events: none;
+    display: none;
+    z-index: 99;
+}
+
+/* Trash icon on the grid always appears "real" */
+.desktopIcon[data-trash="1"] .iconEmoji { font-size: inherit; }
+
+/* ── Context Menus ────────────────────────────────────────── */
+.ctxMenu {
+    display: none;
+    position: fixed;
+    background: rgba(20,20,22,0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 4px 0;
+    min-width: 215px;
+    z-index: 10000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+}
+.ctxMenu.show { display: block; }
+.ctxItem {
+    padding: 8px 13px;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    position: relative;
+    border-radius: 6px;
+    margin: 0 4px;
+    white-space: nowrap;
+}
+.ctxItem:hover { background: rgba(255,255,255,0.1); }
+.ctxItem.sep { height:1px; background:rgba(255,255,255,0.1); margin:3px 10px; padding:0; cursor:default; border-radius:0; }
+.ctxItem.sep:hover { background:rgba(255,255,255,0.1); }
+.ctxItem .arr { margin-left:auto; opacity:0.4; font-size:10px; }
+
+.subMenu {
+    display: none;
+    position: absolute;
+    left: calc(100% + 4px);
+    top: -4px;
+    background: rgba(20,20,22,0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 4px 0;
+    min-width: 185px;
+    z-index: 10001;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+}
+.ctxItem:hover > .subMenu { display: block; }
+
+.sliderRow { padding:6px 13px 10px; margin:0 4px; cursor:default; }
+.sliderRow label { display:block; color:rgba(255,255,255,0.55); font-size:11.5px; margin-bottom:5px; }
+.sliderRow input[type=range] { width:100%; accent-color:#4a9eff; cursor:pointer; }
+
+/* ── Dialogs ──────────────────────────────────────────────── */
+.overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 20000;
+    align-items: center; justify-content: center;
+}
+.overlay.show { display: flex; }
+.dialog {
+    background: rgba(22,22,24,0.98);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 14px;
+    width: 480px;
+    max-height: 86vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.85);
+    color: white; overflow: hidden;
+}
+.dlgHead {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.09);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.dlgHead h2 { font-size: 14px; font-weight: 600; }
+.dlgClose {
+    width: 24px; height: 24px;
+    background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+    color: rgba(255,255,255,0.8); cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s;
+}
+.dlgClose:hover { background: rgba(220,60,60,0.5); color: white; }
+.dlgTabs {
+    display: flex; gap: 2px; padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.09); flex-shrink: 0;
+}
+.dlgTab {
+    padding: 9px 14px; font-size: 12.5px;
+    color: rgba(255,255,255,0.45); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.13s;
+}
+.dlgTab.active { color: #4a9eff; border-bottom-color: #4a9eff; }
+.dlgBody { flex: 1; overflow-y: auto; padding: 16px; }
+.dlgBody::-webkit-scrollbar { width: 4px; }
+.dlgBody::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 2px; }
+.tabPanel { display: none; }
+.tabPanel.active { display: block; }
+
+.propRow {
+    display: flex; gap: 10px; padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 12.5px; align-items: flex-start;
+}
+.propRow:last-child { border: none; }
+.propKey { color: rgba(255,255,255,0.4); min-width: 85px; flex-shrink: 0; }
+.propVal { color: rgba(255,255,255,0.88); word-break: break-all; }
+.propCheck {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 0 2px; font-size: 12.5px;
+    color: rgba(255,255,255,0.75); cursor: pointer;
+}
+.propCheck input { accent-color: #4a9eff; width: 14px; height: 14px; cursor: pointer; }
+.permSection { margin-bottom: 16px; }
+.permSection h3 { font-size: 10.5px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.permRow { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12.5px; }
+.permRow > label { min-width: 52px; color: rgba(255,255,255,0.5); }
+.permChecks { display: flex; gap: 14px; }
+.permChecks label { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.82); cursor: pointer; }
+.permChecks input { accent-color: #4a9eff; }
+.txtInput { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 5px 10px; font-size: 12.5px; flex: 1; }
+.txtInput:focus { outline: none; border-color: #4a9eff; }
+.dlgFoot { display: flex; justify-content: flex-end; gap: 8px; padding: 11px 16px; border-top: 1px solid rgba(255,255,255,0.09); flex-shrink: 0; }
+.btn { padding: 6px 16px; border-radius: 7px; border: none; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all 0.13s; }
+.btn.cancel { background: rgba(255,255,255,0.09); color: white; }
+.btn.cancel:hover { background: rgba(255,255,255,0.16); }
+.btn.ok { background: #4a9eff; color: white; }
+.btn.ok:hover { background: #3a8eee; }
+
+/* Open With */
+.owList { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow-y: auto; }
+.owItem { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 12.5px; color: rgba(255,255,255,0.85); border: 1px solid transparent; transition: all 0.11s; }
+.owItem:hover { background: rgba(255,255,255,0.07); }
+.owItem.active { background: rgba(74,158,255,0.18); border-color: rgba(74,158,255,0.45); }
+.owIcon { font-size: 20px; }
+.owName { font-weight: 500; }
+.owCmd { font-size: 10.5px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+.owSep { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }
+.owHint { font-size: 11.5px; color: rgba(255,255,255,0.35); margin-bottom: 5px; }
+.owSaveRow { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.6); cursor: pointer; }
+.owSaveRow input { accent-color: #4a9eff; }
+.customCmdRow { display: flex; gap: 8px; margin-top: 8px; }
+.customCmdRow input { flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 6px 10px; font-size: 12.5px; }
+.customCmdRow input:focus { outline: none; border-color: #4a9eff; }
+
+/* Emoji picker */
+.emojiBtn {
+    width: 36px; height: 36px; font-size: 20px;
+    background: rgba(255,255,255,0.06); border: 1px solid transparent;
+    border-radius: 6px; cursor: pointer; display:flex; align-items:center; justify-content:center;
+    transition: all 0.1s;
+}
+.emojiBtn:hover { background: rgba(255,255,255,0.14); }
+.emojiBtn.active { border-color: #4a9eff; background: rgba(74,158,255,0.2); }
+.wpGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.wpThumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
+.wpThumb:hover { border-color: rgba(74,158,255,0.5); }
+.wpThumb.active { border-color: #4a9eff; }
+.wpCustomRow { display: flex; gap: 8px; margin-top: 4px; align-items: center; }
+.wpCustomRow input { flex:1; }
+.wpBrowseBtn { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 6px 12px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+.wpBrowseBtn:hover { background: rgba(255,255,255,0.16); }
+</style>
+</head>
+<body>
+
+<div id="select"></div>
+<div id="desktopGrid"><div class="gridGhost" id="gridGhost"></div></div>
+
+<!-- Desktop right-click -->
+<div class="ctxMenu" id="menuDesktop">
+    <div class="ctxItem" style="position:relative">📁 Create New <span class="arr">›</span>
+        <div class="subMenu">
+            <div class="ctxItem" onclick="createNew('folder')">📁 Folder</div>
+            <div class="ctxItem" onclick="createNew('empty')">📄 Empty File</div>
+            <div class="ctxItem" onclick="createNew('text')">📝 Text File (.txt)</div>
+        </div>
+    </div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="pasteIcons()">📋 Paste</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" style="position:relative">🗂️ Sort Icons <span class="arr">›</span>
+        <div class="subMenu">
+            <div class="ctxItem" onclick="sortIcons('name')">🔤 By Name</div>
+            <div class="ctxItem" onclick="sortIcons('size')">📦 By Size</div>
+            <div class="ctxItem" onclick="sortIcons('date')">📅 By Date Modified</div>
+            <div class="ctxItem" onclick="sortIcons('none')">🔀 Unsorted</div>
+            <div class="ctxItem sep"></div>
+            <div class="ctxItem" onclick="toggleFoldFirst()" id="itemFoldFirst">📁 Folders First</div>
+        </div>
+    </div>
+    <div class="sliderRow">
+        <label>Cell size: <b id="szLabel">90</b>px</label>
+        <input type="range" id="szSlider" min="60" max="180" value="90" oninput="onSzSlide(this.value)">
+    </div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="showWallpaper()">🖼️ Change Wallpaper</div>
+    <div class="ctxItem" onclick="refresh()">🔄 Refresh</div>
+</div>
+
+<!-- Icon right-click -->
+<div class="ctxMenu" id="menuIcon">
+    <div class="ctxItem" onclick="openSelected()">📂 Open</div>
+    <div class="ctxItem" onclick="showOpenWith()">↗️ Open With…</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="copyIcons()">📋 Copy</div>
+    <div class="ctxItem" onclick="cutIcons()">✂️ Cut</div>
+    <div class="ctxItem" onclick="deleteIcons()">🗑️ Delete</div>
+    <div class="ctxItem" onclick="renameIcon()">✏️ Rename</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="compressIcons()">📦 Compress</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="showProperties()">ℹ️ Properties</div>
+</div>
+
+<!-- Trash right-click -->
+<div class="ctxMenu" id="menuTrash">
+    <div class="ctxItem" onclick="openTrash()">📂 Open Trash</div>
+    <div class="ctxItem" onclick="emptyTrash()">🗑️ Empty Trash</div>
+</div>
+
+<!-- Properties -->
+<div class="overlay" id="ovProps">
+<div class="dialog">
+    <div class="dlgHead"><h2 id="propsTitle">Properties</h2><button class="dlgClose" onclick="closeOv('ovProps')">✕</button></div>
+    <div class="dlgTabs">
+        <div class="dlgTab active" data-tab="details" onclick="switchTab(this)">Details</div>
+        <div class="dlgTab" data-tab="perms" onclick="switchTab(this)">Permissions</div>
+        <div class="dlgTab" data-tab="icon" onclick="switchTab(this)">Icon</div>
+    </div>
+    <div class="dlgBody">
+        <div class="tabPanel active" id="tab-details">
+            <div class="propRow"><span class="propKey">Name</span><span class="propVal" id="pi-name"></span></div>
+            <div class="propRow"><span class="propKey">Type</span><span class="propVal" id="pi-type"></span></div>
+            <div class="propRow"><span class="propKey">Size</span><span class="propVal" id="pi-size"></span></div>
+            <div class="propRow"><span class="propKey">Location</span><span class="propVal" id="pi-loc"></span></div>
+            <div class="propRow"><span class="propKey">Created</span><span class="propVal" id="pi-cre"></span></div>
+            <div class="propRow"><span class="propKey">Modified</span><span class="propVal" id="pi-mod"></span></div>
+            <div class="propRow"><span class="propKey">Accessed</span><span class="propVal" id="pi-acc"></span></div>
+            <!-- Image metadata — shown only for images -->
+            <div id="pi-img-rows" style="display:none">
+                <div class="propRow"><span class="propKey">Dimensions</span><span class="propVal" id="pi-dimensions"></span></div>
+                <div class="propRow"><span class="propKey">Camera</span><span class="propVal" id="pi-camera"></span></div>
+                <div class="propRow"><span class="propKey">Focal len.</span><span class="propVal" id="pi-focal"></span></div>
+                <div class="propRow"><span class="propKey">Aperture</span><span class="propVal" id="pi-aperture"></span></div>
+                <div class="propRow"><span class="propKey">Shutter</span><span class="propVal" id="pi-shutter"></span></div>
+                <div class="propRow"><span class="propKey">ISO</span><span class="propVal" id="pi-iso"></span></div>
+                <div class="propRow"><span class="propKey">Date taken</span><span class="propVal" id="pi-datetaken"></span></div>
+                <div class="propRow"><span class="propKey">GPS</span><span class="propVal" id="pi-gps"></span></div>
+            </div>
+            <label class="propCheck"><input type="checkbox" id="pi-hidden"> Hide (add "." prefix)</label>
+        </div>
+        <div class="tabPanel" id="tab-perms">
+            <div class="permSection">
+                <h3>Owner &amp; Group</h3>
+                <div class="permRow"><label>Owner</label><input class="txtInput" id="pm-owner" type="text"></div>
+                <div class="permRow"><label>Group</label><input class="txtInput" id="pm-group" type="text"></div>
+            </div>
+            <div class="permSection">
+                <h3>Access Rights</h3>
+                <div class="permRow"><label>Owner</label><div class="permChecks"><label><input type="checkbox" id="p-ur"> Read</label><label><input type="checkbox" id="p-uw"> Write</label><label><input type="checkbox" id="p-ux"> Exec</label></div></div>
+                <div class="permRow"><label>Group</label><div class="permChecks"><label><input type="checkbox" id="p-gr"> Read</label><label><input type="checkbox" id="p-gw"> Write</label><label><input type="checkbox" id="p-gx"> Exec</label></div></div>
+                <div class="permRow"><label>Others</label><div class="permChecks"><label><input type="checkbox" id="p-or"> Read</label><label><input type="checkbox" id="p-ow"> Write</label><label><input type="checkbox" id="p-ox"> Exec</label></div></div>
+            </div>
+        </div>
+        <div class="tabPanel" id="tab-icon">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+                <div id="iconPreviewWrap" style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.07);border-radius:10px;font-size:48px;flex-shrink:0"></div>
+                <div style="flex:1">
+                    <div style="font-size:12.5px;color:rgba(255,255,255,0.5);margin-bottom:8px">Current icon</div>
+                    <button class="wpBrowseBtn" style="margin-bottom:6px" onclick="browseCustomIcon()">Browse image…</button>
+                    <button class="wpBrowseBtn" onclick="resetCustomIcon()">Reset to default</button>
+                </div>
+            </div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.35);margin-bottom:6px">Or pick an emoji</div>
+            <div id="emojiPicker" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto"></div>
+            <div style="margin-top:10px">
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.35);margin-bottom:5px">Custom image path</div>
+                <input class="txtInput" type="text" id="iconCustomPath" style="width:100%" placeholder="/path/to/image.png">
+            </div>
+        </div>
+    </div>
+    <div class="dlgFoot">
+        <button class="btn cancel" onclick="closeOv('ovProps')">Cancel</button>
+        <button class="btn ok" onclick="applyProps()">Apply</button>
+    </div>
+</div>
+</div>
+
+<!-- Open With -->
+<div class="overlay" id="ovOpenWith">
+<div class="dialog" style="width:410px">
+    <div class="dlgHead"><h2>Open With</h2><button class="dlgClose" onclick="closeOv('ovOpenWith')">✕</button></div>
+    <div class="dlgBody">
+        <div class="owList" id="owList"></div>
+        <div class="owSep"></div>
+        <div class="owHint">Custom command</div>
+        <div class="customCmdRow"><input type="text" id="owCustom" placeholder="e.g. mpv, subl, xterm -e nano …"></div>
+        <label class="owSaveRow"><input type="checkbox" id="owSave"> Remember for this file type</label>
+    </div>
+    <div class="dlgFoot">
+        <button class="btn cancel" onclick="closeOv('ovOpenWith')">Cancel</button>
+        <button class="btn ok" onclick="applyOpenWith()">Open</button>
+    </div>
+</div>
+</div>
+
+<!-- Wallpaper picker -->
+<div class="overlay" id="ovWallpaper">
+<div class="dialog" style="width:500px">
+    <div class="dlgHead"><h2>Change Wallpaper</h2><button class="dlgClose" onclick="closeOv('ovWallpaper')">✕</button></div>
+    <div class="dlgBody">
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:10px">Current wallpaper folder images</div>
+        <div class="wpGrid" id="wpGrid"></div>
+        <div class="owSep"></div>
+        <div class="owHint">Or enter a full path / URL</div>
+        <div class="wpCustomRow">
+            <input class="txtInput" type="text" id="wpCustom" placeholder="/home/user/Pictures/wall.jpg">
+            <button class="wpBrowseBtn" onclick="browseWallpaper()">Browse…</button>
+        </div>
+    </div>
+    <div class="dlgFoot">
+        <button class="btn cancel" onclick="closeOv('ovWallpaper')">Cancel</button>
+        <button class="btn ok" onclick="applyWallpaper()">Apply</button>
+    </div>
+</div>
+</div>
+
+<script>
+'use strict';
+const fs   = require('fs');
+const path = require('path');
+const { exec, execSync } = require('child_process');
+
+// ─────────────────────────────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────────────────────────────
+const DESKTOP   = path.join(process.env.HOME, 'Desktop');
+const DATA_FILE = path.join(nw.App.dataPath, 'deskv4.json');
+const THUMB_DIR = path.join(nw.App.dataPath, 'thumbs');
+const IMG_EXTS  = new Set(['.png','.jpg','.jpeg','.gif','.webp','.bmp','.svg']);
+const TRASH_PATH = path.join(process.env.HOME, '.local/share/Trash');
+
+if (!fs.existsSync(THUMB_DIR)) fs.mkdirSync(THUMB_DIR, { recursive:true });
+
+let CFG = {
+    cellSize: 90,
+    sort: 'none',       // 'none'|'name'|'size'|'date'
+    foldersFirst: false,
+    icons: [],          // [{path,col,row}]  — positions when sort='none'
+    openWithMap: {},    // ext -> cmd
+    wallpaper: '',      // path or url
+};
+
+function loadCFG() {
+    try { Object.assign(CFG, JSON.parse(fs.readFileSync(DATA_FILE,'utf8'))); } catch {}
+}
+function saveCFG() {
+    // Only save positions when sort is 'none' (sorted layouts are regenerated)
+    if (CFG.sort === 'none') {
+        CFG.icons = Array.from(document.querySelectorAll('.desktopIcon')).map(el => ({
+            path: el.dataset.path, col: +el.dataset.col, row: +el.dataset.row
+        }));
+    }
+    try { fs.writeFileSync(DATA_FILE, JSON.stringify(CFG,null,2),'utf8'); } catch(e) { console.error(e); }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  WALLPAPER
+// ─────────────────────────────────────────────────────────────────────
+function applyWallpaperCSS(wp) {
+    if (!wp) { document.body.style.background = '#1a1a2e'; return; }
+    // Detect if it's a path or already a data/http url
+    const url = wp.startsWith('http')||wp.startsWith('data:') ? wp : `file://${wp}`;
+    document.body.style.background = `url('${url}') no-repeat center center fixed`;
+    document.body.style.backgroundSize = 'cover';
+}
+
+function showWallpaper() {
+    hideCtx();
+    // Try to find images in common wallpaper dirs
+    const dirs = [
+        '/usr/share/wallpapers',
+        '/usr/share/backgrounds',
+        path.join(process.env.HOME, 'Pictures'),
+        path.join(process.env.HOME, '.local/share/wallpapers'),
+    ];
+    const wpGrid = document.getElementById('wpGrid');
+    wpGrid.innerHTML = '';
+    const found = [];
+    dirs.forEach(dir => {
+        if (!fs.existsSync(dir)) return;
+        try {
+            const items = fs.readdirSync(dir).slice(0,30);
+            items.forEach(f => {
+                const fp = path.join(dir, f);
+                if (IMG_EXTS.has(path.extname(f).toLowerCase())) found.push(fp);
+                // Also recurse one level for wallpaper packs
+                try {
+                    const st = fs.statSync(fp);
+                    if (st.isDirectory()) {
+                        fs.readdirSync(fp).slice(0,10).forEach(ff => {
+                            const ffp = path.join(fp,ff);
+                            if (IMG_EXTS.has(path.extname(ff).toLowerCase())) found.push(ffp);
+                        });
+                    }
+                } catch {}
+            });
+        } catch {}
+    });
+    found.slice(0,18).forEach(fp => {
+        const img = document.createElement('img');
+        img.className = 'wpThumb' + (CFG.wallpaper===fp?' active':'');
+        img.src = `file://${fp}`;
+        img.loading = 'lazy';
+        img.addEventListener('click', () => {
+            document.querySelectorAll('.wpThumb').forEach(t=>t.classList.remove('active'));
+            img.classList.add('active');
+            document.getElementById('wpCustom').value = fp;
+        });
+        wpGrid.appendChild(img);
+    });
+    document.getElementById('wpCustom').value = CFG.wallpaper||'';
+    document.getElementById('ovWallpaper').classList.add('show');
+}
+
+function browseWallpaper() {
+    // Use zenity or kdialog to pick a file
+    exec(`zenity --file-selection --file-filter="Images | *.png *.jpg *.jpeg *.webp *.bmp" 2>/dev/null || kdialog --getopenfilename ~ "*.png *.jpg *.jpeg *.webp" 2>/dev/null`, (err, stdout) => {
+        const p = stdout.trim();
+        if (p) document.getElementById('wpCustom').value = p;
+    });
+}
+
+function applyWallpaper() {
+    const wp = document.getElementById('wpCustom').value.trim();
+    CFG.wallpaper = wp;
+    saveCFG();
+    applyWallpaperCSS(wp);
+    closeOv('ovWallpaper');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  GRID MATH
+//  Icons fill edge-to-edge: first col starts at x=0, last col ends at screen edge.
+//  Gap = (screenW - COLS*cellSize) / (COLS-1)   [between icons, not padding]
+//  But simpler & accurate: icon occupies cellSize px, gap = computed spacing
+//  We use: itemW = cellSize, total = COLS*cellSize + (COLS-1)*gap = screenW
+//  => gap = (screenW - COLS*cellSize) / (COLS-1)
+// ─────────────────────────────────────────────────────────────────────
+const EDGE_PAD = 8; // minimum edge padding px
+let COLS=1, ROWS=1, GAP_X=12, GAP_Y=12;
+
+function calcGrid() {
+    const cs = CFG.cellSize;
+    // How many fit with at least a minimum gap
+    const minGap = Math.max(10, Math.round(cs * 0.15));
+    COLS = Math.max(1, Math.floor((window.innerWidth  - EDGE_PAD*2 + minGap) / (cs + minGap)));
+    ROWS = Math.max(1, Math.floor((window.innerHeight - EDGE_PAD*2 + minGap) / (cs + minGap)));
+    // Recalculate actual gap so icons fill edge-to-edge
+    GAP_X = COLS > 1 ? (window.innerWidth  - EDGE_PAD*2 - COLS*cs) / (COLS-1) : 0;
+    GAP_Y = ROWS > 1 ? (window.innerHeight - EDGE_PAD*2 - ROWS*cs) / (ROWS-1) : 0;
+    // Clamp — don't make gap enormous if few icons
+    GAP_X = Math.min(GAP_X, cs * 0.5);
+    GAP_Y = Math.min(GAP_Y, cs * 0.5);
+}
+
+function cellPx(col, row) {
+    return {
+        x: EDGE_PAD + col * (CFG.cellSize + GAP_X),
+        y: EDGE_PAD + row * (CFG.cellSize + GAP_Y),
+    };
+}
+
+// Snap when icon centre crosses 50% into the next cell
+function pxToCell(px, py) {
+    const stepX = CFG.cellSize + GAP_X;
+    const stepY = CFG.cellSize + GAP_Y;
+    return {
+        col: Math.max(0, Math.min(COLS-1, Math.floor((px - EDGE_PAD) / stepX))),
+        row: Math.max(0, Math.min(ROWS-1, Math.floor((py - EDGE_PAD) / stepY))),
+    };
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  CELL MAP
+// ─────────────────────────────────────────────────────────────────────
+const cellMap = {};
+const ck = (c,r) => `${c},${r}`;
+
+function nextFree(pref) {
+    if (pref) {
+        const k = ck(pref.col, pref.row);
+        if (pref.col < COLS && pref.row < ROWS && !cellMap[k]) return pref;
+    }
+    for (let r=0; r<ROWS; r++)
+        for (let c=0; c<COLS; c++)
+            if (!cellMap[ck(c,r)]) return { col:c, row:r };
+    return { col:0, row:0 };
+}
+
+function snapIcon(el, pref) {
+    const { col, row } = nextFree(pref);
+    const { x, y } = cellPx(col, row);
+    const cs = CFG.cellSize;
+    el.style.left   = x+'px';
+    el.style.top    = y+'px';
+    el.style.width  = cs+'px';
+    el.style.height = cs+'px';
+    el.dataset.col  = col;
+    el.dataset.row  = row;
+    cellMap[ck(col,row)] = el;
+    resizeContents(el);
+}
+
+function resizeContents(el) {
+    const cs    = CFG.cellSize;
+    const imgSz = Math.round(cs * 0.50);
+    const wrap  = el.querySelector('.iconImg');
+    if (wrap)  { wrap.style.width=imgSz+'px'; wrap.style.height=imgSz+'px'; }
+    const emo   = el.querySelector('.iconEmoji');
+    if (emo)   emo.style.fontSize = Math.round(imgSz*0.70)+'px';
+    const lbl   = el.querySelector('.iconLabel');
+    if (lbl) {
+        lbl.style.fontSize = Math.max(9, Math.round(cs * 0.122))+'px';
+        lbl.style.width    = (cs - 8)+'px';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  THUMBNAILS
+// ─────────────────────────────────────────────────────────────────────
+function thumbPath(fp) {
+    let h=5381;
+    for (let i=0;i<fp.length;i++) h=(h*33)^fp.charCodeAt(i);
+    return path.join(THUMB_DIR,(h>>>0)+'.jpg');
+}
+function getThumbnail(fp, cb) {
+    const tp = thumbPath(fp);
+    if (fs.existsSync(tp)) { cb(tp); return; }
+    const q=`"${fp}"`, qt=`"${tp}"`;
+    exec(`convert ${q}[0] -thumbnail 160x160^ -gravity center -extent 160x160 ${qt} 2>/dev/null`,
+        err => {
+            if (!err && fs.existsSync(tp)) { cb(tp); return; }
+            exec(`ffmpeg -y -i ${q} -vf "scale=160:160:force_original_aspect_ratio=increase,crop=160:160" ${qt} 2>/dev/null`,
+                e2 => { if (!e2 && fs.existsSync(tp)) cb(tp); });
+        });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  TRASH ICON  — special built-in, always last or first position
+// ─────────────────────────────────────────────────────────────────────
+function buildTrashIcon() {
+    const el = document.createElement('div');
+    el.className = 'desktopIcon';
+    el.dataset.path  = TRASH_PATH;
+    el.dataset.name  = 'Trash';
+    el.dataset.trash = '1';
+    // Check if trash has items
+    let hasItems = false;
+    try {
+        const files = fs.readdirSync(path.join(TRASH_PATH,'files'));
+        hasItems = files.length > 0;
+    } catch {}
+    el.innerHTML = `
+        <div class="iconInner">
+            <div class="iconImg"><div class="iconEmoji">${hasItems?'🗑️':'🗑️'}</div></div>
+            <div class="iconLabel">Trash${hasItems?' •':''}</div>
+        </div>`;
+    el.addEventListener('mousedown', onIconMD);
+    el.addEventListener('click',     onIconClick);
+    el.addEventListener('dblclick',  openTrash);
+    el.addEventListener('contextmenu', e => {
+        e.preventDefault(); e.stopPropagation();
+        activeIcon = el;
+        showCtx('menuTrash', e.clientX, e.clientY);
+    });
+    return el;
+}
+
+function openTrash() {
+    exec(`xdg-open "${TRASH_PATH}" 2>/dev/null || thunar trash:// 2>/dev/null || nautilus trash:// 2>/dev/null`);
+    hideCtx();
+}
+function emptyTrash() {
+    if (!confirm('Empty the trash? This cannot be undone.')) return;
+    exec(`gio trash --empty 2>/dev/null || rm -rf "${path.join(TRASH_PATH,'files')}"/* "${path.join(TRASH_PATH,'info')}"/*`, () => {
+        loadDesktopIcons();
+    });
+    hideCtx();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  LOAD ICONS
+// ─────────────────────────────────────────────────────────────────────
+function loadDesktopIcons() {
+    calcGrid();
+    const grid = document.getElementById('desktopGrid');
+    grid.querySelectorAll('.desktopIcon').forEach(e=>e.remove());
+    Object.keys(cellMap).forEach(k=>delete cellMap[k]);
+
+    if (!fs.existsSync(DESKTOP)) fs.mkdirSync(DESKTOP,{recursive:true});
+    let files;
+    try { files = fs.readdirSync(DESKTOP); } catch(e) { console.error(e); return; }
+
+    // Stat all — skip broken
+    const entries = [];
+    files.forEach(file => {
+        const fp = path.join(DESKTOP,file);
+        let st; try { st=fs.statSync(fp); } catch(e) { console.warn('skip',file,e.message); return; }
+        entries.push({ file, fp, st });
+    });
+
+    // ── SORT ── applied before positioning
+    doSort(entries);
+
+    // Saved positions (only meaningful when sort='none')
+    const saved = {};
+    (CFG.icons||[]).forEach(e => { saved[e.path]={col:e.col,row:e.row}; });
+
+    entries.forEach(({ file, fp, st }) => {
+        const el = buildIcon(file, fp, st);
+        // When sorted: assign sequentially, ignore saved positions
+        const pref = (CFG.sort === 'none') ? saved[fp] : null;
+        snapIcon(el, pref);
+        grid.appendChild(el);
+    });
+
+    // Trash — always place in last available cell bottom-right
+    const trashEl = buildTrashIcon();
+    const trashPref = findLastCell();
+    snapIcon(trashEl, trashPref);
+    grid.appendChild(trashEl);
+
+    // Ghost sizing
+    const ghost = document.getElementById('gridGhost');
+    ghost.style.width  = CFG.cellSize+'px';
+    ghost.style.height = CFG.cellSize+'px';
+
+    updateFoldFirstLabel();
+}
+
+// Sorting: mutates entries array in-place
+function doSort(entries) {
+    if (CFG.sort === 'none' && !CFG.foldersFirst) return; // preserve FS order / saved positions
+
+    entries.sort((a, b) => {
+        // Folders first modifier
+        if (CFG.foldersFirst) {
+            const ad = a.st.isDirectory(), bd = b.st.isDirectory();
+            if (ad !== bd) return ad ? -1 : 1;
+        }
+        // Primary sort
+        switch (CFG.sort) {
+            case 'name': return a.file.localeCompare(b.file, undefined, {sensitivity:'base'});
+            case 'size': return (a.st.size||0) - (b.st.size||0);
+            case 'date': return b.st.mtimeMs  - a.st.mtimeMs;
+            default:     return 0; // 'none' — only foldersFirst applied above
+        }
+    });
+}
+
+function findLastCell() {
+    // Bottom-right most free cell
+    for (let r=ROWS-1; r>=0; r--)
+        for (let c=COLS-1; c>=0; c--)
+            if (!cellMap[ck(c,r)]) return {col:c,row:r};
+    return {col:0,row:0};
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  BUILD ICON ELEMENT
+// ─────────────────────────────────────────────────────────────────────
+function buildIcon(file, fp, st) {
+    const el = document.createElement('div');
+    el.className    = 'desktopIcon';
+    el.dataset.path = fp;
+    el.dataset.name = file;
+    el.dataset.isdir = st.isDirectory() ? '1' : '0';
+    const isDir = st.isDirectory();
+    const ext   = path.extname(file).toLowerCase();
+    el.innerHTML = `
+        <div class="iconInner">
+            <div class="iconImg"><div class="iconEmoji">${emojiFor(file,isDir)}</div></div>
+            <div class="iconLabel">${esc(file)}</div>
+        </div>`;
+    if (IMG_EXTS.has(ext) && !isDir) {
+        getThumbnail(fp, tp => {
+            const wrap=el.querySelector('.iconImg'); if(!wrap) return;
+            wrap.innerHTML=`<img src="file://${tp}?v=${Date.now()}" alt="">`;
+            resizeContents(el);
+        });
+    }
+    el.addEventListener('mousedown',   onIconMD);
+    el.addEventListener('click',       onIconClick);
+    el.addEventListener('dblclick',    () => openFile(fp));
+    el.addEventListener('contextmenu', onIconCtx);
+    return el;
+}
+
+function emojiFor(file, isDir) {
+    if (isDir) return '📁';
+    const m={
+        '.txt':'📝','.md':'📝','.pdf':'📕',
+        '.zip':'📦','.tar':'📦','.gz':'📦','.bz2':'📦','.xz':'📦','.7z':'📦','.rar':'📦',
+        '.mp4':'🎬','.mkv':'🎬','.avi':'🎬','.webm':'🎬','.mov':'🎬',
+        '.mp3':'🎵','.ogg':'🎵','.flac':'🎵','.wav':'🎵','.aac':'🎵',
+        '.js':'💻','.ts':'💻','.py':'💻','.cpp':'💻','.c':'💻',
+        '.h':'💻','.rs':'💻','.go':'💻','.rb':'💻','.php':'💻',
+        '.sh':'⚙️','.bash':'⚙️',
+        '.png':'🖼️','.jpg':'🖼️','.jpeg':'🖼️','.gif':'🖼️','.webp':'🖼️','.svg':'🖼️',
+    };
+    return m[path.extname(file).toLowerCase()]||'📄';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  DRAG  — multi-icon, folder-drop, 5px dead-zone
+// ─────────────────────────────────────────────────────────────────────
+let drag = null;
+
+function onIconMD(e) {
+    if (e.button!==0) return;
+    e.stopPropagation();
+    const el=e.currentTarget, rect=el.getBoundingClientRect();
+    drag={
+        leader: el,               // icon under cursor
+        offX: e.clientX-rect.left,
+        offY: e.clientY-rect.top,
+        origCol: +el.dataset.col,
+        origRow: +el.dataset.row,
+        startX: e.clientX,
+        startY: e.clientY,
+        active: false,
+        followers: [],            // other selected icons being dragged together
+        folderTarget: null,       // folder icon currently hovering over
+    };
+}
+
+document.addEventListener('mousemove', e => {
+    if (drag) {
+        const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+        if (!drag.active) {
+            if (Math.abs(dx)<5&&Math.abs(dy)<5) return;
+            drag.active=true;
+
+            // Collect all selected icons to move together
+            const selected=Array.from(document.querySelectorAll('.desktopIcon.selected'));
+            // Make sure the leader is selected; if not, drag only the leader
+            if (!drag.leader.classList.contains('selected')) {
+                drag.followers = [];
+            } else {
+                drag.followers = selected.filter(ic=>ic!==drag.leader);
+            }
+
+            // Lift leader
+            drag.leader.classList.add('dragging');
+            drag.leader.style.zIndex=5000;
+            drag.leader.style.transition='none';
+            drag.leader.style.pointerEvents='none';
+            delete cellMap[ck(drag.origCol,drag.origRow)];
+
+            // Lift followers too (keep their relative offset to leader)
+            const lx=parseFloat(drag.leader.style.left), ly=parseFloat(drag.leader.style.top);
+            drag.followers.forEach(ic=>{
+                ic._dragRelX = parseFloat(ic.style.left)-lx;
+                ic._dragRelY = parseFloat(ic.style.top )-ly;
+                ic.classList.add('dragging');
+                ic.style.zIndex=4999;
+                ic.style.transition='none';
+                ic.style.pointerEvents='none';
+                delete cellMap[ck(+ic.dataset.col,+ic.dataset.row)];
+            });
+        }
+
+        // Move leader freely
+        const nx=e.clientX-drag.offX, ny=e.clientY-drag.offY;
+        drag.leader.style.left=nx+'px';
+        drag.leader.style.top =ny+'px';
+
+        // Move followers relative to leader
+        drag.followers.forEach(ic=>{
+            ic.style.left=(nx+ic._dragRelX)+'px';
+            ic.style.top =(ny+ic._dragRelY)+'px';
+        });
+
+        // Determine what's under centre of leader
+        const cx=nx+CFG.cellSize/2, cy=ny+CFG.cellSize/2;
+        const {col,row}=pxToCell(cx,cy);
+        const cellOccupant=cellMap[ck(col,row)];
+        const ghost=document.getElementById('gridGhost');
+
+        // Check if hovering over a folder
+        if (cellOccupant && cellOccupant.dataset.isdir==='1' && cellOccupant!==drag.leader) {
+            // Highlight folder as drop target
+            if (drag.folderTarget && drag.folderTarget!==cellOccupant)
+                drag.folderTarget.querySelector('.iconInner').style.outline='';
+            drag.folderTarget=cellOccupant;
+            cellOccupant.querySelector('.iconInner').style.outline='2px solid #4a9eff';
+            ghost.style.display='none';
+        } else {
+            // Clear folder highlight
+            if (drag.folderTarget) {
+                drag.folderTarget.querySelector('.iconInner').style.outline='';
+                drag.folderTarget=null;
+            }
+            // Show ghost on empty cell
+            if (!cellOccupant) {
+                const gp=cellPx(col,row);
+                ghost.style.left=gp.x+'px'; ghost.style.top=gp.y+'px'; ghost.style.display='block';
+            } else ghost.style.display='none';
+        }
+        return;
+    }
+    if (isSelecting) updateRubberBand(e);
+});
+
+document.addEventListener('mouseup', e => {
+    if (isSelecting) { document.getElementById('select').style.display='none'; isSelecting=false; }
+    if (!drag) return;
+    const {leader,origCol,origRow,active,followers,folderTarget}=drag; drag=null;
+    if (!active) return;
+
+    // Clear styles
+    [leader,...followers].forEach(ic=>{
+        ic.classList.remove('dragging');
+        ic.style.zIndex=ic.style.transition=ic.style.pointerEvents='';
+    });
+    if (folderTarget) folderTarget.querySelector('.iconInner').style.outline='';
+    document.getElementById('gridGhost').style.display='none';
+
+    const cx=parseFloat(leader.style.left)+CFG.cellSize/2;
+    const cy=parseFloat(leader.style.top )+CFG.cellSize/2;
+    const {col,row}=pxToCell(cx,cy);
+    const cellOccupant=cellMap[ck(col,row)];
+
+    // DROP INTO FOLDER
+    if (folderTarget || (cellOccupant && cellOccupant.dataset.isdir==='1' && cellOccupant!==leader)) {
+        const targetDir=(folderTarget||cellOccupant).dataset.path;
+        const toMove=[leader,...followers];
+        let moved=0;
+        toMove.forEach(ic=>{
+            const src=ic.dataset.path;
+            const dest=path.join(targetDir,path.basename(src));
+            try { fs.renameSync(src,dest); moved++; } catch(err){ console.error('move to folder:',err); }
+        });
+        loadDesktopIcons();
+        return;
+    }
+
+    // DROP ON GRID — snap leader, then place followers in nearby free cells
+    snapIcon(leader,{col,row});
+    const lx=cellPx(+leader.dataset.col,+leader.dataset.row);
+    leader.style.left=lx.x+'px'; leader.style.top=lx.y+'px';
+
+    followers.forEach(ic=>{
+        const free=nextFree(null); // next available cell
+        snapIcon(ic,free);
+        const fp=cellPx(+ic.dataset.col,+ic.dataset.row);
+        ic.style.left=fp.x+'px'; ic.style.top=fp.y+'px';
+    });
+
+    saveCFG();
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  RUBBER-BAND SELECTION
+//  Key insight: .desktopIcon is the full cell (transparent). Gap clicks
+//  land on #desktopGrid itself. We listen on desktopGrid, not document.
+// ─────────────────────────────────────────────────────────────────────
+let isSelecting=false, selSt={x:0,y:0};
+
+document.getElementById('desktopGrid').addEventListener('mousedown', e => {
+    if (e.button!==0) return;
+    if (e.target.closest('.ctxMenu,.overlay')) return;
+    // Icon mousedown is stopped at icon level and starts drag — if it
+    // bubbles here at all, the drag system handles it; don't start rubber-band
+    if (e.target.closest('.desktopIcon')) return;
+
+    isSelecting=true;
+    selSt={x:e.clientX,y:e.clientY};
+    const s=document.getElementById('select');
+    s.style.cssText=`display:block;left:${e.clientX}px;top:${e.clientY}px;width:0;height:0;`;
+    if (!e.ctrlKey&&!e.metaKey)
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+});
+
+function updateRubberBand(e) {
+    const s=document.getElementById('select');
+    const x1=selSt.x, y1=selSt.y, x2=e.clientX, y2=e.clientY;
+    s.style.left  =Math.min(x1,x2)+'px';
+    s.style.top   =Math.min(y1,y2)+'px';
+    s.style.width =Math.abs(x2-x1)+'px';
+    s.style.height=Math.abs(y2-y1)+'px';
+    const sr=s.getBoundingClientRect();
+    document.querySelectorAll('.desktopIcon').forEach(ic => {
+        // Test against iconInner — the actual visible area, not the full transparent cell
+        const inner=ic.querySelector('.iconInner')||ic;
+        const r=inner.getBoundingClientRect();
+        const hit=!(r.right<sr.left||r.left>sr.right||r.bottom<sr.top||r.top>sr.bottom);
+        if (hit) ic.classList.add('selected');
+        else if (!e.ctrlKey&&!e.metaKey) ic.classList.remove('selected');
+    });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  SELECTION CLICK
+// ─────────────────────────────────────────────────────────────────────
+let activeIcon=null;
+function onIconClick(e) {
+    if (drag&&drag.active) return;  // just finished dragging — ignore
+    e.stopPropagation();
+    const el=e.currentTarget;
+
+    if (e.ctrlKey||e.metaKey) {
+        // Ctrl+click: toggle this icon
+        el.classList.toggle('selected');
+    } else if (e.shiftKey) {
+        // Shift+click: range select (by grid order)
+        const all=Array.from(document.querySelectorAll('.desktopIcon'));
+        const lastSel=all.filter(i=>i.classList.contains('selected')).pop();
+        if (lastSel && lastSel!==el) {
+            const ai=all.indexOf(lastSel), bi=all.indexOf(el);
+            const lo=Math.min(ai,bi), hi=Math.max(ai,bi);
+            all.slice(lo,hi+1).forEach(i=>i.classList.add('selected'));
+        } else {
+            el.classList.add('selected');
+        }
+    } else {
+        // Plain click: if clicking an already-selected icon, keep selection (for drag)
+        // Only clear if clicking a different unselected icon
+        if (!el.classList.contains('selected')) {
+            document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+        // If it was already selected, leave everything as-is (so multi-drag works)
+    }
+    activeIcon=el;
+}
+document.getElementById('desktopGrid').addEventListener('click', e => {
+    if (!e.target.closest('.desktopIcon'))
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    // Don't fire inside dialogs or inputs
+    if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if (document.querySelector('.overlay.show')) return;
+
+    const ctrl = e.ctrlKey||e.metaKey;
+
+    if (ctrl && e.key==='c') { copyIcons(); return; }
+    if (ctrl && e.key==='x') { cutIcons();  return; }
+    if (ctrl && e.key==='v') { pasteIcons(); return; }
+    if (ctrl && e.key==='a') {
+        document.querySelectorAll('.desktopIcon').forEach(i=>i.classList.add('selected'));
+        return;
+    }
+    if (e.key==='Delete'||e.key==='BackSpace') { deleteIcons(); return; }
+    if (e.key==='Enter'||e.key==='Return') {
+        sel().forEach(ic=>openFile(ic.dataset.path));
+        return;
+    }
+    if (e.key==='F2' && activeIcon) { renameIcon(); return; }
+    if (e.key==='Escape') {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        return;
+    }
+    // Arrow key navigation
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        arrowNav(e.key);
+    }
+});
+
+function arrowNav(key) {
+    const icons = Array.from(document.querySelectorAll('.desktopIcon'));
+    const curSelected = icons.filter(i=>i.classList.contains('selected'));
+    if (!curSelected.length) {
+        if (icons.length) { icons[0].classList.add('selected'); activeIcon=icons[0]; }
+        return;
+    }
+    const ref = curSelected[curSelected.length-1];
+    const refC=+ref.dataset.col, refR=+ref.dataset.row;
+    let targetC=refC, targetR=refR;
+    if (key==='ArrowRight') targetC=Math.min(COLS-1,refC+1);
+    if (key==='ArrowLeft')  targetC=Math.max(0,refC-1);
+    if (key==='ArrowDown')  targetR=Math.min(ROWS-1,refR+1);
+    if (key==='ArrowUp')    targetR=Math.max(0,refR-1);
+    const target = icons.find(i=>+i.dataset.col===targetC&&+i.dataset.row===targetR);
+    if (target) {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        target.classList.add('selected');
+        activeIcon=target;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  CONTEXT MENUS
+// ─────────────────────────────────────────────────────────────────────
+function onIconCtx(e) {
+    if (e.currentTarget.dataset.trash) return; // trash has its own
+    e.preventDefault(); e.stopPropagation();
+    const el=e.currentTarget;
+    if (!el.classList.contains('selected')) {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+    activeIcon=el;
+    showCtx('menuIcon',e.clientX,e.clientY);
+}
+document.addEventListener('contextmenu', e => {
+    if (e.target.closest('.desktopIcon,.ctxMenu,.overlay')) return;
+    e.preventDefault(); hideCtx();
+    showCtx('menuDesktop',e.clientX,e.clientY);
+});
+function showCtx(id,x,y) {
+    hideCtx();
+    const m=document.getElementById(id);
+    m.style.left=x+'px'; m.style.top=y+'px'; m.classList.add('show');
+    setTimeout(()=>{
+        const r=m.getBoundingClientRect();
+        if(r.right>window.innerWidth)  m.style.left=(x-r.width)+'px';
+        if(r.bottom>window.innerHeight) m.style.top=(y-r.height)+'px';
+    },0);
+}
+function hideCtx() { document.querySelectorAll('.ctxMenu').forEach(m=>m.classList.remove('show')); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.ctxMenu')) hideCtx(); });
+
+// ─────────────────────────────────────────────────────────────────────
+//  FILE ACTIONS
+// ─────────────────────────────────────────────────────────────────────
+const sel = () => Array.from(document.querySelectorAll('.desktopIcon.selected'));
+
+function openSelected() { sel().forEach(ic=>openFile(ic.dataset.path)); hideCtx(); }
+
+function openFile(fp) {
+    const ext=(path.extname(fp)||'').toLowerCase();
+    const cmd=CFG.openWithMap[ext]||'xdg-open';
+    // Show loading cursor for 2.5s
+    document.body.classList.add('launching');
+    setTimeout(()=>document.body.classList.remove('launching'), 2500);
+    exec(`${cmd} "${fp}"`, err=>{
+        document.body.classList.remove('launching');
+        if(err) console.error('open:',err);
+    });
+}
+
+let clipboard=null, clipAct=null;
+function copyIcons() { clipboard=sel().map(i=>i.dataset.path); clipAct='copy'; hideCtx(); }
+function cutIcons()  { clipboard=sel().map(i=>i.dataset.path); clipAct='cut';  hideCtx(); }
+
+function pasteIcons() {
+    if(!clipboard||!clipboard.length) return;
+    clipboard.forEach(src=>{
+        const dest=path.join(DESKTOP,path.basename(src));
+        try {
+            if(clipAct==='copy') fs.copyFileSync(src,dest);
+            else fs.renameSync(src,dest);
+        } catch(e){console.error(e);}
+    });
+    if(clipAct==='cut'){clipboard=null;clipAct=null;}
+    loadDesktopIcons(); hideCtx();
+}
+
+function deleteIcons() {
+    const s=sel(); if(!s.length) return;
+    if(!confirm(`Delete ${s.length} item(s)?`)) return;
+    s.forEach(ic=>{
+        exec(`gio trash "${ic.dataset.path}" 2>/dev/null || rm -rf "${ic.dataset.path}"`,()=>loadDesktopIcons());
+    });
+    hideCtx();
+}
+
+function renameIcon() {
+    if(!activeIcon||activeIcon.dataset.trash) return;
+    const n=prompt('New name:',activeIcon.dataset.name);
+    if(!n||n===activeIcon.dataset.name) return;
+    try{ fs.renameSync(activeIcon.dataset.path,path.join(DESKTOP,n)); loadDesktopIcons(); }
+    catch(e){alert('Failed: '+e.message);}
+    hideCtx();
+}
+
+function compressIcons() {
+    const s=sel(); if(!s.length) return;
+    const files=s.map(i=>`"${i.dataset.path}"`).join(' ');
+    exec(`tar -czf "${path.join(DESKTOP,'archive_'+Date.now()+'.tar.gz')}" ${files}`,
+        err=>{ if(!err) loadDesktopIcons(); });
+    hideCtx();
+}
+
+function createNew(type) {
+    const def=type==='folder'?'New Folder':type==='text'?'NewFile.txt':'NewFile';
+    const name=prompt(type==='folder'?'Folder name:':'File name:',def);
+    if(!name) return;
+    const np=path.join(DESKTOP,name);
+    try {
+        if(type==='folder') fs.mkdirSync(np);
+        else fs.writeFileSync(np,'','utf8');
+        loadDesktopIcons();
+    } catch(e){alert('Failed: '+e.message);}
+    hideCtx();
+}
+
+function refresh() { loadDesktopIcons(); hideCtx(); }
+
+// ─────────────────────────────────────────────────────────────────────
+//  NATIVE DRAG-DROP FROM FILE MANAGER (Dolphin, Thunar, etc.)
+//  Files dragged from outside the window carry a 'Files' DataTransfer
+// ─────────────────────────────────────────────────────────────────────
+const grid = document.getElementById('desktopGrid');
+
+grid.addEventListener('dragover', e => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect='copy';
+    grid.style.outline='2px solid rgba(74,158,255,0.5)';
+});
+grid.addEventListener('dragleave', e => {
+    // Only clear when leaving the whole grid, not child elements
+    if (!grid.contains(e.relatedTarget)) grid.style.outline='';
+});
+grid.addEventListener('drop', e => {
+    e.preventDefault();
+    grid.style.outline='';
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+        // Files dropped from an external app (Dolphin, etc.)
+        Array.from(files).forEach(f => {
+            const src=f.path||f.name;
+            if (!src) return;
+            const dest=path.join(DESKTOP, path.basename(src));
+            if (src===dest) return; // already on desktop
+            try { fs.copyFileSync(src, dest); } catch(err) { console.error('drop copy:', err); }
+        });
+        loadDesktopIcons();
+        return;
+    }
+
+    // Also handle text/uri-list (some apps send URIs not File objects)
+    const uriList = e.dataTransfer.getData('text/uri-list');
+    if (uriList) {
+        uriList.split('\n').forEach(uri => {
+            uri = uri.trim();
+            if (!uri || uri.startsWith('#')) return;
+            const src = decodeURIComponent(uri.replace(/^file:\/\//, ''));
+            const dest = path.join(DESKTOP, path.basename(src));
+            if (src===dest) return;
+            try { fs.copyFileSync(src, dest); } catch(err) { console.error('drop uri copy:', err); }
+        });
+        loadDesktopIcons();
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  SORT
+// ─────────────────────────────────────────────────────────────────────
+function sortIcons(mode) {
+    CFG.sort = mode;
+    saveCFG();
+    loadDesktopIcons();
+    hideCtx();
+}
+function toggleFoldFirst() {
+    CFG.foldersFirst=!CFG.foldersFirst;
+    saveCFG(); loadDesktopIcons(); hideCtx();
+}
+function updateFoldFirstLabel() {
+    const el=document.getElementById('itemFoldFirst');
+    if(el) el.textContent=(CFG.foldersFirst?'✅':'📁')+' Folders First';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  CELL SIZE SLIDER
+// ─────────────────────────────────────────────────────────────────────
+function onSzSlide(v) {
+    CFG.cellSize=parseInt(v);
+    document.getElementById('szLabel').textContent=v;
+    calcGrid();
+    // Reflow in-place
+    const icons=[...document.querySelectorAll('.desktopIcon')];
+    Object.keys(cellMap).forEach(k=>delete cellMap[k]);
+    icons.sort((a,b)=>(+a.dataset.row*10000+ +a.dataset.col)-(+b.dataset.row*10000+ +b.dataset.col));
+    icons.forEach(el=>{
+        snapIcon(el,{col:+el.dataset.col,row:+el.dataset.row});
+        const {x,y}=cellPx(+el.dataset.col,+el.dataset.row);
+        el.style.left=x+'px'; el.style.top=y+'px';
+    });
+    const g=document.getElementById('gridGhost');
+    g.style.width=CFG.cellSize+'px'; g.style.height=CFG.cellSize+'px';
+    saveCFG();
+}
+function syncUI() {
+    document.getElementById('szSlider').value=CFG.cellSize;
+    document.getElementById('szLabel').textContent=CFG.cellSize;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  PROPERTIES
+// ─────────────────────────────────────────────────────────────────────
+let propsPath=null;
+function showProperties() {
+    if(!activeIcon||activeIcon.dataset.trash) return;
+    hideCtx();
+    propsPath=activeIcon.dataset.path;
+    const name=activeIcon.dataset.name;
+    let st; try{st=fs.statSync(propsPath);}catch(e){alert(e.message);return;}
+    document.getElementById('propsTitle').textContent=name;
+    document.getElementById('pi-name').textContent=name;
+    document.getElementById('pi-type').textContent=st.isDirectory()?'Directory':(path.extname(name)||'File');
+    document.getElementById('pi-size').textContent=fmtBytes(st.size);
+    document.getElementById('pi-loc').textContent=path.dirname(propsPath);
+    document.getElementById('pi-cre').textContent=st.birthtime.toLocaleString();
+    document.getElementById('pi-mod').textContent=st.mtime.toLocaleString();
+    document.getElementById('pi-acc').textContent=st.atime.toLocaleString();
+    document.getElementById('pi-hidden').checked=name.startsWith('.');
+    const m=st.mode;
+    const bits=[0o400,0o200,0o100,0o040,0o020,0o010,0o004,0o002,0o001];
+    ['p-ur','p-uw','p-ux','p-gr','p-gw','p-gx','p-or','p-ow','p-ox'].forEach((id,i)=>{
+        document.getElementById(id).checked=!!(m&bits[i]);
+    });
+    try {
+        const [o,g]=execSync(`stat -c "%U %G" "${propsPath}"`).toString().trim().split(' ');
+        document.getElementById('pm-owner').value=o||''; document.getElementById('pm-group').value=g||'';
+    } catch { document.getElementById('pm-owner').value=''; document.getElementById('pm-group').value=''; }
+    document.querySelectorAll('.dlgTab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+    document.querySelector('[data-tab="details"]').classList.add('active');
+    document.getElementById('tab-details').classList.add('active');
+    document.getElementById('ovProps').classList.add('show');
+}
+
+function applyProps() {
+    if(!propsPath) return;
+    const name=path.basename(propsPath);
+    const wantHidden=document.getElementById('pi-hidden').checked;
+    const isHidden=name.startsWith('.');
+    let target=propsPath;
+    if(wantHidden&&!isHidden){
+        const np=path.join(path.dirname(propsPath),'.'+name);
+        try{fs.renameSync(propsPath,np);target=np;}catch(e){alert(e.message);}
+    } else if(!wantHidden&&isHidden){
+        const np=path.join(path.dirname(propsPath),name.slice(1));
+        try{fs.renameSync(propsPath,np);target=np;}catch(e){alert(e.message);}
+    }
+    let mode=0;
+    const bits=[0o400,0o200,0o100,0o040,0o020,0o010,0o004,0o002,0o001];
+    ['p-ur','p-uw','p-ux','p-gr','p-gw','p-gx','p-or','p-ow','p-ox'].forEach((id,i)=>{
+        if(document.getElementById(id).checked) mode|=bits[i];
+    });
+    try{fs.chmodSync(target,mode);}catch(e){console.warn('chmod:',e);}
+    const own=document.getElementById('pm-owner').value.trim();
+    const grp=document.getElementById('pm-group').value.trim();
+    if(own||grp) exec(`chown ${own}${grp?':'+grp:''} "${target}"`,err=>{if(err)console.warn('chown:',err);});
+    closeOv('ovProps'); loadDesktopIcons();
+}
+
+function switchTab(tabEl) {
+    const name=tabEl.dataset.tab;
+    document.querySelectorAll('.dlgTab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+    tabEl.classList.add('active');
+    document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  OPEN WITH
+// ─────────────────────────────────────────────────────────────────────
+const APP_CANDIDATES=[
+    {name:'Default (xdg-open)',cmd:'xdg-open',  icon:'📂',always:true},
+    {name:'Mousepad',          cmd:'mousepad',   icon:'📝'},{name:'Gedit',cmd:'gedit',icon:'📝'},
+    {name:'Kate',              cmd:'kate',       icon:'📝'},{name:'Pluma',cmd:'pluma',icon:'📝'},
+    {name:'Leafpad',           cmd:'leafpad',    icon:'📝'},{name:'Nano (xterm)',cmd:'xterm -e nano',icon:'📝'},
+    {name:'VS Code',           cmd:'code',       icon:'💻'},{name:'Codium',cmd:'codium',icon:'💻'},
+    {name:'Sublime Text',      cmd:'subl',       icon:'💻'},{name:'Vim (xterm)',cmd:'xterm -e vim',icon:'💻'},
+    {name:'Thunar',            cmd:'thunar',     icon:'📂'},{name:'Nautilus',cmd:'nautilus',icon:'📂'},
+    {name:'Nemo',              cmd:'nemo',       icon:'📂'},{name:'Dolphin',cmd:'dolphin',icon:'📂'},
+    {name:'PCManFM',           cmd:'pcmanfm',    icon:'📂'},
+    {name:'Feh',               cmd:'feh',        icon:'🖼️'},{name:'EOG',cmd:'eog',icon:'🖼️'},
+    {name:'GIMP',              cmd:'gimp',       icon:'🖼️'},{name:'Geeqie',cmd:'geeqie',icon:'🖼️'},
+    {name:'VLC',               cmd:'vlc',        icon:'🎬'},{name:'MPV',cmd:'mpv',icon:'🎬'},
+    {name:'Totem',             cmd:'totem',      icon:'🎬'},
+    {name:'Evince',            cmd:'evince',     icon:'📕'},{name:'Okular',cmd:'okular',icon:'📕'},
+    {name:'Zathura',           cmd:'zathura',    icon:'📕'},{name:'Atril',cmd:'atril',icon:'📕'},
+    {name:'File Roller',       cmd:'file-roller',icon:'📦'},{name:'Engrampa',cmd:'engrampa',icon:'📦'},
+    {name:'Ark',               cmd:'ark',        icon:'📦'},
+    {name:'Xterm',             cmd:'xterm',      icon:'🖥️'},{name:'XFCE Terminal',cmd:'xfce4-terminal',icon:'🖥️'},
+    {name:'GNOME Terminal',    cmd:'gnome-terminal',icon:'🖥️'},{name:'Konsole',cmd:'konsole',icon:'🖥️'},
+    {name:'Alacritty',         cmd:'alacritty',  icon:'🖥️'},{name:'Kitty',cmd:'kitty',icon:'🖥️'},
+];
+let cachedApps=null;
+function getApps() {
+    if(cachedApps) return cachedApps;
+    cachedApps=APP_CANDIDATES.filter(a=>{
+        if(a.always) return true;
+        try{execSync(`which ${a.cmd.split(' ')[0]} 2>/dev/null`);return true;}catch{return false;}
+    });
+    return cachedApps;
+}
+
+let owSel=null;
+function showOpenWith() {
+    if(!activeIcon||activeIcon.dataset.trash) return; hideCtx();
+    const ext=(path.extname(activeIcon.dataset.path)||'').toLowerCase();
+    const savedCmd=CFG.openWithMap[ext]||null;
+    owSel=savedCmd;
+    const apps=getApps(), list=document.getElementById('owList');
+    list.innerHTML='';
+    apps.forEach(app=>{
+        const el=document.createElement('div');
+        el.className='owItem'+(savedCmd===app.cmd?' active':'');
+        el.innerHTML=`<span class="owIcon">${app.icon}</span><div><div class="owName">${app.name}</div><div class="owCmd">${app.cmd}</div></div>`;
+        el.addEventListener('click',()=>{
+            list.querySelectorAll('.owItem').forEach(i=>i.classList.remove('active'));
+            el.classList.add('active'); owSel=app.cmd;
+            document.getElementById('owCustom').value='';
+        });
+        list.appendChild(el);
+    });
+    document.getElementById('owCustom').value='';
+    document.getElementById('owSave').checked=!!savedCmd;
+    document.getElementById('ovOpenWith').classList.add('show');
+}
+function applyOpenWith() {
+    if(!activeIcon) return;
+    const fp=activeIcon.dataset.path, ext=(path.extname(fp)||'').toLowerCase();
+    const custom=document.getElementById('owCustom').value.trim();
+    const cmd=custom||owSel||'xdg-open';
+    if(document.getElementById('owSave').checked) { CFG.openWithMap[ext]=cmd; saveCFG(); }
+    document.body.classList.add('launching');
+    setTimeout(()=>document.body.classList.remove('launching'),2500);
+    exec(`${cmd} "${fp}"`,err=>{ document.body.classList.remove('launching'); if(err)console.error(err); });
+    closeOv('ovOpenWith');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────────────────────────────
+function closeOv(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(ov=>{
+    ov.addEventListener('mousedown',e=>{ if(e.target===ov) closeOv(ov.id); });
+});
+function fmtBytes(b) {
+    if(!b) return '0 B';
+    const k=1024,u=['B','KB','MB','GB','TB'];
+    const i=Math.floor(Math.log(b)/Math.log(k));
+    return (b/Math.pow(k,i)).toFixed(2)+' '+u[i];
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ─────────────────────────────────────────────────────────────────────
+//  RESIZE
+// ─────────────────────────────────────────────────────────────────────
+let rTimer;
+window.addEventListener('resize',()=>{ clearTimeout(rTimer); rTimer=setTimeout(loadDesktopIcons,300); });
+
+// ─────────────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────────────
+loadCFG();
+applyWallpaperCSS(CFG.wallpaper);
+calcGrid();
+syncUI();
+loadDesktopIcons();
+</script>
+</body>
+</html>
