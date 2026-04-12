@@ -2,40 +2,81 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elve desktop</title>
-<style>
-    body{
-        color:red;
-        font-size:20px;
-        font-weight: bold;
-    }
-</style>
+    <title>Elve Desktop Launcher</title>
 </head>
 <body>
-<p style="background: rgba(202, 202, 202, 0.355);text-align: center;">Running......</p>
 <script>
-    //For multiple screens, spawn one app on each screen, then copy elements if element is offset on one screen when dragging to 
-    //another screen
-    var win=nw.Window.get();
-    var WindowOptionsDesk;
-    var WindowOptionsTop;
-    windowOptionsDesk = { "title": "Desk", "frame": false, "fullscreen": true, "transparent": false, "resizable": false, "show": true, "always_on_top": false };
-    var deskWindow=nw.Window.open("/desk.html",windowOptionsDesk,function(newWindow)
-    {
-        deskWindow = newWindow;
-        deskWindow.setAlwaysOnTop=false;
-        deskWindowOn=true;
+    const launcher = nw.Window.get();
+    let deskWindow = null;
+    let topWindow = null;
+
+    function openShellWindows() {
+        const screenWidth = window.screen && window.screen.width ? window.screen.width : 1920;
+        const screenHeight = window.screen && window.screen.height ? window.screen.height : 1080;
+
+        const deskOptions = {
+            title: 'Desk',
+            frame: false,
+            fullscreen: true,
+            transparent: false,
+            resizable: false,
+            show: true,
+            focus: false,
+            always_on_top: false,
+            show_in_taskbar: false,
+            x: 0,
+            y: 0,
+            width: screenWidth,
+            height: screenHeight
+        };
+
+        const topOptions = {
+            title: 'Top',
+            frame: false,
+            fullscreen: false,
+            transparent: true,
+            resizable: false,
+            show: false,
+            focus: false,
+            always_on_top: true,
+            show_in_taskbar: false,
+            x: 0,
+            y: 0,
+            width: screenWidth,
+            height: screenHeight
+        };
+
+        setTimeout(()=>{nw.Window.open('/desk2.html', deskOptions, (newWindow) => {
+            deskWindow = newWindow;
+            deskWindow.moveTo(0, 0);
+            deskWindow.resizeTo(screenWidth, screenHeight);
+            deskWindow.setAlwaysOnTop(false);
+            deskWindow.show();
+        });},2000)
+
+        // setTimeout(()=>{nw.Window.open('/top.html', topOptions, (newWindow) => {
+        //     topWindow = newWindow;
+        //     topWindow.on('loaded', () => {
+        //         topWindow.moveTo(0, 0);
+        //         topWindow.resizeTo(screenWidth, screenHeight);
+        //         topWindow.setAlwaysOnTop(true);
+        //         topWindow.show();
+        //     });
+        // });},5000)
+    }
+
+    openShellWindows();
+
+    launcher.hide();
+    if (typeof launcher.setShowInTaskbar === 'function') {
+        launcher.setShowInTaskbar(false);
+    }
+
+    launcher.on('close', () => {
+        if (topWindow && !topWindow.closed) topWindow.close(true);
+        if (deskWindow && !deskWindow.closed) deskWindow.close(true);
+        launcher.close(true);
     });
-    windowOptionsTop = { "title": "Top", "frame": false, "fullscreen": true, "transparent": true, "resizable": false, "show": true, "always_on_top": true };
-    var topWindow=nw.Window.open("/top.html",windowOptionsTop,function(newWindow)
-    {
-        topWindow = newWindow;
-        topWindow .window.moveTo(511,587);
-        topWindow.setAlwaysOnTop=true;
-        topWindowOn=true;
-    });
-    
 </script>
 </body>
 </html>

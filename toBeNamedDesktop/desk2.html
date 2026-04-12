@@ -66,7 +66,9 @@ body.launching * { cursor: progress !important; }
 
 .desktopIcon:hover .iconInner { background: rgba(255,255,255,0.13); }
 .desktopIcon.selected .iconInner { background: rgba(74,158,255,0.38); }
-.desktopIcon.dragging { opacity: 0.25; z-index: 4999; }
+/* While dragging: look like hovered, not transparent */
+.desktopIcon.dragging { opacity: 1; z-index: 4999; }
+.desktopIcon.dragging .iconInner { background: rgba(255,255,255,0.20); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
 
 .desktopIcon .iconImg {
     flex-shrink: 0;
@@ -117,16 +119,8 @@ body.launching * { cursor: progress !important; }
     -webkit-line-clamp: unset;
 }
 
-/* ghost */
-.gridGhost {
-    position: absolute;
-    border: 2px dashed rgba(74,158,255,0.75);
-    border-radius: 8px;
-    background: rgba(74,158,255,0.1);
-    pointer-events: none;
-    display: none;
-    z-index: 99;
-}
+/* ghost — hidden; we don't highlight cells while dragging */
+.gridGhost { display: none !important; }
 
 /* Trash icon on the grid always appears "real" */
 .desktopIcon[data-trash="1"] .iconEmoji { font-size: inherit; }
@@ -280,6 +274,22 @@ body.launching * { cursor: progress !important; }
 .customCmdRow input { flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 6px 10px; font-size: 12.5px; }
 .customCmdRow input:focus { outline: none; border-color: #4a9eff; }
 
+/* Inline rename input */
+.iconRenameInput {
+    background: rgba(20,20,30,0.92);
+    border: 1px solid #4a9eff;
+    border-radius: 4px;
+    color: white;
+    font-size: inherit;
+    text-align: center;
+    width: 100%;
+    padding: 1px 3px;
+    outline: none;
+    line-height: 1.3;
+    resize: none;
+    overflow: hidden;
+    display: block;
+}
 /* Emoji picker */
 .emojiBtn {
     width: 36px; height: 36px; font-size: 20px;
@@ -297,12 +307,71 @@ body.launching * { cursor: progress !important; }
 .wpCustomRow input { flex:1; }
 .wpBrowseBtn { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 6px 12px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
 .wpBrowseBtn:hover { background: rgba(255,255,255,0.16); }
+
+/* ── Find bar ───────────────────────────────────────────── */
+#findBar {
+    display: none; position: fixed;
+    top: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 30000;
+    background: rgba(18,18,20,0.97);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 12px; padding: 10px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    flex-direction: column; gap: 8px; min-width: 340px;
+}
+#findBar.show { display: flex; }
+#findBarRow { display: flex; align-items: center; gap: 8px; }
+#findInput {
+    flex: 1; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 7px;
+    color: white; font-size: 14px; padding: 6px 10px; outline: none;
+}
+#findInput:focus { border-color: #4a9eff; }
+#findCount { font-size: 11.5px; color: rgba(255,255,255,0.4); white-space: nowrap; }
+#findClose { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
+#findClose:hover { color: white; }
+#findResults { display: flex; flex-wrap: wrap; gap: 5px; max-height: 240px; overflow-y: auto; padding: 2px 0; }
+.findResult {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 9px; border-radius: 7px;
+    background: rgba(255,255,255,0.07); border: 1px solid transparent;
+    cursor: pointer; font-size: 12px; color: rgba(255,255,255,0.85);
+    transition: all 0.1s; max-width: 180px;
+}
+.findResult:hover { background: rgba(255,255,255,0.13); }
+.findResult.active { background: rgba(74,158,255,0.25); border-color: rgba(74,158,255,0.5); }
+.findResult .frName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Type-to-select indicator */
+#typeSearchBar {
+    display: none; position: fixed;
+    bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: rgba(18,18,20,0.93);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 6px 16px; font-size: 13px; color: rgba(255,255,255,0.75);
+    z-index: 25000; pointer-events: none; letter-spacing: 0.04em;
+}
+#typeSearchBar.show { display: block; }
 </style>
 </head>
 <body>
 
 <div id="select"></div>
 <div id="desktopGrid"><div class="gridGhost" id="gridGhost"></div></div>
+<div id="pageIndicator"></div>
+
+<!-- Find bar -->
+<div id="findBar">
+    <div id="findBarRow">
+        <span style="font-size:13px;color:rgba(255,255,255,0.5);margin-right:2px">🔍</span>
+        <input id="findInput" type="text" placeholder="Search desktop…" autocomplete="off" spellcheck="false">
+        <span id="findCount"></span>
+        <button id="findClose" onclick="closeFindBar()">✕</button>
+    </div>
+    <div id="findResults"></div>
+</div>
+
+<!-- Type-to-select bar -->
+<div id="typeSearchBar"></div>
 
 <!-- Desktop right-click -->
 <div class="ctxMenu" id="menuDesktop">
@@ -318,10 +387,10 @@ body.launching * { cursor: progress !important; }
     <div class="ctxItem sep"></div>
     <div class="ctxItem" style="position:relative">🗂️ Sort Icons <span class="arr">›</span>
         <div class="subMenu">
-            <div class="ctxItem" onclick="sortIcons('name')">🔤 By Name</div>
-            <div class="ctxItem" onclick="sortIcons('size')">📦 By Size</div>
-            <div class="ctxItem" onclick="sortIcons('date')">📅 By Date Modified</div>
-            <div class="ctxItem" onclick="sortIcons('none')">🔀 Unsorted</div>
+            <div class="ctxItem" id="sortName" onclick="sortIcons('name')">🔤 By Name</div>
+            <div class="ctxItem" id="sortSize" onclick="sortIcons('size')">📦 By Size</div>
+            <div class="ctxItem" id="sortDate" onclick="sortIcons('date')">📅 By Date Modified</div>
+            <div class="ctxItem" id="sortNone" onclick="sortIcons('none')">🔀 Unsorted</div>
             <div class="ctxItem sep"></div>
             <div class="ctxItem" onclick="toggleFoldFirst()" id="itemFoldFirst">📁 Folders First</div>
         </div>
@@ -331,8 +400,34 @@ body.launching * { cursor: progress !important; }
         <input type="range" id="szSlider" min="60" max="180" value="90" oninput="onSzSlide(this.value)">
     </div>
     <div class="ctxItem sep"></div>
+    <div class="ctxItem" id="menuToggleIcons" onclick="toggleShowIcons()">👁️ Hide Desktop Icons</div>
+    <div class="ctxItem" id="menuToggleHidden" onclick="toggleShowHidden()">🫥 Show Hidden Files</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" style="position:relative">📐 Taskbar Offset <span class="arr">›</span>
+        <div class="subMenu" style="min-width:220px;padding:8px 12px">
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px">Move grid away from taskbar</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                <label style="color:rgba(255,255,255,0.6)">Top (px)</label>
+                <input class="txtInput" id="offTop" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+                <label style="color:rgba(255,255,255,0.6)">Bottom (px)</label>
+                <input class="txtInput" id="offBottom" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+                <label style="color:rgba(255,255,255,0.6)">Left (px)</label>
+                <input class="txtInput" id="offLeft" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+                <label style="color:rgba(255,255,255,0.6)">Right (px)</label>
+                <input class="txtInput" id="offRight" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+            </div>
+        </div>
+    </div>
+    <div class="ctxItem sep"></div>
     <div class="ctxItem" onclick="showWallpaper()">🖼️ Change Wallpaper</div>
-    <div class="ctxItem" onclick="refresh()">🔄 Refresh</div>
+    <!-- <div class="ctxItem" style="position:relative">🧩 Add Widget <span class="arr">›</span> -->
+        <div class="subMenu">
+            <div class="ctxItem" onclick="addWidget('clock')">🕐 Analog Clock</div>
+            <div class="ctxItem" onclick="addWidget('note')">📝 Sticky Note</div>
+            <div class="ctxItem" onclick="addWidget('todo')">✅ Todo List</div>
+        </div>
+    </div>
+    <!-- <div class="ctxItem" onclick="refresh()">🔄 Refresh</div> -->
 </div>
 
 <!-- Icon right-click -->
@@ -343,9 +438,11 @@ body.launching * { cursor: progress !important; }
     <div class="ctxItem" onclick="copyIcons()">📋 Copy</div>
     <div class="ctxItem" onclick="cutIcons()">✂️ Cut</div>
     <div class="ctxItem" onclick="deleteIcons()">🗑️ Delete</div>
-    <div class="ctxItem" onclick="renameIcon()">✏️ Rename</div>
+    <div class="ctxItem" onclick="startInlineRename(activeIcon)">✏️ Rename</div>
+    <div class="ctxItem" id="menuCopyPath" onclick="copyPath()" style="display:none">📎 Copy Path</div>
     <div class="ctxItem sep"></div>
-    <div class="ctxItem" onclick="compressIcons()">📦 Compress</div>
+    <div class="ctxItem" id="menuExtract" onclick="extractArchive()" style="display:none">📂 Extract Here</div>
+    <div class="ctxItem" onclick="compressIcons()">📦 Compress to .tar.gz</div>
     <div class="ctxItem sep"></div>
     <div class="ctxItem" onclick="showProperties()">ℹ️ Properties</div>
 </div>
@@ -367,7 +464,7 @@ body.launching * { cursor: progress !important; }
     </div>
     <div class="dlgBody">
         <div class="tabPanel active" id="tab-details">
-            <div class="propRow"><span class="propKey">Name</span><span class="propVal" id="pi-name"></span></div>
+            <div class="propRow"><span class="propKey">Name</span><input class="txtInput" id="pi-name" type="text" style="flex:1"></div>
             <div class="propRow"><span class="propKey">Type</span><span class="propVal" id="pi-type"></span></div>
             <div class="propRow"><span class="propKey">Size</span><span class="propVal" id="pi-size"></span></div>
             <div class="propRow"><span class="propKey">Location</span><span class="propVal" id="pi-loc"></span></div>
@@ -482,21 +579,25 @@ if (!fs.existsSync(THUMB_DIR)) fs.mkdirSync(THUMB_DIR, { recursive:true });
 
 let CFG = {
     cellSize: 90,
-    sort: 'none',       // 'none'|'name'|'size'|'date'
+    sort: 'none',
     foldersFirst: false,
-    icons: [],          // [{path,col,row}]  — positions when sort='none'
-    openWithMap: {},    // ext -> cmd
-    wallpaper: '',      // path or url
+    showIcons: true,
+    showHidden: false,
+    offsets: { top:0, bottom:0, left:0, right:0 },
+    icons: [],
+    openWithMap: {},
+    wallpaper: '',
+    iconOverrides: {},
 };
 
 function loadCFG() {
     try { Object.assign(CFG, JSON.parse(fs.readFileSync(DATA_FILE,'utf8'))); } catch {}
 }
 function saveCFG() {
-    // Only save positions when sort is 'none' (sorted layouts are regenerated)
     if (CFG.sort === 'none') {
         CFG.icons = Array.from(document.querySelectorAll('.desktopIcon')).map(el => ({
-            path: el.dataset.path, col: +el.dataset.col, row: +el.dataset.row
+            path: el.dataset.path, col: +el.dataset.col, row: +el.dataset.row,
+            page: parseInt(el.dataset.page)||0
         }));
     }
     try { fs.writeFileSync(DATA_FILE, JSON.stringify(CFG,null,2),'utf8'); } catch(e) { console.error(e); }
@@ -578,45 +679,51 @@ function applyWallpaper() {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-//  GRID MATH
-//  Icons fill edge-to-edge: first col starts at x=0, last col ends at screen edge.
-//  Gap = (screenW - COLS*cellSize) / (COLS-1)   [between icons, not padding]
-//  But simpler & accurate: icon occupies cellSize px, gap = computed spacing
-//  We use: itemW = cellSize, total = COLS*cellSize + (COLS-1)*gap = screenW
-//  => gap = (screenW - COLS*cellSize) / (COLS-1)
+//  GRID MATH — respects taskbar offsets
 // ─────────────────────────────────────────────────────────────────────
-const EDGE_PAD = 8; // minimum edge padding px
-let COLS=1, ROWS=1, GAP_X=12, GAP_Y=12;
+const EDGE_PAD = 8;
+let COLS=1, ROWS=1, GAP_X=12, GAP_Y=12, GRID_LEFT=0, GRID_TOP=0, GRID_W=0, GRID_H=0;
 
 function calcGrid() {
     const cs = CFG.cellSize;
-    // How many fit with at least a minimum gap
+    const off = CFG.offsets || { top:0, bottom:0, left:0, right:0 };
+    GRID_LEFT = EDGE_PAD + (off.left||0);
+    GRID_TOP  = EDGE_PAD + (off.top||0);
+    GRID_W = window.innerWidth  - EDGE_PAD*2 - (off.left||0) - (off.right||0);
+    GRID_H = window.innerHeight - EDGE_PAD*2 - (off.top||0)  - (off.bottom||0);
+
     const minGap = Math.max(10, Math.round(cs * 0.15));
-    COLS = Math.max(1, Math.floor((window.innerWidth  - EDGE_PAD*2 + minGap) / (cs + minGap)));
-    ROWS = Math.max(1, Math.floor((window.innerHeight - EDGE_PAD*2 + minGap) / (cs + minGap)));
-    // Recalculate actual gap so icons fill edge-to-edge
-    GAP_X = COLS > 1 ? (window.innerWidth  - EDGE_PAD*2 - COLS*cs) / (COLS-1) : 0;
-    GAP_Y = ROWS > 1 ? (window.innerHeight - EDGE_PAD*2 - ROWS*cs) / (ROWS-1) : 0;
-    // Clamp — don't make gap enormous if few icons
-    GAP_X = Math.min(GAP_X, cs * 0.5);
-    GAP_Y = Math.min(GAP_Y, cs * 0.5);
+    COLS = Math.max(1, Math.floor((GRID_W + minGap) / (cs + minGap)));
+    ROWS = Math.max(1, Math.floor((GRID_H + minGap) / (cs + minGap)));
+    GAP_X = COLS > 1 ? Math.min((GRID_W - COLS*cs) / (COLS-1), cs*0.5) : 0;
+    GAP_Y = ROWS > 1 ? Math.min((GRID_H - ROWS*cs) / (ROWS-1), cs*0.5) : 0;
 }
 
 function cellPx(col, row) {
     return {
-        x: EDGE_PAD + col * (CFG.cellSize + GAP_X),
-        y: EDGE_PAD + row * (CFG.cellSize + GAP_Y),
+        x: GRID_LEFT + col * (CFG.cellSize + GAP_X),
+        y: GRID_TOP  + row * (CFG.cellSize + GAP_Y),
     };
 }
 
-// Snap when icon centre crosses 50% into the next cell
 function pxToCell(px, py) {
     const stepX = CFG.cellSize + GAP_X;
     const stepY = CFG.cellSize + GAP_Y;
     return {
-        col: Math.max(0, Math.min(COLS-1, Math.floor((px - EDGE_PAD) / stepX))),
-        row: Math.max(0, Math.min(ROWS-1, Math.floor((py - EDGE_PAD) / stepY))),
+        col: Math.max(0, Math.min(COLS-1, Math.floor((px - GRID_LEFT) / stepX))),
+        row: Math.max(0, Math.min(ROWS-1, Math.floor((py - GRID_TOP)  / stepY))),
     };
+}
+
+function saveOffsets() {
+    CFG.offsets = {
+        top:    parseInt(document.getElementById('offTop').value)||0,
+        bottom: parseInt(document.getElementById('offBottom').value)||0,
+        left:   parseInt(document.getElementById('offLeft').value)||0,
+        right:  parseInt(document.getElementById('offRight').value)||0,
+    };
+    saveCFG();
+    loadDesktopIcons();
 }
 
 // ─────────────────────────────────────────────────────────────────────
@@ -685,24 +792,34 @@ function getThumbnail(fp, cb) {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-//  TRASH ICON  — special built-in, always last or first position
+//  TRASH ICON
 // ─────────────────────────────────────────────────────────────────────
+function getTrashCount() {
+    try { return fs.readdirSync(path.join(TRASH_PATH,'files')).length; } catch { return 0; }
+}
+function getTrashSize() {
+    try {
+        const out=execSync(`du -sb "${path.join(TRASH_PATH,'files')}" 2>/dev/null`).toString();
+        return parseInt(out)||0;
+    } catch { return 0; }
+}
+
 function buildTrashIcon() {
     const el = document.createElement('div');
     el.className = 'desktopIcon';
     el.dataset.path  = TRASH_PATH;
     el.dataset.name  = 'Trash';
     el.dataset.trash = '1';
-    // Check if trash has items
-    let hasItems = false;
-    try {
-        const files = fs.readdirSync(path.join(TRASH_PATH,'files'));
-        hasItems = files.length > 0;
-    } catch {}
+    el.dataset.isdir = '0';
+    const count = getTrashCount();
+    const full  = count > 0;
     el.innerHTML = `
         <div class="iconInner">
-            <div class="iconImg"><div class="iconEmoji">${hasItems?'🗑️':'🗑️'}</div></div>
-            <div class="iconLabel">Trash${hasItems?' •':''}</div>
+            <div class="iconImg"><div class="iconEmoji" style="position:relative">
+                ${full ? '🗑️' : '🗑️'}
+                ${full ? `<span style="position:absolute;top:-4px;right:-6px;background:#e55;color:white;border-radius:8px;font-size:9px;padding:0 4px;min-width:14px;text-align:center;line-height:14px">${count>99?'99+':count}</span>` : ''}
+            </div></div>
+            <div class="iconLabel">Trash${full?' ('+count+')':''}</div>
         </div>`;
     el.addEventListener('mousedown', onIconMD);
     el.addEventListener('click',     onIconClick);
@@ -740,9 +857,10 @@ function loadDesktopIcons() {
     let files;
     try { files = fs.readdirSync(DESKTOP); } catch(e) { console.error(e); return; }
 
-    // Stat all — skip broken
+    // Stat all — skip broken, respect showHidden
     const entries = [];
     files.forEach(file => {
+        if (!CFG.showHidden && file.startsWith('.')) return; // skip hidden
         const fp = path.join(DESKTOP,file);
         let st; try { st=fs.statSync(fp); } catch(e) { console.warn('skip',file,e.message); return; }
         entries.push({ file, fp, st });
@@ -774,10 +892,10 @@ function loadDesktopIcons() {
     ghost.style.width  = CFG.cellSize+'px';
     ghost.style.height = CFG.cellSize+'px';
 
-    updateFoldFirstLabel();
+    updateSortUI();
+    updateMenuToggles();
+    setTimeout(()=>{ if(typeof loadWidgets==='function'){ loadWidgets(); applyPageVisibility(); } },0);
 }
-
-// Sorting: mutates entries array in-place
 function doSort(entries) {
     if (CFG.sort === 'none' && !CFG.foldersFirst) return; // preserve FS order / saved positions
 
@@ -816,12 +934,25 @@ function buildIcon(file, fp, st) {
     el.dataset.isdir = st.isDirectory() ? '1' : '0';
     const isDir = st.isDirectory();
     const ext   = path.extname(file).toLowerCase();
+
+    // Check for custom icon override
+    const override = CFG.iconOverrides && CFG.iconOverrides[fp];
+    let iconHtml;
+    if (override && override.type==='image') {
+        iconHtml=`<div class="iconImg"><img src="file://${override.value}" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>`;
+    } else {
+        const emoji = override&&override.type==='emoji' ? override.value : emojiFor(file,isDir);
+        iconHtml=`<div class="iconImg"><div class="iconEmoji">${emoji}</div></div>`;
+    }
+
     el.innerHTML = `
         <div class="iconInner">
-            <div class="iconImg"><div class="iconEmoji">${emojiFor(file,isDir)}</div></div>
+            ${iconHtml}
             <div class="iconLabel">${esc(file)}</div>
         </div>`;
-    if (IMG_EXTS.has(ext) && !isDir) {
+
+    // Thumbnail for images (only if no custom override)
+    if (!override && IMG_EXTS.has(ext) && !isDir) {
         getThumbnail(fp, tp => {
             const wrap=el.querySelector('.iconImg'); if(!wrap) return;
             wrap.innerHTML=`<img src="file://${tp}?v=${Date.now()}" alt="">`;
@@ -926,8 +1057,18 @@ document.addEventListener('mousemove', e => {
         const cellOccupant=cellMap[ck(col,row)];
         const ghost=document.getElementById('gridGhost');
 
-        // Check if hovering over a folder
-        if (cellOccupant && cellOccupant.dataset.isdir==='1' && cellOccupant!==drag.leader) {
+        // Check if hovering over a folder OR trash
+        const isTrash = cellOccupant && cellOccupant.dataset.trash==='1';
+        const isFolder = cellOccupant && cellOccupant.dataset.isdir==='1' && !isTrash && cellOccupant!==drag.leader;
+
+        if (isTrash) {
+            if (drag.folderTarget && drag.folderTarget!==cellOccupant)
+                drag.folderTarget.querySelector('.iconInner').style.outline='';
+            drag.folderTarget=cellOccupant;
+            cellOccupant.querySelector('.iconInner').style.outline='2px solid #e55';
+            ghost.style.display='none';
+        } else if (isFolder) {
+        } else if (isFolder) {
             // Highlight folder as drop target
             if (drag.folderTarget && drag.folderTarget!==cellOccupant)
                 drag.folderTarget.querySelector('.iconInner').style.outline='';
@@ -952,7 +1093,12 @@ document.addEventListener('mousemove', e => {
 });
 
 document.addEventListener('mouseup', e => {
-    if (isSelecting) { document.getElementById('select').style.display='none'; isSelecting=false; }
+    if (isSelecting) {
+        document.getElementById('select').style.display='none';
+        isSelecting=false;
+        justFinishedRubberBand=true;
+        setTimeout(()=>{ justFinishedRubberBand=false; }, 80);
+    }
     if (!drag) return;
     const {leader,origCol,origRow,active,followers,folderTarget}=drag; drag=null;
     if (!active) return;
@@ -970,30 +1116,48 @@ document.addEventListener('mouseup', e => {
     const {col,row}=pxToCell(cx,cy);
     const cellOccupant=cellMap[ck(col,row)];
 
-    // DROP INTO FOLDER
-    if (folderTarget || (cellOccupant && cellOccupant.dataset.isdir==='1' && cellOccupant!==leader)) {
-        const targetDir=(folderTarget||cellOccupant).dataset.path;
+    // DROP INTO TRASH
+    const dropTarget = folderTarget || (cellOccupant && cellOccupant!==leader ? cellOccupant : null);
+    if (dropTarget && dropTarget.dataset.trash==='1') {
         const toMove=[leader,...followers];
-        let moved=0;
+        if(!confirm(`Move ${toMove.length} item(s) to trash?`)) {
+            // Put icons back
+            toMove.forEach(ic=>{ snapIcon(ic,{col:+ic.dataset.col||0,row:+ic.dataset.row||0}); });
+            return;
+        }
+        toMove.forEach(ic=>{
+            exec(`gio trash "${ic.dataset.path}" 2>/dev/null || rm -rf "${ic.dataset.path}"`, ()=>{});
+        });
+        setTimeout(loadDesktopIcons, 300);
+        return;
+    }
+
+    // DROP INTO FOLDER
+    if (dropTarget && dropTarget.dataset.isdir==='1') {
+        const targetDir=dropTarget.dataset.path;
+        const toMove=[leader,...followers];
         toMove.forEach(ic=>{
             const src=ic.dataset.path;
             const dest=path.join(targetDir,path.basename(src));
-            try { fs.renameSync(src,dest); moved++; } catch(err){ console.error('move to folder:',err); }
+            try { fs.renameSync(src,dest); } catch(err){ console.error('move to folder:',err); }
         });
         loadDesktopIcons();
         return;
     }
 
-    // DROP ON GRID — snap leader, then place followers in nearby free cells
+    // DROP ON GRID — snap leader to target cell, followers to cells near their current positions
     snapIcon(leader,{col,row});
-    const lx=cellPx(+leader.dataset.col,+leader.dataset.row);
-    leader.style.left=lx.x+'px'; leader.style.top=lx.y+'px';
+    const lSnap=cellPx(+leader.dataset.col,+leader.dataset.row);
+    leader.style.left=lSnap.x+'px'; leader.style.top=lSnap.y+'px';
 
     followers.forEach(ic=>{
-        const free=nextFree(null); // next available cell
-        snapIcon(ic,free);
-        const fp=cellPx(+ic.dataset.col,+ic.dataset.row);
-        ic.style.left=fp.x+'px'; ic.style.top=fp.y+'px';
+        // Compute where the follower ended up on screen and snap to that cell
+        const fcx=parseFloat(ic.style.left)+CFG.cellSize/2;
+        const fcy=parseFloat(ic.style.top )+CFG.cellSize/2;
+        const fc=pxToCell(fcx,fcy);
+        snapIcon(ic, fc);
+        const fp2=cellPx(+ic.dataset.col,+ic.dataset.row);
+        ic.style.left=fp2.x+'px'; ic.style.top=fp2.y+'px';
     });
 
     saveCFG();
@@ -1043,16 +1207,21 @@ function updateRubberBand(e) {
 //  SELECTION CLICK
 // ─────────────────────────────────────────────────────────────────────
 let activeIcon=null;
+let justFinishedRubberBand=false;
 function onIconClick(e) {
-    if (drag&&drag.active) return;  // just finished dragging — ignore
+    if (drag&&drag.active) return;
+    if (justFinishedRubberBand) return; // rubber-band just ended — don't mess with selection
     e.stopPropagation();
     const el=e.currentTarget;
 
     if (e.ctrlKey||e.metaKey) {
-        // Ctrl+click: toggle this icon
-        el.classList.toggle('selected');
+        // Ctrl+click: if icon is selected, move all selected to other page; otherwise toggle selection
+        if(el.classList.contains('selected') && sel().length>1) {
+            moveSelectedToOtherPage();
+        } else {
+            el.classList.toggle('selected');
+        }
     } else if (e.shiftKey) {
-        // Shift+click: range select (by grid order)
         const all=Array.from(document.querySelectorAll('.desktopIcon'));
         const lastSel=all.filter(i=>i.classList.contains('selected')).pop();
         if (lastSel && lastSel!==el) {
@@ -1063,31 +1232,148 @@ function onIconClick(e) {
             el.classList.add('selected');
         }
     } else {
-        // Plain click: if clicking an already-selected icon, keep selection (for drag)
-        // Only clear if clicking a different unselected icon
         if (!el.classList.contains('selected')) {
             document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
             el.classList.add('selected');
         }
-        // If it was already selected, leave everything as-is (so multi-drag works)
     }
     activeIcon=el;
 }
 document.getElementById('desktopGrid').addEventListener('click', e => {
+    if (justFinishedRubberBand) return; // rubber-band just ended — preserve selection
     if (!e.target.closest('.desktopIcon'))
         document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  TYPE-TO-SELECT
+// ─────────────────────────────────────────────────────────────────────
+let typeBuffer='';
+let typeTimer=null;
+const TYPE_TIMEOUT=1200; // ms before buffer resets
+
+function typeSelectUpdate() {
+    const bar=document.getElementById('typeSearchBar');
+    bar.textContent='Type to select: '+typeBuffer;
+    bar.classList.add('show');
+
+    // Match icons whose name starts with the buffer (case-insensitive)
+    const q=typeBuffer.toLowerCase();
+    const icons=Array.from(document.querySelectorAll('.desktopIcon'));
+    let matched=null;
+    for(const ic of icons) {
+        if((ic.dataset.name||'').toLowerCase().startsWith(q)) { matched=ic; break; }
+    }
+    // Cycle: if we already have a unique match, pressing more chars re-matches
+    if(matched) {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        matched.classList.add('selected');
+        activeIcon=matched;
+    }
+
+    clearTimeout(typeTimer);
+    typeTimer=setTimeout(()=>{
+        typeBuffer='';
+        bar.classList.remove('show');
+    }, TYPE_TIMEOUT);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  FIND BAR (Ctrl+F)
+// ─────────────────────────────────────────────────────────────────────
+let findActive=false;
+
+function openFindBar() {
+    findActive=true;
+    const bar=document.getElementById('findBar');
+    bar.classList.add('show');
+    const inp=document.getElementById('findInput');
+    inp.value='';
+    inp.focus();
+    renderFindResults('');
+}
+
+function closeFindBar() {
+    findActive=false;
+    document.getElementById('findBar').classList.remove('show');
+    // Restore all icons to visible
+    document.querySelectorAll('.desktopIcon').forEach(ic=>{
+        ic.style.opacity='';
+        ic.style.pointerEvents='';
+    });
+    document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+}
+
+function renderFindResults(q) {
+    const container=document.getElementById('findResults');
+    const count=document.getElementById('findCount');
+    container.innerHTML='';
+    const icons=Array.from(document.querySelectorAll('.desktopIcon'));
+    const ql=q.toLowerCase();
+
+    // Dim non-matching icons on the desktop
+    icons.forEach(ic=>{
+        const name=(ic.dataset.name||'').toLowerCase();
+        const match=!ql||name.includes(ql);
+        ic.style.opacity=match?'':'0.15';
+        ic.style.pointerEvents=match?'':'none';
+    });
+
+    if(!ql) { count.textContent=''; return; }
+
+    const matches=icons.filter(ic=>(ic.dataset.name||'').toLowerCase().includes(ql));
+    count.textContent=matches.length+' found';
+
+    matches.forEach(ic=>{
+        const item=document.createElement('div');
+        item.className='findResult';
+        const emoji=ic.querySelector('.iconEmoji')?ic.querySelector('.iconEmoji').textContent:'📄';
+        item.innerHTML=`<span>${emoji}</span><span class="frName">${esc(ic.dataset.name||'')}</span>`;
+        item.addEventListener('click',()=>{
+            container.querySelectorAll('.findResult').forEach(r=>r.classList.remove('active'));
+            item.classList.add('active');
+            // Select and highlight the icon on desktop
+            document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+            ic.classList.add('selected');
+            activeIcon=ic;
+        });
+        item.addEventListener('dblclick',()=>{ openFile(ic.dataset.path); closeFindBar(); });
+        container.appendChild(item);
+    });
+}
+
+document.getElementById('findInput').addEventListener('input', e=>{
+    renderFindResults(e.target.value.trim());
+});
+document.getElementById('findInput').addEventListener('keydown', e=>{
+    if(e.key==='Escape') { closeFindBar(); return; }
+    if(e.key==='Enter') {
+        const active=document.querySelector('.findResult.active');
+        if(active) active.dispatchEvent(new MouseEvent('dblclick'));
+        else {
+            // Open first match
+            const first=document.querySelector('.findResult');
+            if(first) first.dispatchEvent(new MouseEvent('dblclick'));
+        }
+    }
+    e.stopPropagation();
 });
 
 // ─────────────────────────────────────────────────────────────────────
 //  KEYBOARD SHORTCUTS
 // ─────────────────────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-    // Don't fire inside dialogs or inputs
+    // Always allow Escape to close find bar
+    if(e.key==='Escape' && findActive) { closeFindBar(); return; }
+
+    // Don't fire inside inputs/textareas (inline rename etc.)
     if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    // Don't fire inside open dialogs (except find bar handled above)
     if (document.querySelector('.overlay.show')) return;
 
     const ctrl = e.ctrlKey||e.metaKey;
 
+    if (ctrl && e.key==='f') { e.preventDefault(); openFindBar(); return; }
     if (ctrl && e.key==='c') { copyIcons(); return; }
     if (ctrl && e.key==='x') { cutIcons();  return; }
     if (ctrl && e.key==='v') { pasteIcons(); return; }
@@ -1095,20 +1381,28 @@ document.addEventListener('keydown', e => {
         document.querySelectorAll('.desktopIcon').forEach(i=>i.classList.add('selected'));
         return;
     }
-    if (e.key==='Delete'||e.key==='BackSpace') { deleteIcons(); return; }
-    if (e.key==='Enter'||e.key==='Return') {
+    if (e.key==='Delete') { deleteIcons(); return; }
+    if (e.key==='Enter') {
         sel().forEach(ic=>openFile(ic.dataset.path));
         return;
     }
-    if (e.key==='F2' && activeIcon) { renameIcon(); return; }
+    if (e.key==='F2' && activeIcon) { startInlineRename(activeIcon); return; }
     if (e.key==='Escape') {
         document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        typeBuffer='';
+        document.getElementById('typeSearchBar').classList.remove('show');
         return;
     }
-    // Arrow key navigation
     if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
         e.preventDefault();
         arrowNav(e.key);
+        return;
+    }
+
+    // Type-to-select: any printable single character not combined with ctrl/alt
+    if (!ctrl && !e.altKey && e.key.length===1 && !findActive) {
+        typeBuffer+=e.key;
+        typeSelectUpdate();
     }
 });
 
@@ -1138,7 +1432,7 @@ function arrowNav(key) {
 //  CONTEXT MENUS
 // ─────────────────────────────────────────────────────────────────────
 function onIconCtx(e) {
-    if (e.currentTarget.dataset.trash) return; // trash has its own
+    if (e.currentTarget.dataset.trash) return;
     e.preventDefault(); e.stopPropagation();
     const el=e.currentTarget;
     if (!el.classList.contains('selected')) {
@@ -1146,6 +1440,13 @@ function onIconCtx(e) {
         el.classList.add('selected');
     }
     activeIcon=el;
+    // Show/hide context-sensitive items
+    const fp=el.dataset.path;
+    const isDir=el.dataset.isdir==='1';
+    const ext=path.extname(fp).toLowerCase();
+    const archive=isArchive(fp);
+    document.getElementById('menuCopyPath').style.display=isDir?'':'none';
+    document.getElementById('menuExtract').style.display=archive?'':'none';
     showCtx('menuIcon',e.clientX,e.clientY);
 }
 document.addEventListener('contextmenu', e => {
@@ -1208,15 +1509,6 @@ function deleteIcons() {
     s.forEach(ic=>{
         exec(`gio trash "${ic.dataset.path}" 2>/dev/null || rm -rf "${ic.dataset.path}"`,()=>loadDesktopIcons());
     });
-    hideCtx();
-}
-
-function renameIcon() {
-    if(!activeIcon||activeIcon.dataset.trash) return;
-    const n=prompt('New name:',activeIcon.dataset.name);
-    if(!n||n===activeIcon.dataset.name) return;
-    try{ fs.renameSync(activeIcon.dataset.path,path.join(DESKTOP,n)); loadDesktopIcons(); }
-    catch(e){alert('Failed: '+e.message);}
     hideCtx();
 }
 
@@ -1304,10 +1596,126 @@ function toggleFoldFirst() {
     CFG.foldersFirst=!CFG.foldersFirst;
     saveCFG(); loadDesktopIcons(); hideCtx();
 }
-function updateFoldFirstLabel() {
-    const el=document.getElementById('itemFoldFirst');
-    if(el) el.textContent=(CFG.foldersFirst?'✅':'📁')+' Folders First';
+function updateSortUI() {
+    const map={name:'sortName',size:'sortSize',date:'sortDate',none:'sortNone'};
+    Object.entries(map).forEach(([mode,id])=>{
+        const el=document.getElementById(id);
+        if(!el) return;
+        const labels={name:'🔤 By Name',size:'📦 By Size',date:'📅 By Date Modified',none:'🔀 Unsorted'};
+        el.textContent=(CFG.sort===mode?'✅ ':'')+labels[mode];
+    });
+    const ff=document.getElementById('itemFoldFirst');
+    if(ff) ff.textContent=(CFG.foldersFirst?'✅ ':'')+'Folders First';
 }
+function updateMenuToggles() {
+    const si=document.getElementById('menuToggleIcons');
+    if(si) si.textContent=CFG.showIcons?'👁️ Hide Desktop Icons':'👁️ Show Desktop Icons';
+    const sh=document.getElementById('menuToggleHidden');
+    if(sh) sh.textContent=CFG.showHidden?'🫥 Hide Hidden Files':'🫥 Show Hidden Files';
+}
+function toggleShowIcons() {
+    CFG.showIcons=!CFG.showIcons;
+    document.getElementById('desktopGrid').style.visibility=CFG.showIcons?'visible':'hidden';
+    saveCFG(); updateMenuToggles(); hideCtx();
+}
+function toggleShowHidden() {
+    CFG.showHidden=!CFG.showHidden;
+    saveCFG(); loadDesktopIcons(); hideCtx();
+}
+
+function copyPath() {
+    if(!activeIcon) return;
+    const clip=nw.Clipboard.get();
+    clip.set(activeIcon.dataset.path,'text');
+    hideCtx();
+}
+
+// Archives
+const ARCHIVE_EXTS=new Set(['.zip','.tar','.gz','.bz2','.xz','.7z','.rar','.tar.gz','.tar.bz2','.tar.xz']);
+function isArchive(fp) {
+    const f=fp.toLowerCase();
+    return ARCHIVE_EXTS.has(path.extname(f)) || f.endsWith('.tar.gz')||f.endsWith('.tar.bz2')||f.endsWith('.tar.xz');
+}
+function extractArchive() {
+    if(!activeIcon) return;
+    const fp=activeIcon.dataset.path;
+    const dir=path.dirname(fp);
+    const f=fp.toLowerCase();
+    let cmd;
+    if(f.endsWith('.zip'))                       cmd=`unzip -o "${fp}" -d "${dir}"`;
+    else if(f.endsWith('.tar.gz')||f.endsWith('.tgz')) cmd=`tar -xzf "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.tar.bz2'))              cmd=`tar -xjf "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.tar.xz'))               cmd=`tar -xJf "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.tar'))                  cmd=`tar -xf  "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.7z'))                   cmd=`7z x "${fp}" -o"${dir}"`;
+    else if(f.endsWith('.rar'))                  cmd=`unrar x "${fp}" "${dir}"`;
+    else if(f.endsWith('.gz'))                   cmd=`gunzip -k "${fp}"`;
+    else if(f.endsWith('.bz2'))                  cmd=`bunzip2 -k "${fp}"`;
+    else cmd=`xdg-open "${fp}"`;
+    document.body.classList.add('launching');
+    exec(cmd, err=>{
+        document.body.classList.remove('launching');
+        if(err) alert('Extract failed: '+err.message);
+        else loadDesktopIcons();
+    });
+    hideCtx();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  INLINE RENAME — input appears exactly where the label is
+// ─────────────────────────────────────────────────────────────────────
+function startInlineRename(iconEl) {
+    const ic = iconEl || activeIcon;
+    if(!ic||ic.dataset.trash) return;
+    hideCtx();
+
+    const lbl = ic.querySelector('.iconLabel');
+    if(!lbl) return;
+
+    const originalName = ic.dataset.name;
+
+    // Build textarea in place of label
+    const inp = document.createElement('textarea');
+    inp.className = 'iconRenameInput';
+    inp.value = originalName;
+    inp.rows = 1;
+    inp.style.fontSize = lbl.style.fontSize || '11px';
+    inp.style.width = lbl.style.width || '100%';
+    // Auto-grow height
+    inp.style.height = 'auto';
+
+    lbl.replaceWith(inp);
+    inp.focus();
+    inp.select();
+    // auto-size
+    inp.style.height = inp.scrollHeight+'px';
+    inp.addEventListener('input', ()=>{ inp.style.height='auto'; inp.style.height=inp.scrollHeight+'px'; });
+
+    function commit() {
+        const newName=inp.value.trim();
+        // Restore label before possibly reloading
+        inp.replaceWith(lbl);
+        if(!newName||newName===originalName) return;
+        const oldPath=ic.dataset.path;
+        const newPath=path.join(DESKTOP, newName);
+        try {
+            fs.renameSync(oldPath, newPath);
+            loadDesktopIcons();
+        } catch(err) { alert('Rename failed: '+err.message); }
+    }
+    function cancel() { inp.replaceWith(lbl); }
+
+    inp.addEventListener('keydown', e=>{
+        if(e.key==='Enter'){ e.preventDefault(); commit(); }
+        if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+        e.stopPropagation(); // don't trigger desktop shortcuts
+    });
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('click', e=>e.stopPropagation());
+    inp.addEventListener('mousedown', e=>e.stopPropagation());
+}
+
+function renameIcon() { startInlineRename(activeIcon); }
 
 // ─────────────────────────────────────────────────────────────────────
 //  CELL SIZE SLIDER
@@ -1330,29 +1738,53 @@ function onSzSlide(v) {
     saveCFG();
 }
 function syncUI() {
-    document.getElementById('szSlider').value=CFG.cellSize;
+    const sl=document.getElementById('szSlider');
+    if(sl) sl.value=CFG.cellSize;
     document.getElementById('szLabel').textContent=CFG.cellSize;
+    // Taskbar offsets
+    const off=CFG.offsets||{};
+    ['Top','Bottom','Left','Right'].forEach(k=>{
+        const el=document.getElementById('off'+k);
+        if(el) el.value=off[k.toLowerCase()]||0;
+    });
+    updateSortUI();
+    updateMenuToggles();
+    if(!CFG.showIcons) document.getElementById('desktopGrid').style.visibility='hidden';
 }
 
 // ─────────────────────────────────────────────────────────────────────
 //  PROPERTIES
 // ─────────────────────────────────────────────────────────────────────
 let propsPath=null;
+const EMOJI_LIST=['📄','📝','📕','📦','🎬','🎵','💻','⚙️','🖼️','📂','📁',
+    '🔑','🔒','🔓','💾','💿','📀','🖥️','🖨️','📡','🔧','🔨','⚡','🌐',
+    '📊','📈','📉','🗂️','📋','📌','📎','✂️','🗑️','⭐','❤️','🚀','🎮','🧩'];
+
 function showProperties() {
     if(!activeIcon||activeIcon.dataset.trash) return;
     hideCtx();
     propsPath=activeIcon.dataset.path;
     const name=activeIcon.dataset.name;
     let st; try{st=fs.statSync(propsPath);}catch(e){alert(e.message);return;}
+
     document.getElementById('propsTitle').textContent=name;
-    document.getElementById('pi-name').textContent=name;
-    document.getElementById('pi-type').textContent=st.isDirectory()?'Directory':(path.extname(name)||'File');
+    document.getElementById('pi-name').value=name;
+    const ext=path.extname(name).toLowerCase();
+    document.getElementById('pi-type').textContent=st.isDirectory()?'Directory':(ext||'File');
     document.getElementById('pi-size').textContent=fmtBytes(st.size);
     document.getElementById('pi-loc').textContent=path.dirname(propsPath);
     document.getElementById('pi-cre').textContent=st.birthtime.toLocaleString();
     document.getElementById('pi-mod').textContent=st.mtime.toLocaleString();
     document.getElementById('pi-acc').textContent=st.atime.toLocaleString();
     document.getElementById('pi-hidden').checked=name.startsWith('.');
+
+    // Image metadata
+    const imgRows=document.getElementById('pi-img-rows');
+    const isImg=IMG_EXTS.has(ext)&&!st.isDirectory();
+    imgRows.style.display=isImg?'':'none';
+    if(isImg) loadImageMeta(propsPath);
+
+    // Permissions
     const m=st.mode;
     const bits=[0o400,0o200,0o100,0o040,0o020,0o010,0o004,0o002,0o001];
     ['p-ur','p-uw','p-ux','p-gr','p-gw','p-gx','p-or','p-ow','p-ox'].forEach((id,i)=>{
@@ -1362,6 +1794,11 @@ function showProperties() {
         const [o,g]=execSync(`stat -c "%U %G" "${propsPath}"`).toString().trim().split(' ');
         document.getElementById('pm-owner').value=o||''; document.getElementById('pm-group').value=g||'';
     } catch { document.getElementById('pm-owner').value=''; document.getElementById('pm-group').value=''; }
+
+    // Icon tab
+    buildIconTab();
+
+    // Reset to details tab
     document.querySelectorAll('.dlgTab').forEach(t=>t.classList.remove('active'));
     document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
     document.querySelector('[data-tab="details"]').classList.add('active');
@@ -1369,18 +1806,124 @@ function showProperties() {
     document.getElementById('ovProps').classList.add('show');
 }
 
+// ── Image EXIF via exiftool (most common) or identify ────────────────
+function loadImageMeta(fp) {
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v||'—'; };
+    set('pi-dimensions','…'); set('pi-camera',''); set('pi-focal','');
+    set('pi-aperture',''); set('pi-shutter',''); set('pi-iso','');
+    set('pi-datetaken',''); set('pi-gps','');
+
+    // Try exiftool first (richest EXIF)
+    exec(`exiftool -json -ImageWidth -ImageHeight -Make -Model -FocalLength -Aperture -ShutterSpeed -ISO -DateTimeOriginal -GPSLatitude -GPSLongitude "${fp}" 2>/dev/null`, (err,stdout) => {
+        if (!err && stdout.trim()) {
+            try {
+                const d=JSON.parse(stdout)[0];
+                const w=d.ImageWidth, h=d.ImageHeight;
+                if(w&&h) set('pi-dimensions',`${w} × ${h} px`);
+                const cam=[d.Make,d.Model].filter(Boolean).join(' ');
+                set('pi-camera',cam);
+                if(d.FocalLength) set('pi-focal',d.FocalLength);
+                if(d.Aperture)    set('pi-aperture','ƒ/'+d.Aperture);
+                if(d.ShutterSpeed)set('pi-shutter',d.ShutterSpeed+'s');
+                if(d.ISO)         set('pi-iso',d.ISO);
+                if(d.DateTimeOriginal) set('pi-datetaken',d.DateTimeOriginal);
+                if(d.GPSLatitude&&d.GPSLongitude) set('pi-gps',`${d.GPSLatitude}, ${d.GPSLongitude}`);
+                return;
+            } catch {}
+        }
+        // Fallback: identify (ImageMagick) for just dimensions
+        exec(`identify -format "%wx%h" "${fp}" 2>/dev/null`, (e2,out2) => {
+            if(!e2&&out2.trim()) {
+                const [w,h]=(out2.trim().split('x'));
+                if(w&&h) set('pi-dimensions',`${w} × ${h} px`);
+            } else {
+                // Last resort: load in an img tag
+                const img=new Image();
+                img.onload=()=>set('pi-dimensions',`${img.naturalWidth} × ${img.naturalHeight} px`);
+                img.src=`file://${fp}`;
+            }
+        });
+    });
+}
+
+// ── Icon tab ─────────────────────────────────────────────────────────
+let pendingIconChoice=null; // { type:'emoji'|'image', value:str } | null=reset
+
+function buildIconTab() {
+    pendingIconChoice=undefined; // undefined = no change yet
+    // Preview
+    const wrap=document.getElementById('iconPreviewWrap');
+    const saved=CFG.iconOverrides&&CFG.iconOverrides[propsPath];
+    if(saved&&saved.type==='image') {
+        wrap.innerHTML=`<img src="file://${saved.value}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">`;
+    } else {
+        wrap.textContent=saved?saved.value:emojiFor(path.basename(propsPath),false);
+    }
+    document.getElementById('iconCustomPath').value='';
+
+    // Emoji grid
+    const picker=document.getElementById('emojiPicker');
+    picker.innerHTML='';
+    const curEmoji=saved&&saved.type==='emoji'?saved.value:'';
+    EMOJI_LIST.forEach(em=>{
+        const btn=document.createElement('button');
+        btn.className='emojiBtn'+(em===curEmoji?' active':'');
+        btn.textContent=em;
+        btn.addEventListener('click',()=>{
+            picker.querySelectorAll('.emojiBtn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            pendingIconChoice={type:'emoji',value:em};
+            wrap.textContent=em; wrap.innerHTML=''; wrap.textContent=em;
+            document.getElementById('iconCustomPath').value='';
+        });
+        picker.appendChild(btn);
+    });
+}
+
+function browseCustomIcon() {
+    exec(`zenity --file-selection --file-filter="Images | *.png *.jpg *.jpeg *.svg *.webp" 2>/dev/null || kdialog --getopenfilename ~ "*.png *.jpg *.jpeg *.svg" 2>/dev/null`,(err,stdout)=>{
+        const p=stdout.trim();
+        if(!p) return;
+        document.getElementById('iconCustomPath').value=p;
+        const wrap=document.getElementById('iconPreviewWrap');
+        wrap.innerHTML=`<img src="file://${p}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">`;
+        pendingIconChoice={type:'image',value:p};
+        document.getElementById('emojiPicker').querySelectorAll('.emojiBtn').forEach(b=>b.classList.remove('active'));
+    });
+}
+
+function resetCustomIcon() {
+    if(!CFG.iconOverrides) CFG.iconOverrides={};
+    delete CFG.iconOverrides[propsPath];
+    pendingIconChoice=null; // null = explicitly reset
+    const wrap=document.getElementById('iconPreviewWrap');
+    wrap.textContent=emojiFor(path.basename(propsPath||''),false);
+    document.getElementById('iconCustomPath').value='';
+    document.getElementById('emojiPicker').querySelectorAll('.emojiBtn').forEach(b=>b.classList.remove('active'));
+}
+
 function applyProps() {
     if(!propsPath) return;
-    const name=path.basename(propsPath);
-    const wantHidden=document.getElementById('pi-hidden').checked;
-    const isHidden=name.startsWith('.');
+    const origName=path.basename(propsPath);
+    const newName=document.getElementById('pi-name').value.trim();
     let target=propsPath;
+
+    // Rename if name changed
+    if(newName && newName!==origName) {
+        const np=path.join(path.dirname(propsPath), newName);
+        try{ fs.renameSync(propsPath, np); target=np; propsPath=np; }
+        catch(e){ alert('Rename failed: '+e.message); }
+    }
+
+    const wantHidden=document.getElementById('pi-hidden').checked;
+    const curName=path.basename(target);
+    const isHidden=curName.startsWith('.');
     if(wantHidden&&!isHidden){
-        const np=path.join(path.dirname(propsPath),'.'+name);
-        try{fs.renameSync(propsPath,np);target=np;}catch(e){alert(e.message);}
+        const np=path.join(path.dirname(target),'.'+curName);
+        try{fs.renameSync(target,np);target=np;}catch(e){alert(e.message);}
     } else if(!wantHidden&&isHidden){
-        const np=path.join(path.dirname(propsPath),name.slice(1));
-        try{fs.renameSync(propsPath,np);target=np;}catch(e){alert(e.message);}
+        const np=path.join(path.dirname(target),curName.slice(1));
+        try{fs.renameSync(target,np);target=np;}catch(e){alert(e.message);}
     }
     let mode=0;
     const bits=[0o400,0o200,0o100,0o040,0o020,0o010,0o004,0o002,0o001];
@@ -1391,7 +1934,17 @@ function applyProps() {
     const own=document.getElementById('pm-owner').value.trim();
     const grp=document.getElementById('pm-group').value.trim();
     if(own||grp) exec(`chown ${own}${grp?':'+grp:''} "${target}"`,err=>{if(err)console.warn('chown:',err);});
-    closeOv('ovProps'); loadDesktopIcons();
+
+    const customPath=document.getElementById('iconCustomPath').value.trim();
+    if(customPath) pendingIconChoice={type:'image',value:customPath};
+    if(!CFG.iconOverrides) CFG.iconOverrides={};
+    if(pendingIconChoice===null) {
+        delete CFG.iconOverrides[propsPath];
+    } else if(pendingIconChoice) {
+        if(target!==propsPath) delete CFG.iconOverrides[propsPath];
+        CFG.iconOverrides[target]=pendingIconChoice;
+    }
+    saveCFG(); closeOv('ovProps'); loadDesktopIcons();
 }
 
 function switchTab(tabEl) {
@@ -1501,6 +2054,535 @@ applyWallpaperCSS(CFG.wallpaper);
 calcGrid();
 syncUI();
 loadDesktopIcons();
+initPages();
+</script>
+
+<style>
+/* ═══════════════════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════════════════ */
+#pagesContainer {
+    position: fixed; top:0; left:0;
+    width:100vw; height:200vh; /* 2 pages stacked */
+    pointer-events: none;
+    z-index: 0;
+}
+#pageIndicator {
+    position: fixed; right:14px; top:50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px;
+    z-index: 9000; pointer-events: none;
+}
+.pageDot {
+    width:7px; height:7px; border-radius:50%;
+    background: rgba(255,255,255,0.35);
+    transition: background 0.2s, transform 0.2s;
+}
+.pageDot.active { background: white; transform: scale(1.3); }
+
+/* Page transition */
+#desktopGrid { transition: transform 0.38s cubic-bezier(.4,0,.2,1); }
+
+/* ═══════════════════════════════════════════════════════
+   WIDGETS
+═══════════════════════════════════════════════════════ */
+.widget {
+    position: absolute;
+    background: rgba(255,255,255,0.08);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+    overflow: hidden;
+    z-index: 11;
+    user-select: none;
+    transition: box-shadow 0.15s;
+    cursor: default;
+}
+.widget:hover { box-shadow: 0 6px 32px rgba(0,0,0,0.5); }
+.widget.dragging { opacity: 0.85; z-index: 5100; box-shadow: 0 12px 40px rgba(0,0,0,0.6); }
+.widget.selected { outline: 2px solid rgba(74,158,255,0.7); }
+
+.widgetHeader {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 12px 4px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.07em;
+    color: rgba(255,255,255,0.5); text-transform: uppercase;
+    cursor: move;
+}
+.widgetClose {
+    background: none; border: none;
+    color: rgba(255,255,255,0.35); cursor: pointer;
+    font-size: 13px; line-height: 1; padding: 0;
+    transition: color 0.1s;
+}
+.widgetClose:hover { color: rgba(255,100,100,0.9); }
+
+/* Clock */
+.clockFace {
+    display: flex; align-items: center; justify-content: center;
+    padding: 6px 12px 12px;
+}
+.clockSvg { overflow: visible; }
+
+/* Notes */
+.noteArea {
+    width: 100%; height: calc(100% - 36px);
+    background: transparent; border: none; outline: none; resize: none;
+    color: rgba(255,255,255,0.85); font-size: 12.5px; line-height: 1.55;
+    padding: 4px 12px 12px; font-family: inherit;
+}
+
+/* Todo */
+.todoList { overflow-y: auto; padding: 0 10px 10px; max-height: calc(100% - 80px); }
+.todoItem {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 0; border-bottom: 1px solid rgba(255,255,255,0.07);
+    font-size: 12.5px; color: rgba(255,255,255,0.8);
+}
+.todoItem input[type=checkbox] { accent-color: #4a9eff; flex-shrink:0; }
+.todoItem span { flex:1; cursor:default; }
+.todoItem span.done { text-decoration: line-through; color: rgba(255,255,255,0.35); }
+.todoDel { background:none; border:none; color:rgba(255,255,255,0.2); cursor:pointer; font-size:14px; padding:0; }
+.todoDel:hover { color:rgba(255,80,80,0.8); }
+.todoAdd { display:flex; gap:6px; padding: 6px 10px; border-top: 1px solid rgba(255,255,255,0.08); }
+.todoInput {
+    flex:1; background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.12);
+    border-radius:6px; color:white; font-size:12px; padding:4px 8px; outline:none;
+}
+.todoInput:focus { border-color: #4a9eff; }
+.todoAddBtn {
+    background:#4a9eff; border:none; border-radius:6px;
+    color:white; font-size:13px; cursor:pointer; padding:0 10px;
+}
+
+/* Widget add menu (in desktop ctx menu) */
+</style>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  PAGES SYSTEM
+// ═══════════════════════════════════════════════════════════════════════
+const NUM_PAGES = 2;
+let currentPage = 0; // 0 = top page, 1 = bottom page
+
+function initPages() {
+    // Page indicator dots
+    const ind = document.getElementById('pageIndicator');
+    for(let i=0;i<NUM_PAGES;i++) {
+        const d = document.createElement('div');
+        d.className = 'pageDot' + (i===0?' active':'');
+        d.dataset.page = i;
+        ind.appendChild(d);
+    }
+
+    // Wheel scroll to change page
+    document.addEventListener('wheel', onPageScroll, { passive: false });
+    // Touch swipe
+    let touchY0 = null;
+    document.addEventListener('touchstart', e=>{ touchY0=e.touches[0].clientY; }, {passive:true});
+    document.addEventListener('touchend', e=>{
+        if(touchY0===null) return;
+        const dy = touchY0 - e.changedTouches[0].clientY;
+        if(Math.abs(dy)>60) goToPage(currentPage + (dy>0?1:-1));
+        touchY0=null;
+    });
+}
+
+let pageScrollTimer=null;
+function onPageScroll(e) {
+    if(document.querySelector('.overlay.show')) return;
+    if(e.target.closest('.widget textarea, .widget .todoList')) return; // allow scrolling inside widgets
+    clearTimeout(pageScrollTimer);
+    pageScrollTimer = setTimeout(()=>{
+        goToPage(currentPage + (e.deltaY>0?1:-1));
+    }, 60);
+}
+
+function goToPage(p) {
+    p = Math.max(0, Math.min(NUM_PAGES-1, p));
+    if(p===currentPage) return;
+    currentPage = p;
+    const grid = document.getElementById('desktopGrid');
+    grid.style.transform = p===0 ? '' : `translateY(-100vh)`;
+    document.querySelectorAll('.pageDot').forEach((d,i)=>{
+        d.classList.toggle('active', i===p);
+    });
+    // Widgets move with their page
+    document.querySelectorAll('.widget').forEach(w=>{
+        const wp = parseInt(w.dataset.page)||0;
+        w.style.transform = (wp===p) ? '' : `translateY(${(wp-p)*100}vh)`;
+        w.style.pointerEvents = (wp===p) ? '' : 'none';
+    });
+}
+
+// Move icon/widget to other page: Ctrl+drag or Ctrl+click context
+function moveIconToPage(el, p) {
+    el.dataset.page = p;
+    saveCFG();
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+//  WIDGETS SYSTEM
+// ═══════════════════════════════════════════════════════════════════════
+// Widget data stored in CFG.widgets: [{id,type,col,row,cols,rows,page,data}]
+if(!CFG.widgets) CFG.widgets={};
+
+const WIDGET_TYPES = ['clock','note','todo'];
+
+function addWidget(type) {
+    hideCtx();
+    const id = 'w_'+Date.now();
+    // Default sizes
+    const sizes = { clock:{cols:2,rows:2}, note:{cols:2,rows:3}, todo:{cols:2,rows:3} };
+    const sz = sizes[type]||{cols:2,rows:2};
+    // Find a free zone (top-left of a cols×rows block)
+    const pos = findWidgetFreeZone(sz.cols, sz.rows);
+    const wdata = { id, type, col:pos.col, row:pos.row, cols:sz.cols, rows:sz.rows, page:currentPage, data:{} };
+    CFG.widgets[id] = wdata;
+    saveCFG();
+    renderWidget(wdata);
+}
+
+function findWidgetFreeZone(cols, rows) {
+    // Simple: find top-left cell where all cells in cols×rows block are free
+    for(let r=0;r<ROWS-rows+1;r++) {
+        for(let c=0;c<COLS-cols+1;c++) {
+            let free=true;
+            outer: for(let dr=0;dr<rows;dr++) for(let dc=0;dc<cols;dc++) {
+                if(cellMap[ck(c+dc,r+dr)]) { free=false; break outer; }
+            }
+            if(free) return {col:c,row:r};
+        }
+    }
+    return {col:0,row:0};
+}
+
+function renderWidget(wdata) {
+    const { id, type, col, row, cols, rows, page } = wdata;
+    const cs = CFG.cellSize;
+    const {x,y} = cellPx(col, row);
+    const gx = GAP_X, gy = GAP_Y;
+    const w = cols*cs + (cols-1)*gx;
+    const h = rows*cs + (rows-1)*gy;
+
+    // Remove existing if any
+    const old = document.getElementById(id);
+    if(old) old.remove();
+    // Free cells it occupied
+    for(let dr=0;dr<rows;dr++) for(let dc=0;dc<cols;dc++) {
+        const k=ck(col+dc,row+dr);
+        if(cellMap[k]&&cellMap[k]._widgetId===id) delete cellMap[k];
+    }
+
+    const el = document.createElement('div');
+    el.id = id;
+    el.className = 'widget';
+    el.dataset.widgetId = id;
+    el.dataset.page = page||0;
+    el.style.left = x+'px';
+    el.style.top  = y+'px';
+    el.style.width = w+'px';
+    el.style.height = h+'px';
+    if((page||0) !== currentPage) {
+        el.style.transform = `translateY(${((page||0)-currentPage)*100}vh)`;
+        el.style.pointerEvents = 'none';
+    }
+
+    // Mark cells as occupied by widget
+    for(let dr=0;dr<rows;dr++) for(let dc=0;dc<cols;dc++) {
+        const k=ck(col+dc,row+dr);
+        cellMap[k] = el;
+        el._widgetId = id;
+    }
+
+    const inner = buildWidgetInner(wdata);
+    el.innerHTML = `
+        <div class="widgetHeader">
+            <span>${{clock:'🕐 Clock',note:'📝 Note',todo:'✅ Todo'}[type]||type}</span>
+            <div style="display:flex;gap:6px;align-items:center">
+                <button class="widgetClose" onclick="resizeWidgetMenu('${id}')" title="Resize">⤡</button>
+                <button class="widgetClose" onclick="deleteWidget('${id}')">✕</button>
+            </div>
+        </div>`;
+    el.querySelector('.widgetHeader').insertAdjacentHTML('afterend', inner);
+
+    // Header drag
+    const header = el.querySelector('.widgetHeader');
+    header.addEventListener('mousedown', ev=>startWidgetDrag(ev, el, wdata));
+    // Ctrl+click to move to other page
+    el.addEventListener('click', ev=>{ if(ev.ctrlKey||ev.metaKey) promptMoveWidgetPage(wdata); });
+
+    document.getElementById('desktopGrid').appendChild(el);
+    initWidgetBehavior(el, wdata);
+}
+
+function buildWidgetInner(wdata) {
+    const { type, cols, rows } = wdata;
+    const cs = CFG.cellSize;
+    const h = rows*cs + (rows-1)*GAP_Y - 36; // subtract header
+    if(type==='clock') {
+        return `<div class="clockFace" style="height:${h}px"><canvas id="clk_${wdata.id}" width="${Math.min(cols*cs-20,h-10)}" height="${Math.min(cols*cs-20,h-10)}"></canvas></div>`;
+    }
+    if(type==='note') {
+        const text = (wdata.data&&wdata.data.text)||'';
+        return `<textarea class="noteArea" style="height:${h}px" placeholder="Type a note…" oninput="saveWidgetNote('${wdata.id}',this.value)">${esc(text)}</textarea>`;
+    }
+    if(type==='todo') {
+        return `<div class="todoList" id="tl_${wdata.id}" style="max-height:${h-48}px"></div>
+        <div class="todoAdd">
+            <input class="todoInput" id="ti_${wdata.id}" type="text" placeholder="New item…">
+            <button class="todoAddBtn" onclick="addTodoItem('${wdata.id}')">+</button>
+        </div>`;
+    }
+    return '';
+}
+
+function initWidgetBehavior(el, wdata) {
+    const { type, id } = wdata;
+    if(type==='clock') startClock(id);
+    if(type==='todo') renderTodoList(id);
+    if(type==='note') {
+        // nothing extra needed
+    }
+}
+
+// ── Clock ────────────────────────────────────────────────────────────
+const clockTimers={};
+function startClock(id) {
+    clearInterval(clockTimers[id]);
+    clockTimers[id]=setInterval(()=>drawClock(id), 1000);
+    drawClock(id);
+}
+function drawClock(id) {
+    const canvas=document.getElementById('clk_'+id);
+    if(!canvas) { clearInterval(clockTimers[id]); return; }
+    const ctx=canvas.getContext('2d');
+    const W=canvas.width, H=canvas.height, R=Math.min(W,H)/2-4;
+    const cx=W/2, cy=H/2;
+    const now=new Date();
+    const h=now.getHours()%12, m=now.getMinutes(), s=now.getSeconds();
+
+    ctx.clearRect(0,0,W,H);
+
+    // Face
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.07)'; ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.25)'; ctx.lineWidth=1.5; ctx.stroke();
+
+    // Hour marks
+    for(let i=0;i<12;i++){
+        const a=i*Math.PI/6;
+        const x1=cx+Math.sin(a)*(R-6), y1=cy-Math.cos(a)*(R-6);
+        const x2=cx+Math.sin(a)*(R-12), y2=cy-Math.cos(a)*(R-12);
+        ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+        ctx.strokeStyle='rgba(255,255,255,0.5)'; ctx.lineWidth=i%3===0?2:1; ctx.stroke();
+    }
+
+    function hand(angle, len, width, color) {
+        ctx.beginPath();
+        ctx.moveTo(cx,cy);
+        ctx.lineTo(cx+Math.sin(angle)*len, cy-Math.cos(angle)*len);
+        ctx.strokeStyle=color; ctx.lineWidth=width; ctx.lineCap='round'; ctx.stroke();
+    }
+
+    hand((h+m/60)*Math.PI/6, R*0.55, 3, 'rgba(255,255,255,0.9)');
+    hand((m+s/60)*Math.PI/30, R*0.78, 2, 'rgba(255,255,255,0.85)');
+    hand(s*Math.PI/30, R*0.85, 1, '#4a9eff');
+
+    // Centre dot
+    ctx.beginPath(); ctx.arc(cx,cy,3,0,Math.PI*2);
+    ctx.fillStyle='white'; ctx.fill();
+}
+
+// ── Note ─────────────────────────────────────────────────────────────
+function saveWidgetNote(id, text) {
+    if(!CFG.widgets[id]) return;
+    if(!CFG.widgets[id].data) CFG.widgets[id].data={};
+    CFG.widgets[id].data.text=text;
+    saveCFG();
+}
+
+// ── Todo ─────────────────────────────────────────────────────────────
+function renderTodoList(id) {
+    const wdata=CFG.widgets[id]; if(!wdata) return;
+    const items=(wdata.data&&wdata.data.items)||[];
+    const list=document.getElementById('tl_'+id); if(!list) return;
+    list.innerHTML='';
+    items.forEach((item,i)=>{
+        const div=document.createElement('div'); div.className='todoItem';
+        div.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><span class="${item.done?'done':''}">${esc(item.text)}</span><button class="todoDel">×</button>`;
+        div.querySelector('input').addEventListener('change',ev=>{
+            items[i].done=ev.target.checked; saveCFG(); renderTodoList(id);
+        });
+        div.querySelector('.todoDel').addEventListener('click',()=>{
+            items.splice(i,1); saveCFG(); renderTodoList(id);
+        });
+        list.appendChild(div);
+    });
+}
+function addTodoItem(id) {
+    const inp=document.getElementById('ti_'+id); if(!inp) return;
+    const text=inp.value.trim(); if(!text) return;
+    if(!CFG.widgets[id].data) CFG.widgets[id].data={};
+    if(!CFG.widgets[id].data.items) CFG.widgets[id].data.items=[];
+    CFG.widgets[id].data.items.push({text,done:false});
+    inp.value='';
+    saveCFG();
+    renderTodoList(id);
+}
+document.addEventListener('keydown', ev=>{
+    if(ev.key!=='Enter') return;
+    const active=document.activeElement;
+    if(active&&active.classList.contains('todoInput')) {
+        const id=active.id.replace('ti_','');
+        addTodoItem(id);
+    }
+}, true);
+
+// ── Widget drag ───────────────────────────────────────────────────────
+let wDrag=null;
+function startWidgetDrag(e, el, wdata) {
+    if(e.button!==0) return;
+    e.stopPropagation(); e.preventDefault();
+    const rect=el.getBoundingClientRect();
+    // Free cells
+    const {col,row,cols,rows,id}=wdata;
+    for(let dr=0;dr<rows;dr++) for(let dc=0;dc<cols;dc++) {
+        const k=ck(col+dc,row+dr);
+        if(cellMap[k]&&cellMap[k]._widgetId===id) delete cellMap[k];
+    }
+    // Push any icons out of the way
+    wDrag={el,wdata,offX:e.clientX-rect.left,offY:e.clientY-rect.top,startX:e.clientX,startY:e.clientY};
+    el.classList.add('dragging');
+    el.style.zIndex=5100;
+    el.style.transition='none';
+}
+
+document.addEventListener('mousemove', ev=>{
+    if(!wDrag) return;
+    const nx=ev.clientX-wDrag.offX, ny=ev.clientY-wDrag.offY;
+    wDrag.el.style.left=nx+'px'; wDrag.el.style.top=ny+'px';
+});
+
+document.addEventListener('mouseup', ev=>{
+    if(!wDrag) return;
+    const {el,wdata}=wDrag; wDrag=null;
+    el.classList.remove('dragging');
+    el.style.zIndex=''; el.style.transition='';
+
+    // Snap to grid
+    const cx=parseFloat(el.style.left)+parseFloat(el.style.width)/2;
+    const cy=parseFloat(el.style.top)+parseFloat(el.style.height)/2;
+    const {col,row}=pxToCell(cx,cy);
+    const nc=Math.max(0,Math.min(COLS-wdata.cols,col));
+    const nr=Math.max(0,Math.min(ROWS-wdata.rows,row));
+
+    // Displace icons in the new zone
+    for(let dr=0;dr<wdata.rows;dr++) for(let dc=0;dc<wdata.cols;dc++) {
+        const k=ck(nc+dc,nr+dr);
+        const occ=cellMap[k];
+        if(occ&&occ._widgetId!==wdata.id&&occ.classList.contains('desktopIcon')) {
+            // Move that icon to next free cell
+            delete cellMap[k];
+            const free=nextFree(null);
+            snapIcon(occ,free);
+            const fp=cellPx(+occ.dataset.col,+occ.dataset.row);
+            occ.style.left=fp.x+'px'; occ.style.top=fp.y+'px';
+        }
+    }
+
+    wdata.col=nc; wdata.row=nr;
+    CFG.widgets[wdata.id]=wdata;
+    saveCFG();
+    renderWidget(wdata); // re-render at snapped position
+}, true);
+
+// ── Delete / Resize ───────────────────────────────────────────────────
+function deleteWidget(id) {
+    const wdata=CFG.widgets[id]; if(!wdata) return;
+    // Free cells
+    for(let dr=0;dr<wdata.rows;dr++) for(let dc=0;dc<wdata.cols;dc++) {
+        const k=ck(wdata.col+dc,wdata.row+dr);
+        if(cellMap[k]&&cellMap[k]._widgetId===id) delete cellMap[k];
+    }
+    if(clockTimers[id]) clearInterval(clockTimers[id]);
+    const el=document.getElementById(id); if(el) el.remove();
+    delete CFG.widgets[id];
+    saveCFG();
+}
+
+function resizeWidgetMenu(id) {
+    const wdata=CFG.widgets[id]; if(!wdata) return;
+    const cols=prompt('Width (cells 1-'+COLS+'):', wdata.cols);
+    if(!cols) return;
+    const rows=prompt('Height (cells 1-'+ROWS+'):', wdata.rows);
+    if(!rows) return;
+    // Free old cells
+    for(let dr=0;dr<wdata.rows;dr++) for(let dc=0;dc<wdata.cols;dc++) {
+        const k=ck(wdata.col+dc,wdata.row+dr);
+        if(cellMap[k]&&cellMap[k]._widgetId===id) delete cellMap[k];
+    }
+    wdata.cols=Math.max(1,Math.min(COLS,parseInt(cols)||wdata.cols));
+    wdata.rows=Math.max(1,Math.min(ROWS,parseInt(rows)||wdata.rows));
+    CFG.widgets[id]=wdata;
+    saveCFG();
+    renderWidget(wdata);
+}
+
+function promptMoveWidgetPage(wdata) {
+    const p=wdata.page===0?1:0;
+    wdata.page=p;
+    CFG.widgets[wdata.id]=wdata;
+    saveCFG();
+    renderWidget(wdata);
+    goToPage(p);
+}
+
+// ── Load all saved widgets ────────────────────────────────────────────
+function loadWidgets() {
+    if(!CFG.widgets) return;
+    Object.values(CFG.widgets).forEach(wdata=>renderWidget(wdata));
+}
+
+// ── Move icon to page (Ctrl+drag placeholder) ─────────────────────────
+// When Ctrl is held and icon dropped, move it to other page
+const origMouseup = null; // handled in page system
+
+// ── Ctrl+click icon → move to other page ─────────────────────────────
+// Already hooked in onIconClick — when Ctrl is held, check if they want to move page
+// We override: Ctrl+Click on icon shows a tiny page picker if multiple pages
+// For simplicity: Ctrl+click moves selected icons to the other page
+function moveSelectedToOtherPage() {
+    const targets=sel();
+    targets.forEach(ic=>{
+        const cur=parseInt(ic.dataset.page)||0;
+        const next=(cur+1)%NUM_PAGES;
+        ic.dataset.page=next;
+        // Visually update
+        if(next!==currentPage) {
+            ic.style.transform=`translateY(${(next-currentPage)*100}vh)`;
+            ic.style.pointerEvents='none';
+        } else {
+            ic.style.transform='';
+            ic.style.pointerEvents='';
+        }
+    });
+    saveCFG();
+}
+
+// Restore page visibility of icons on page load
+function applyPageVisibility() {
+    document.querySelectorAll('.desktopIcon').forEach(ic=>{
+        const p=parseInt(ic.dataset.page)||0;
+        if(p!==currentPage) {
+            ic.style.transform=`translateY(${(p-currentPage)*100}vh)`;
+            ic.style.pointerEvents='none';
+        }
+    });
+}
+
 </script>
 </body>
 </html>
