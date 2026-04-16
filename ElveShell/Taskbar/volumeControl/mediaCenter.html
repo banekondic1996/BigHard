@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .mediaCenterContainer{
+            display: block;
+            background: rgb(255 255 255 / 76%);
+            width: 300px;
+            height: 150px;
+            border-radius: 12px;
+            user-select: none;
+            backdrop-filter: blur(1px);
+        }
+        .mediaCenterButton{
+            display: flex;
+            background: rgb(248 125 166 / 44%);
+            border-radius: 12px;
+            width: 64px;
+            height: 33px;
+            margin: 10px;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+        }
+        .mediaCenterButton img{
+            width: auto;
+            height: 22px;
+           /*  mix-blend-mode: overlay; */
+            opacity: 0.5;
+        }
+        .mediaFlexContainer{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            padding: 4px;
+            justify-content: space-around;
+        }
+        .sliderContainer{
+            text-align: center;
+        }
+        .slider {
+        -webkit-appearance: none;
+        width: 70%;
+        height: 20px;
+        background: #d3d3d3;
+        outline: none;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+        margin: 10px;
+        border-radius: 10px;
+        }
+    
+        .slider:hover {
+        opacity: 1;
+        }
+         .sliderTrack{
+            -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: rgb(248 125 166 / 44%);;
+        cursor: pointer;
+        position: absolute;
+        border-radius: 10px;
+        margin: 13px;
+        z-index: 0;
+        pointer-events: none;
+        max-width: 204px; 
+        min-width: 10px;
+         }
+        .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: #ff80db00;
+        cursor: pointer;
+        border-radius: 100%;
+        z-index:999;
+        }
+    
+        .slider::-moz-range-thumb {
+        width: 15px;
+        height: 15px;
+        background: #ff80db;
+        cursor: pointer;
+        z-index:999;
+        }
+        .mediaTrayContainer{
+            display: flex;
+            width: 100%;
+            height: 25%;
+            background:rgb(113 113 113 / 58%);
+            border-radius: 10px 10px 0px 0px;
+        }
+        .sliderContainer img{
+            width: 22px;
+            height:22px;
+            opacity: 0.5;
+        }
+        .mediaTray{
+            display: flex;
+            background:rgb(113, 113, 113);
+            width: 80%;
+            height: 70%;
+            border-radius: 10px;
+            margin:auto;
+            text-align: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-around;
+            align-items: center;
+            color:white;
+        }
+        .color{
+            background: rgb(255 47 47 / 80%);
+        }
+        .colorDarker{
+            background: rgba(193, 35, 35, 0.8);
+        }
+        .mediaTitle{
+            margin: auto;
+            font-family: system-ui;
+            font-size: 90%;
+        }
+        </style>
+</head>
+<body>
+    <div class="mediaCenterContainer">
+        <div class="mediaTrayContainer color">
+        <div class="mediaTray colorDarker"> <p class="mediaTitle">Playing</p>
+</div>
+    </div>
+            <div class="mediaFlexContainer">
+            <div class="mediaCenterButton color"><img src="previous.png"></div>
+            <div class="mediaCenterButton color"><img src="play.png"></div>
+            <div class="mediaCenterButton color"><img src="next.png"></div> 
+        </div><div class="sliderContainer">
+                <img src="sound.png">
+                <span class="sliderTrack color" style="width: 176px;"></span>
+                <input type="range" min="1" max="100" value="50" class="slider" id="myRange" oninput="sliderTrackChange(this); changeVolume(this.value)" onchange="sliderTrackChange(this)">
+            </div>
+            <input type="color" oninput="console.log(hexToRgbA(this.value))" value="rgba(0,0,0 / 100)" style="width:85%;border:none;position: absolute;width: 30px;">
+    </div>
+    <script>
+        var PowerShell = require("node-powershell");
+        function injectVoumeControl(){
+            volume=new PowerShell.PowerShell;
+            volume.invokeCommand("C:/Users/X.000000000000000000/VolumeAndMute.ps1");
+        }
+        injectVoumeControl();
+        function changeVolume(value){
+            volume.invokeCommand('[audio]::Volume='+value/100+';');
+        };
+        function muteVolume(){
+            volume.invokeCommand('[audio]::Mute').then(data=>{
+                if(data.raw=="False"){
+                    volume.invokeCommand('[audio]::Mute='+1+';');
+                }
+                if(data.raw=="True"){
+                    volume.invokeCommand('[audio]::Mute='+0+';');
+                }
+            });
+        }
+        var styleElement=document.getElementsByTagName("style");
+        var oldStyle=styleElement[0].innerHTML;
+        function sliderTrackChange(el){
+            console.log(el.parentElement.children[1]);
+            el.parentElement.children[1].style.width=((el.offsetWidth/100)*el.value)+'px'
+        }
+        function hexToRgbA(hex){
+            var c;
+            if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                c= hex.substring(1).split('');
+                if(c.length== 3){
+                    c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+                }
+                c= '0x'+c.join('');
+                color='rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',0.8)';
+                colorDarker='rgba('+[((c>>16)&255)*0.75, ((c>>8)&255)*0.75, (c&255)*0.75].join(',')+',0.8)';
+                colorChange(color,colorDarker);
+                return color+" "+colorDarker;
+            }
+            throw new Error('Bad Hex');
+        }
+        function colorChange(color,colorDarker){
+            styleElement[0].innerHTML=oldStyle;
+            var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .mediaCenterButton.color:hover{ background-color: '+colorDarker+' }';
+            oldStyle=styleElement[0].innerHTML;
+            styleElement[0].innerHTML=oldStyle+css;
+            console.log(styleElement[0]);
+        }
+    </script>
+</script>
+
+</body>
+</html>

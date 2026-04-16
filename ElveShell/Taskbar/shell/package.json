@@ -1,0 +1,41 @@
+{
+    "name": "linux-taskbar",
+    "version": "1.0.0",
+    "main": "index.html",
+    "scripts": {
+        "start": "node index.js",
+        "start-nw": "nw .",
+        "build-nw": "nwbuild --platform win --arch x64 --outDir dist/src --glob=false src "
+    },
+    "window": {
+        "title": "Taskbar",
+        "width": 1920,
+        "height": 1080,
+        "frame": true,
+        "toolbar": false,
+        "resizable": true,
+        "always-on-top": false,
+        "position": "bottom",
+        "transparent": true,
+        "show_in_taskbar": false
+    },
+    "webview": {
+        "partitions": [
+            {
+                "name": "trusted",
+                "accessible_resources": [
+                    "<all_urls>"
+                ]
+            }
+        ]
+    },
+    "chromium-args": "--enable-transparent-visuals --disable-gpu",
+    "dependencies": {
+        "@girs/node-gobject-2.0": "^2.78.0-3.3.0",
+        "dbus-next": "^0.10.2",
+        "node-gyp": "^11.5.0",
+        "node-waf": "^10.1.1",
+        "nw": "^0.105.0",
+        "sortablejs": "^1.15.0"
+    }
+}

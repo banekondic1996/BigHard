@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>top</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://unpkg.com/@popperjs/core@2/dist/umd/popper.min.js"></script>
+      <script src="dom-x11-input-region.js"></script>
+    <style>
+        html {
+            width: 0 !important;
+            height: 0 !important;
+            overflow: visible !important;
+            background: transparent !important;
+        }
+        body {
+            background: transparent !important;
+        }
+    </style>
+</head>
+<body>
+<!--    ---------Context menu START(change to tag menu in future)------------------ -->
+    <div class="contextMenu" id="contextMenuID">
+        <table style="width: 100%;display: flex;">
+            <tbody style="width: 100%;display: flex;flex-direction: row;align-items: center;">
+                <tr onclick="">
+                    <th style="display: flex;flex-direction: column;">
+                        <div class="icons" style="display: flex;">
+                            <img alt="Copy" src="/icons/copy.png" style="height: 24px;">
+                        </div>
+                        <div class="icons" style="display: flex;">
+                            <img alt="Cut" src="/icons/cut.png" style="height: 24px;margin: auto;"></div>
+                        <div class="icons" style="display: flex;">
+                            <img alt="Paste" src="/icons/paste.png" style="height: 24px;"></div>
+                        <div class="icons" style="display: flex;" onmouseenter="console.log('hell');">
+                            <img alt="Respawn" src="/icons/reload.png" style="height: 24px;" ></div>
+                        <div class="icons" style="display: flex;">
+                            <img alt="Settings" src="/icons/settings.png" style="height: 24px;">
+                        </div><div class="icons" style="display: flex;">
+                            <img  alt="New" src="/icons/add.png" style="height: 24px;">
+                        </div>
+                    </th>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+<!--    ---------Context menu END(change to tag menu in future)------------------ -->
+<!--    ---------Webviews START(change to tag and inject it in future)------------------ -->
+<webview id="transferDialogID" onmouseleave="" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 1050px;height: 477px;bottom: 178;display: block;background: transparent;" partition="trusted" src="/transferDialog/transferDialog.html" type=""></webview>
+<webview id="appMenuID" onmouseenter="" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 600px;height: 560px;left:600px;bottom:94px;display: block;resize: both;overflow: hidden;min-width: 420px;min-height: 420px;border-radius: 16px;" partition="trusted" src="/app-menu.html" type=""></webview>
+<webview id="mediaCenterID" onmouseenter="mouseLeftObject.mediaCenter=false" onmouseleave="" class="hide" alwaysontop allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 177px;left:600px;bottom:94px;display: block;" partition="trusted" src="/volumeControl/mediaCenter.html" type=""></webview>
+<webview id="calendarID" onmouseenter="mouseLeftObject.calendar=false" onmouseleave="mouseLeftObject.calendar=true" class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 311px;height: 460px;left:1200px;bottom:94px;display: block;" partition="trusted" src="/calendar/calendar.html" type=""></webview>
+<webview id="controlCenterID" onmouseenter="mouseLeftObject.controlCenter=false" onmouseleave="mouseLeftObject.controlCenter=true"  class="hide" allowtransparency allownw style="position: absolute;z-index: 10000;width: 350px;height: 410px;bottom: 75px;display: block;" partition="trusted" src="/controlCenter/controlCenter.html" type=""></webview>
+<webview id="sideBarID" onmouseenter="mouseLeftObject.sideBar=false" onmouseleave="mouseLeftObject.sideBar=true" class="hide" allowtransparency style="position: absolute;z-index: 10000;display: block;height: 427px;width:420px;height: calc(100% - 200px);right:2px;top:100px;background: transparent;" partition="trusted" src="/edgy/edgy.html" type=""></webview>
+<!--    ---------Webviews END(change to tag and inject it in future)------------------ -->
+<!--    ---------Bar START(add options to change orientation in future)------------------ -->
+<div id="barResizeID"></div>
+<div id="barID" class="colorBackground">
+    <div id="trayIconsID" class="color darkMode"></div>
+    <img class='taskbutton color darkMode' src="/icons/toggle.png" oncontextmenu="openSettings()" onclick="openControlCenter(event);"></img>
+    <img class="taskbutton color darkMode" src="/icons/sidebar.png" onclick="openSideBar()">
+    <img class="taskbutton color darkMode" src="/icons/search.png" onclick="openSearch();">
+    <div id="barAppsID" style="display: flex;align-items: center;margin:auto;height: 100%;">
+        <div class='taskbutton color darkMode' onmouseleave="" onclick="openAppMenu(event)"><img src="/icons/apps.png" class="darkMode" onclick='' style='height:100%;width:100%'></div>
+        <img class="taskbutton color darkMode" src="/icons/repeat.png" onclick="exec('kioclient5 exec /usr/share/applications/firefox.desktop');">
+        <img id='iconTest'src="">
+    </div>
+    <div id="barClockID" class="color darkMode" onclick="openCalendar(event)" style=""></div>
+</div>
+<!--    ---------Bar END(add options to change orientation in future)------------------ -->
+<!--    -----------------------Tray START--------------------------------------------- --> 
+<!-- <div class="appTrayContainer colorDarker">
+    <div class="appTray color"> </div>
+</div> -->
+<!--    -----------------------Tray END--------------------------------------------- --> 
+<!--    -----------------------Settings START--------------------------------------------- --> 
+<div class="xInputs" id="settingsContainerId" style="display: none; top: 10%; left: 50%; transform: translateX(-50%); color: white; font: -webkit-control; max-height: 80vh; overflow-y: auto; width: 500px;">
+    <div class="inputAddButtonId" style="flex-direction: column; padding: 20px; margin-inline: 5px; background: rgba(40, 40, 40, 0.95); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.2);">
+        <div class="settingsRow" style="align-self: auto; font: -webkit-control; margin-bottom: 20px; font-size: 20px; font-weight: 600;">Taskbar Settings</div>
+        
+        <!-- Panel Color -->
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <span style="display: block; margin-bottom: 5px;">Panels color:</span>
+            <input type="color" name="" id="barColorId" oninput="updateBarColor(this.value)">
+        </div>
+        
+        <!-- Accent Color -->
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <span style="display: block; margin-bottom: 5px;">Accent color:</span>
+            <input type="color" name="" id="buttonsColorId" oninput="acentColorChange(this.value)">
+        </div>
+        
+        <!-- Shadow -->
+        <div class="settingsRow" style="margin-bottom: 10px;">
+            <span style="display: block; margin-bottom: 5px;">Shadow color:</span>
+            <input type="color" name="" id="shadowColorId" oninput="updateShadowColor(this.value)">
+        </div>
+        
+        <!-- Shadow Size -->
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <span style="display: block; margin-bottom: 5px;">Shadow size: <span id="shadowSizeValue">4px</span></span>
+            <input type="range" min="0" max="20" step="1" value="4" id="shadowSizeId" oninput="updateShadowSize(this.value)" style="width: 100%;">
+        </div>
+        
+        <input type="button" style="width: 150px; background: rgb(255, 255, 255); margin-bottom: 20px; align-self: center; padding: 8px; border-radius: 5px; cursor: pointer;" value="Disable shadows" onclick="disableShadows()">
+        
+        <!-- Taskbar Position -->
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <span style="display: block; margin-bottom: 5px;">Taskbar position:</span>
+            <select id="barPositionId" onchange="updateBarPosition(this.value)" style="width: 100%; padding: 8px; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 5px;">
+                <option value="bottom">Bottom</option>
+                <option value="top">Top</option>
+                <option value="left">Left</option>
+                <option value="right">Right</option>
+            </select>
+        </div>
+        
+        <!-- Taskbar Size (Height for horizontal, Width for vertical) -->
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <span style="display: block; margin-bottom: 5px;">Taskbar size: <span id="barSizeValue">94px</span></span>
+            <input type="range" min="40" max="150" step="2" value="94" id="barSizeId" oninput="updateBarSize(this.value)" style="width: 100%;">
+        </div>
+        
+        <!-- Bar Transparency -->
+        <div class="settingsRow" style="margin-top: 15px; margin-bottom: 5px;">
+            <span>Bar transparency:</span>
+        </div>
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <input type="range" min="0" max="0.99" step="0.01" value="0.85" id="barTransparencyId" oninput="updateBarTransparency(this.value)" style="width: 100%;">
+        </div>
+        
+        <!-- Bar Width (for horizontal bars) -->
+        <div class="settingsRow" style="margin-top: 15px; margin-bottom: 5px;">
+            <span>Bar width:</span>
+        </div>
+        <div class="settingsRow" style="margin-bottom: 15px;">
+            <input type="range" min="30" max="98" step="1" value="98" id="barWidthId" oninput="updateBarWidth(this.value)" style="width: 100%;">
+        </div>
+        
+        <!-- Bar Border Radius -->
+        <div class="settingsRow" style="margin-top: 15px; margin-bottom: 5px;">
+            <span>Bar border radius:</span>
+        </div>
+        <div class="settingsRow" style="margin-bottom: 20px;">
+            <input type="range" min="0" max="30" step="1" value="0" id="barBorderRadiusId" oninput="updateBarBorderRadius(this.value)" style="width: 100%;">
+        </div>
+        
+        <!-- Auto-hide Taskbar -->
+        <div class="settingsRow" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+            <span>Auto-hide taskbar:</span>
+            <label style="position: relative; display: inline-block; width: 46px; height: 24px; cursor: pointer;">
+                <input type="checkbox" id="autoHideToggleId" onchange="toggleAutoHide(this.checked)" style="opacity:0;width:0;height:0;position:absolute;">
+                <span id="autoHideSliderUI" style="position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,0.2);border-radius:24px;transition:background 0.3s;border:1px solid rgba(255,255,255,0.3);">
+                    <span id="autoHideKnob" style="position:absolute;left:3px;top:3px;width:16px;height:16px;background:white;border-radius:50%;transition:transform 0.3s;display:block;"></span>
+                </span>
+            </label>
+        </div>
+
+        <!-- Close Button -->
+        <input type="button" style="width: 100px; background: rgb(255, 255, 255); align-self: center; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: 600;" value="Close" onclick="closeSettings()">
+    </div>
+</div>
+
+<!--    -----------------------Settings END--------------------------------------------- --> 
+<!--    -----------------------Search START--------------------------------------------- --> 
+<div id="searchOverlayID" class="searchOverlay hide" onclick="openSearch();">
+    <div id="searchBarID"><input type="text" name="" id="searchOverlayInputID" placeholder="Search or run program"></div>
+</div>  
+<!--    -----------------------Search END--------------------------------------------- --> 
+<!--    -----------------------Window TEST START--------------------------------------------- --> 
+<!-- <div id="windowContainerID" class="opaque">
+    <div id="resizersBoxID">
+        <div class="resizer-corner" id="resizerTopLeftID" style="left: 0px;top: 0px;cursor: nw-resize;" onmousedown="resizeWindow(event)"></div>
+        <div class="resizer-vertical" id="resizerTopID"  style="top: 0px;cursor: n-resize;" onmousedown="resizeWindow(event)"></div>       
+        <div class="resizer-vertical" id="resizerBottomID" style="bottom: 4px;cursor: s-resize;" onmousedown="resizeWindow(event)"></div>
+        <div class="resizer-corner" id="resizerTopRightID" style="right: 0px;top: 0px;cursor: ne-resize;" onmousedown="resizeWindow(event)"></div>
+        <div class="resizer-horizontal" id="resizerRightID" style="right: 0px;cursor: e-resize;" onmousedown="resizeWindow(event)"></div>
+        <div class="resizer-horizontal" id="resizerLeftID" style="left: 0px;cursor: w-resize;" onmousedown="resizeWindow(event)"></div>
+        <div class="resizer-corner" id="resizerBottomLeftID" style="left: 0px;bottom: 4px;cursor: sw-resize;" onmousedown="resizeWindow(event)"></div>
+        <div class="resizer-corner" id="resizerBottomRightID" style="right: 0px;bottom: 4px;cursor: se-resize;"  onmousedown="resizeWindow(event)"></div>
+    </div>
+    
+    <div class="windowContent" id="windowContentID" onmousedown="resizeWindow(event)" style="">
+        <div class="WindowBar">
+    
+        <div class="buttonsHolder windowTabTitleButton" onclick="" style="left: 10px;">
+            <div class="windowTabTitleText" style="">This is Title</div>
+        </div>
+    
+        <div class="buttonsHolder windowTabTitleButton" onclick="" style="left: 196px;">
+            <div class="windowTabTitleText" style="">This is Title 2</div>
+        </div>
+    
+        <div class="buttonsHolder windowMainButtons" onclick="" style="">
+            <div class="windowButton" onclick="" style="margin: auto;background: #c3c3c3;"></div>
+            <div class="windowButton" onclick="" style="margin: auto;background: #fff49b;"></div>
+            <div class="windowButton" onclick="" style="margin: auto;background: #cbff9b;"></div>
+            <div class="windowButton" onclick="" style="margin: auto;background: #ff9b9b;"></div>  
+        </div>
+        </div>
+    </div>
+    </div>
+            <script>
+               console.log("checkpoint 1");
+               let orgWidth=0;
+               let orgHeight=0;
+               let mousePosX=0;
+               let mousePosY=0;
+               let orgTop=0;
+               let orgLeft=0;
+               let source="";
+               let theWindow=document.getElementById("windowContainerID");
+               console.log("checkpoint 2");
+               function resizeWindow(event){
+                source=event.srcElement.id;
+                event.preventDefault();
+                orgWidth=theWindow.offsetWidth;
+                orgHeight=theWindow.offsetHeight;
+                orgTop=theWindow.offsetTop;
+                orgLeft=theWindow.offsetLeft;
+                document.addEventListener('mousemove', resize);
+                document.addEventListener('mouseup', stopResize);
+                mousePosX=event.clientX;
+                mousePosY=event.clientY;
+                console.log(event);
+               }
+               function resize(e){
+                    const width = orgWidth+ (e.pageX - mousePosX);
+                    const height=orgHeight+ (e.pageY - mousePosY);
+                    if(source=="resizerBottomRightID"){
+                        theWindow.style.width = width + 'px';
+                        theWindow.style.height = height + 'px';
+                        }
+                    if(source=="resizerTopRightID"){
+                        theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                        theWindow.style.width = orgWidth+(e.pageX - mousePosX) + 'px';
+                        theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                    }
+                    if(source=="resizerBottomLeftID"){
+                        theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';;
+                        theWindow.style.height = height + 'px';
+                        theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                    }
+                    if(source=="resizerTopLeftID"){
+                        theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                        theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                        theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';
+                        theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                        console.log(theWindow.style.offsetRight);
+                    }
+                    if(source=="resizerTopID"){
+                        theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                        theWindow.style.height = orgHeight-(e.pageY - mousePosY) + 'px';
+                    }
+                    if(source=="resizerBottomID"){
+                        theWindow.style.height = height + 'px';
+                    }
+                    if(source=="resizerLeftID"){
+                        theWindow.style.width = orgWidth-(e.pageX - mousePosX) + 'px';;
+                        theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                    }
+                    if(source=="resizerRightID"){
+                        theWindow.style.width = orgWidth+(e.pageX - mousePosX) + 'px';
+                    }
+                    if(source=="windowContentID"){
+                        theWindow.style.top=orgTop+(e.pageY - mousePosY)+'px';
+                        theWindow.style.left=orgLeft+(e.pageX - mousePosX)+'px';
+                    }
+                }
+                console.log("checkpoint 3");
+                function stopResize() {
+                document.removeEventListener('mousemove', resize)
+                }
+                console.log("checkpoint 4");
+            </script> -->
+<!--    -----------------------Window TEST END--------------------------------------------- --> 
+
+
+
+<!--    -----------------------Functions Microsoft Linux START--------------------------------------------- --> 
+
+<script>
+// Require
+    const os = require('node:os'); //To get OS info
+    const { exec } = require('child_process');
+/*     const { listOpenWindows } = require('@josephuspaye/list-open-windows'); */
+    // On extract assign icons
+  /*   iconExtractor.emitter.on('icon', function(data)
+            {
+                RunningProcessList[num].Icon="data:image/png;base64,"+data.Base64ImageData+"";
+                refreshBarIcons();                            
+            }); */
+    // Get the list of open windows
+    console.log("checkpoint 5");
+     //RunningProcessList.forEach(console.log);
+     // Delaying getting icons in bar, cause it needs time
+    // function getBarIconsBasedOnList()
+    // {
+    //     var len=RunningProcessList.length;
+    //     var time=300;
+    //     if(num<len)
+    //     {
+    //         for(let i=0;i<len;i++)
+    //         {
+    //             setTimeout(() => 
+    //             {
+    //             console.log("Delayed for 100 ms.");
+    //             getBarIcon(i);
+    //             }, time);
+    //             time=time+100;
+    //         }
+    //     }
+    // }
+    console.log("checkpoint 6");
+//////////////////////////////////////// Fetch icons for bar icons
+    function getBarIcon(numB){ 
+            num=numB;
+            /* iconExtractor.getIcon("",RunningProcessList[num].processPath.replace(/\\/g, '/'));        */    
+        }
+ ////////////////////////////////////////
+ ////////////////////////////////////////  Maximize/minimize apps based on process id
+ function showORhideAPP(processId){
+            console.log("Trying to show: "+processId);
+            /* showORhideShell.invokeCommand("C:/Users/X.000000000000000000/procesessB.ps1 -Style 'SHOWDEFAULT' -processID "+processId+""); */
+        }
+//////////////////////////////////////// Push new app into process list and into bar
+        function pushNewApp(){
+            
+        }
+        //////////////////////////////////////// Volume control functions
+        function volumeMute(){
+            /* volume.invokeCommand('[audio]::Volume='+0.00+';'); */
+        }
+        function volumeUp(){
+            /* volume.invokeCommand('[audio]::Volume=[audio]::Volume+'+0.01+';'); */
+        }
+        function volumeDown(){
+            /* volume.invokeCommand('[audio]::Volume=[audio]::Volume-'+0.01+';'); */
+        }
+        console.log("checkpoint 7");
+</script>
+<!--    -----------------------Functions Microsoft Linux END--------------------------------------------- --> 
+
+
+<script>
+         const LAUNCHER_TYPE='nw'
+         console.log("width="+window.innerWidth);
+         /* let AppProcessID=nw.process.ppid; */ //App process ID, use window.process.ppid instead
+         let barElement=document.getElementById('barAppsID');
+         var colorMain="background-color: #353535ba;";
+        const TASKBAR_THEME_STORAGE_KEY = 'elveTaskbarTheme';
+        const APP_MENU_BOUNDS_STORAGE_KEY = 'elveAppMenuBounds';
+        const DEFAULT_TASKBAR_THEME = {
+            surfaceColor: '#050505',
+            surfaceAlpha: 0.35,
+            accentColor: '#b0b0b0'
+        };
+        const DEFAULT_APP_MENU_BOUNDS = {
+            width: 600,
+            height: 560
+        };
+        let taskbarTheme = loadTaskbarTheme();
+        if(LAUNCHER_TYPE=='nw'){
+         var win=nw.Window.get();
+         initializeShellWindow();
+        }
+        console.log("checkpoint 8");
+         var num=0;
+        function normalizeHexColor(color, fallback) {
+            if (typeof color !== 'string') {
+                return fallback;
+            }
+            const trimmed = color.trim();
+            if (/^#[0-9a-f]{6}$/i.test(trimmed)) {
+                return trimmed.toLowerCase();
+            }
+            if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+                return '#' + trimmed.slice(1).split('').map((part) => part + part).join('').toLowerCase();
+            }
+            return fallback;
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function hexToRgba(hex, alpha) {
+            const normalized = normalizeHexColor(hex, '#000000');
+            const safeAlpha = clamp(Number(alpha), 0, 1);
+            const r = parseInt(normalized.slice(1, 3), 16);
+            const g = parseInt(normalized.slice(3, 5), 16);
+            const b = parseInt(normalized.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+        }
+
+        function shadeHex(hex, amount) {
+            const normalized = normalizeHexColor(hex, '#000000');
+            const channel = (value) => clamp(Math.round(value + amount), 0, 255);
+            const r = channel(parseInt(normalized.slice(1, 3), 16));
+            const g = channel(parseInt(normalized.slice(3, 5), 16));
+            const b = channel(parseInt(normalized.slice(5, 7), 16));
+            return `#${[r, g, b].map((part) => part.toString(16).padStart(2, '0')).join('')}`;
+        }
+
+        function loadTaskbarTheme() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(TASKBAR_THEME_STORAGE_KEY) || '{}');
+                return {
+                    surfaceColor: normalizeHexColor(stored.surfaceColor, DEFAULT_TASKBAR_THEME.surfaceColor),
+                    surfaceAlpha: clamp(Number.isFinite(stored.surfaceAlpha) ? stored.surfaceAlpha : DEFAULT_TASKBAR_THEME.surfaceAlpha, 0, 0.99),
+                    accentColor: normalizeHexColor(stored.accentColor, DEFAULT_TASKBAR_THEME.accentColor)
+                };
+            } catch (error) {
+                return { ...DEFAULT_TASKBAR_THEME };
+            }
+        }
+
+        function applyTaskbarTheme(patch = {}, options = {}) {
+            const { persist = true, broadcast = true } = options;
+            taskbarTheme = {
+                ...taskbarTheme,
+                ...patch
+            };
+            taskbarTheme.surfaceColor = normalizeHexColor(taskbarTheme.surfaceColor, DEFAULT_TASKBAR_THEME.surfaceColor);
+            taskbarTheme.accentColor = normalizeHexColor(taskbarTheme.accentColor, DEFAULT_TASKBAR_THEME.accentColor);
+            taskbarTheme.surfaceAlpha = clamp(Number(taskbarTheme.surfaceAlpha), 0, 0.99);
+
+            document.documentElement.style.setProperty('--taskbar-surface', hexToRgba(taskbarTheme.surfaceColor, taskbarTheme.surfaceAlpha));
+            document.documentElement.style.setProperty('--taskbar-surface-strong', hexToRgba(taskbarTheme.surfaceColor, clamp(taskbarTheme.surfaceAlpha + 0.22, 0, 0.99)));
+            document.documentElement.style.setProperty('--taskbar-surface-alpha', String(taskbarTheme.surfaceAlpha));
+            document.documentElement.style.setProperty('--accent-color', hexToRgba(taskbarTheme.accentColor, 0.72));
+            document.documentElement.style.setProperty('--accent-color-solid', taskbarTheme.accentColor);
+
+            const barColorInput = document.getElementById('barColorId');
+            const accentColorInput = document.getElementById('buttonsColorId');
+            const transparencyInput = document.getElementById('barTransparencyId');
+
+            if (barColorInput) {
+                barColorInput.value = taskbarTheme.surfaceColor;
+            }
+            if (accentColorInput) {
+                accentColorInput.value = taskbarTheme.accentColor;
+            }
+            if (transparencyInput) {
+                transparencyInput.value = taskbarTheme.surfaceAlpha.toFixed(2);
+            }
+
+            if (persist) {
+                localStorage.setItem(TASKBAR_THEME_STORAGE_KEY, JSON.stringify(taskbarTheme));
+            }
+
+            if (broadcast) {
+                broadcastTaskbarTheme();
+            }
+        }
+
+        function loadAppMenuBounds() {
+            try {
+                const stored = JSON.parse(localStorage.getItem(APP_MENU_BOUNDS_STORAGE_KEY) || '{}');
+                return {
+                    width: clamp(parseInt(stored.width, 10) || DEFAULT_APP_MENU_BOUNDS.width, 420, Math.max(420, window.innerWidth - 20)),
+                    height: clamp(parseInt(stored.height, 10) || DEFAULT_APP_MENU_BOUNDS.height, 420, Math.max(420, window.innerHeight - 120))
+                };
+            } catch (error) {
+                return { ...DEFAULT_APP_MENU_BOUNDS };
+            }
+        }
+
+        function saveAppMenuBounds(bounds) {
+            localStorage.setItem(APP_MENU_BOUNDS_STORAGE_KEY, JSON.stringify({
+                width: Math.round(bounds.width),
+                height: Math.round(bounds.height)
+            }));
+        }
+
+        function applyAppMenuBounds(bounds = loadAppMenuBounds()) {
+            const appMenuView = document.getElementById('appMenuID');
+            if (!appMenuView) return bounds;
+            const nextBounds = {
+                width: clamp(Math.round(bounds.width), 420, Math.max(420, window.innerWidth - 20)),
+                height: clamp(Math.round(bounds.height), 420, Math.max(420, window.innerHeight - 120))
+            };
+            appMenuView.style.width = `${nextBounds.width}px`;
+            appMenuView.style.height = `${nextBounds.height}px`;
+            return nextBounds;
+        }
+
+        function watchAppMenuResize() {
+            const appMenuView = document.getElementById('appMenuID');
+            if (!appMenuView || typeof ResizeObserver !== 'function') return;
+            let resizeSaveTimer = null;
+            const observer = new ResizeObserver((entries) => {
+                const entry = entries[0];
+                if (!entry) return;
+                const bounds = {
+                    width: entry.contentRect.width,
+                    height: entry.contentRect.height
+                };
+                clearTimeout(resizeSaveTimer);
+                resizeSaveTimer = setTimeout(() => {
+                    const applied = applyAppMenuBounds(bounds);
+                    saveAppMenuBounds(applied);
+                }, 120);
+            });
+            observer.observe(appMenuView);
+        }
+
+        function broadcastTaskbarTheme() {
+            const payload = JSON.stringify(taskbarTheme);
+            document.querySelectorAll('webview').forEach((view) => {
+                if (typeof view.executeScript !== 'function') {
+                    return;
+                }
+                view.executeScript({
+                    code: `window.applyElveTheme && window.applyElveTheme(${payload});`
+                }, () => {});
+            });
+        }
+
+        function initializeShellWindow() {
+            if (!win) {
+                return;
+            }
+
+            const width = window.screen?.width || window.innerWidth || 1920;
+            const height = window.screen?.height || window.innerHeight || 1080;
+
+            try {
+                win.moveTo(0, 0);
+                win.resizeTo(width, height);
+                win.setAlwaysOnTop(true);
+                if (typeof win.setShowInTaskbar === 'function') {
+                    win.setShowInTaskbar(false);
+                }
+                win.show();
+            } catch (error) {
+                console.warn('[Shell] Failed to initialize shell window:', error.message);
+            }
+        }
+
+        applyTaskbarTheme(taskbarTheme, { persist: false, broadcast: false });
+        applyAppMenuBounds();
+//////////////////////////////////////// Refresh icons in bar  
+        var pinnedPaths=['C://Windows//explorer.exe'];
+        barRunningApps+=pinnedPaths[0];
+        var pinnedAppsList=[`<div id="explorer" class="taskbutton color darkMode" title="top" onmouseover="showAppThumb(this,event);" onmouseleave="this.children[0].classList.add('hide')"><div class="appThumb hide darkMode" onmouseenter="mouseEnterObject.thumbnail=true" onmouseleave="hideAppThumb(0);"><img id="44608" src="/icons/explorer.png" onclick="openItem('C://Windows//explorer.exe')"></div><img id="44608" src="/icons/explorer.png" class="darkMode" onclick="openItem('C://Windows//explorer.exe')" style="height:100%;width:100%"></div>`]
+        var pinnedApps
+        pinnedApps=pinnedAppsList.join();
+        var barRunningApps=[];
+        console.log("checkpoint 9");
+        function dewIt()
+        {
+        RunningProcessList.forEach(element=>{
+            barElement.innerHTML="";
+            if(barRunningApps.includes(element.processPath)){
+                var indexOfProcess=barRunningApps.indexOf(element.processPath);
+                console.log("double window"+element.processPath);
+                console.log(barElement.children[indexOfProcess]);
+            }
+            else{
+            barRunningApps.push(element.processPath);
+            console.log(element.icon);
+            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`'><img class="taskbutton color" id='`+element.processId+`' src="`+element.Icon+`" title="`+element.caption+`" onclick='showORhideAPP(`+element.processId+`)'></div>`;
+            }
+        });
+        }
+        console.log("checkpoint 10");
+        function refreshBarIcons(){
+            barRunningApps=[];
+            barElement.innerHTML="";
+            RunningProcessList.forEach(element=>{
+            if (element.Icon==undefined){
+                element.Icon='/icons/testWindow.png'
+            }
+            if(barRunningApps.includes(element.processPath)){
+                var indexOfProcess=barRunningApps.indexOf(element.processPath);
+        /*         console.log("double window"+element.processPath);
+                console.log("child");
+                console.log(barElement.children[indexOfProcess]); */
+                barElement.children[indexOfProcess].children[0].innerHTML+=`<img id='`+element.processId+`' src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
+                barElement.children[indexOfProcess].children[1].outerHTML=`<img id='`+element.processId+`' class="darkMode" src="`+element.Icon+`" onmouseover="showAppThumb(this.parentElement,event);" style="height:100%;width:100%">`
+            }
+            else{
+            barRunningApps.push(element.processPath);
+            var index=barRunningApps.length-1;
+            console.log(element.icon);
+            barElement.innerHTML=barElement.innerHTML+`<div id='`+element.processPath+`' class='taskbutton color darkMode' title="`+element.caption+`" onmouseover="showAppThumb(this,event)" onmouseleave="this.children[0].classList.add('hide')"><div class="appThumb hide darkMode" onmouseenter="mouseEnterObject.thumbnail=true" onmouseleave="hideAppThumb(`+index+`);">s</div><img id='`+element.processId+`' src="`+element.Icon+`" class="darkMode" onclick='showORhideAPP(`+element.processId+`)' style='height:100%;width:100%'></div>`;
+            barElement.children[index].children[0].innerHTML+=`<img id='`+element.processId+`'  src="`+element.Icon+`" onclick='showORhideAPP(`+element.processId+`)'>`;
+            }
+        });
+        barElement.innerHTML=pinnedApps+barElement.innerHTML;
+        }
+        console.log("checkpoint 11");
+////////////////////////////////////////  
+        function hideAppThumb(index){
+            if(mouseEnterObject.thumbnail==false){
+            barElement.children[index].children[0].classList.add('hide');
+        }
+        }
+////////////////////////////////////////  
+        function showAppThumb(element,event){
+            var index=Array.prototype.findIndex.call(barElement.children, (c) => c === element);
+            console.log("showAppThumb:"+index)
+/*             console.log(event);
+            console.log("Position left:"+ parseInt(event.clientX+200)+"px")
+            barElement.children[index].children[0].style.left=parseInt(event.clientX+200)+"px";
+            barElement.children[index].children[0].style.top=parseInt(event.clientY+200)+"px"; */
+            barElement.children[index].children[0].classList.remove('hide');
+        }
+        console.log("checkpoint 12");
+//////////////////////////////////////// Bar clock function
+        let monthsList=["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+        function startTime() {
+            const today = new Date();
+            let month=today.getMonth();
+            let date=today.getDate();
+            let h = today.getHours();
+            let m = today.getMinutes();
+            m = checkTime(m);
+            document.getElementById('barClockID').innerHTML =  date+" "+monthsList[month]+" "+ h + ":" + m ;
+            setTimeout(startTime, 60000);
+            }
+//////////////////////////////////////// Bar clock function
+        function checkTime(i) {
+            if (i < 10) {i = "0" + i};  // add zero in front of numbers < 10
+            return i;
+            }
+            console.log("checkpoint 13");
+////////////////////////////////////////
+        /* win.resizeTo(1920,1080); */ //Only if its FHD res screen, in final it should be fullscreen always
+        /*  win.enterKioskMode(); */
+
+        /* win.showDevTools(); */ //Won't work without NW.JS SDK downloaded seperatly and putting it in node_modules/nw
+        startTime(); //turn on the clock in bar
+        // Position the resize handle correctly for the default (bottom) position
+        setTimeout(_repositionResizeHandle, 100);
+////////////////////////////////////////
+var mouseLeftObject={};
+var mouseLeftObject={calendar:true,controlCenter:true,runningAppsThumbnail:true,bar:true,mediaCenter:true,sideBar:true};
+var mouseEnterObject={thumbnail:false};
+var resizableBar = document.getElementById('barID');
+console.log("checkpoint 14");
+document.addEventListener('DOMContentLoaded', function () 
+        {   
+            var isResizing = false;
+            var lastY;
+            var lastX;
+            var mouseDown=false;
+            var resizableBarBorder = document.getElementById('barResizeID');
+            var resizableBar = document.getElementById('barID');
+            var contextMenuElement = document.getElementById('contextMenuID');
+            resizableBarBorder.addEventListener('mousedown', function (e) 
+            {
+                e.stopPropagation();
+                isResizing = true;
+                lastY = e.clientY;
+                lastX = e.clientX;
+            });
+            ////////////////////////////////////////
+            function activateContextMenu(e){
+                contextMenuElement.style.display="block";
+                contextMenuElement.style.left=e.clientX+"px";
+                contextMenuElement.style.top=e.clientY+"px";
+            }
+            ////////////////////////////////////////
+            console.log("checkpoint 15 content loaded");
+            document.addEventListener('mousemove', function (e) 
+            {
+                if (!isResizing) return;
+
+                if (barPosition === 'bottom') {
+                    // Handle is above the bar — dragging up increases height
+                    var deltaY = lastY - e.clientY;
+                    var newH = Math.max(20, resizableBar.offsetHeight + deltaY);
+                    resizableBar.style.height = newH + 'px';
+                    document.getElementById('barSizeId').value = newH;
+                    document.getElementById('barSizeValue').textContent = newH + 'px';
+                } else if (barPosition === 'top') {
+                    // Handle is below the bar — dragging down increases height
+                    var deltaY = e.clientY - lastY;
+                    var newH = Math.max(20, resizableBar.offsetHeight + deltaY);
+                    resizableBar.style.height = newH + 'px';
+                    document.getElementById('barSizeId').value = newH;
+                    document.getElementById('barSizeValue').textContent = newH + 'px';
+                } else if (barPosition === 'left') {
+                    // Handle is to the right of the bar — dragging right increases width
+                    var deltaX = e.clientX - lastX;
+                    var newW = Math.max(20, resizableBar.offsetWidth + deltaX);
+                    resizableBar.style.width = newW + 'px';
+                    document.getElementById('barSizeId').value = newW;
+                    document.getElementById('barSizeValue').textContent = newW + 'px';
+                } else if (barPosition === 'right') {
+                    // Handle is to the left of the bar — dragging left increases width
+                    var deltaX = lastX - e.clientX;
+                    var newW = Math.max(20, resizableBar.offsetWidth + deltaX);
+                    resizableBar.style.width = newW + 'px';
+                    document.getElementById('barSizeId').value = newW;
+                    document.getElementById('barSizeValue').textContent = newW + 'px';
+                }
+
+                lastY = e.clientY;
+                lastX = e.clientX;
+                _repositionResizeHandle();
+            });
+            ////////////////////////////////////////
+            document.addEventListener('mouseup', function () 
+            {
+                isResizing = false;
+                mouseDown=false;
+                console.log("mouseup");
+            });
+        });
+        console.log("checkpoint 16");
+//////////////////////////////////////// Open file function
+        function openItem(filePath){
+   /*  filePath= filePath.replace("/", "\\"); */
+    if(filePath.includes("shell:")){
+        const { exec } = require('child_process');
+        exec('start '+filePath+'', (error, stdout, stderr) => {
+        if (error) {
+            console.error(`Error opening: ${error.message}`);
+            return;
+        }
+        if (stderr) {
+            console.error(`Standard error: ${stderr}`);
+            return;
+        }
+        console.log('Opened successfully');
+        });
+    }
+    console.log(filePath);
+    nw.Shell.openItem(filePath);
+}
+console.log("checkpoint 17");
+//////////////////////////////////////// Control center functions
+var controlWindowOn=false;
+let controlCenterElement=document.getElementById("controlCenterID");
+function openControlCenter(event)
+{
+    if (controlWindowOn==false)
+    {   
+        if(event.clientX>200){
+        controlCenterElement.style.left=parseInt(event.clientX+150)+"px";
+        }
+        else {controlCenterElement.style.left=parseInt(event.clientX+50)+"px";}
+        controlCenterElement.classList.remove("hide");
+        controlWindowOn=true;
+    }
+    else if (controlWindowOn==true)
+    {
+        controlCenterElement.classList.add("hide");
+        controlWindowOn=false;
+    }
+}
+console.log("checkpoint 18");
+//////////////////////////////////////// Calendar functions
+var calendarOn=false;
+var sideBarWasOn=false;
+let calendarElement=document.getElementById("calendarID");
+function openCalendar(event)
+{
+    console.log(event)
+    if (calendarOn==false)
+    {
+        if(window.screen.availWidth-event.clientX>200){calendarElement.style.left=parseInt(event.clientX-150)+"px";}
+        else {calendarElement.style.left=parseInt(window.screen.availWidth-330)+"px";}
+        calendarOn=true;
+        calendarElement.classList.remove("hide");
+        if(sideBarOn==true)
+        {
+            sideBarWasOn=true;
+            openSideBar();
+        }
+    }
+    else if (calendarOn==true)
+    {   
+        if(sideBarWasOn==true)
+        {
+            openSideBar();
+        }
+        /* controlWindow.window.close(); */
+        calendarOn=false;
+        calendarElement.classList.add("hide");
+    }
+}
+//////////////////////////////////////// Sidebar functions
+var sideBarOn=false;
+let sideBarElement=document.getElementById("sideBarID");
+function openSideBar()
+{
+    if (sideBarOn==false)
+    {
+        sideBarOn=true;
+        sideBarElement.classList.remove("hide");;
+    }
+    else if (sideBarOn==true)
+    {
+        /* controlWindow.window.close(); */
+        sideBarOn=false;
+        sideBarElement.classList.add("hide");
+    }
+}
+console.log("checkpoint 19");
+//////////////////////////////////////// Search functions
+var searchOverlayOn=false;
+let searchOverlayElement=document.getElementById("searchOverlayID");
+let searchOverlayInputElement=document.getElementById("searchOverlayInputID");
+function openSearch()
+{
+    if (searchOverlayOn==false)
+    {
+        searchOverlayOn=true;
+        searchOverlayElement.classList.remove("hide");
+        searchOverlayInputElement.focus();
+    }
+    else if (searchOverlayOn==true)
+    {
+        /* controlWindow.window.close(); */
+        searchOverlayOn=false;
+        searchOverlayElement.classList.add("hide");
+    }
+}
+console.log("checkpoint 20");
+//////////////////////////////////////// Media functions
+var mediaCenterOn=false;
+let mediaCenterElement=document.getElementById("mediaCenterID");
+function openMediaCenter()
+{
+    if (mediaCenterOn==false)
+    {
+        mediaCenterOn=true;
+        mediaCenterElement.classList.remove("hide");
+        setTimeout(function(){
+            mediaCenterOn=false;
+            mediaCenterElement.classList.add("hide");
+        },2000);
+    }
+    else if (mediaCenterOn==true)
+    {
+/*             setTimeout(function(){
+            mediaCenterOn=false;
+            mediaCenterElement.classList.add("hide");
+        },4000); */
+    }
+}
+//////////////////////////////////////// darkModeOn not working for some reason.... Get's 3 elements of class darkMode, on each function call
+console.log("checkpoint 21");
+var darkModeIsOn=true;
+function darkModeOn(){
+    if (darkModeIsOn){
+        var darkModeElements=document.getElementsByClassName('darkMode');    
+    for(let i=0;i<darkModeElements.length;i++){
+        console.log("Removing element: "+i)
+        darkModeElements[i].classList.remove('darkMode');
+    }
+    darkModeIsOn=false;
+    }
+    else{
+
+    }
+}
+//////////////////////////////////////// Settings 
+
+var resizableBar = document.getElementById('barID');
+var barPosition = 'bottom';
+var barOrientation = 'horizontal'; // horizontal or vertical
+
+function updateBarColor(color) {
+    applyTaskbarTheme({ surfaceColor: color });
+}
+
+function updateShadowColor(color) {
+    const size = document.getElementById('shadowSizeId').value;
+    resizableBar.style.boxShadow = `0px 0px ${size}px 1px ${color}66`;
+}
+
+function updateShadowSize(size) {
+    document.getElementById('shadowSizeValue').textContent = size + 'px';
+    const color = document.getElementById('shadowColorId').value;
+    resizableBar.style.boxShadow = `0px 0px ${size}px 1px ${color}66`;
+}
+
+function disableShadows() {
+    resizableBar.style.boxShadow = '';
+}
+
+function updateBarPosition(position) {
+    barPosition = position;
+
+    // Full reset
+    resizableBar.style.top = '';
+    resizableBar.style.bottom = '';
+    resizableBar.style.left = '';
+    resizableBar.style.right = '';
+    resizableBar.style.width = '';
+    resizableBar.style.height = '';
+    resizableBar.style.transform = '';
+    resizableBar.style.flexDirection = '';
+    resizableBar.style.alignItems = '';
+
+    const thickness = document.getElementById('barSizeId').value + 'px';
+    const widthPct  = document.getElementById('barWidthId').value;
+
+    if (position === 'bottom') {
+        barOrientation = 'horizontal';
+        resizableBar.style.bottom         = '0';
+        resizableBar.style.left           = '50%';
+        resizableBar.style.transform      = 'translateX(-50%)';
+        resizableBar.style.height         = thickness;
+        resizableBar.style.width          = widthPct + '%';
+        resizableBar.style.flexDirection  = 'row';
+        resizableBar.style.alignItems     = 'center';
+    } else if (position === 'top') {
+        barOrientation = 'horizontal';
+        resizableBar.style.top            = '0';
+        resizableBar.style.left           = '50%';
+        resizableBar.style.transform      = 'translateX(-50%)';
+        resizableBar.style.height         = thickness;
+        resizableBar.style.width          = widthPct + '%';
+        resizableBar.style.flexDirection  = 'row';
+        resizableBar.style.alignItems     = 'center';
+    } else if (position === 'left') {
+        barOrientation = 'vertical';
+        resizableBar.style.left           = '0';
+        resizableBar.style.top            = '50%';
+        resizableBar.style.transform      = 'translateY(-50%)';
+        resizableBar.style.width          = thickness;
+        resizableBar.style.height         = widthPct + '%';
+        resizableBar.style.flexDirection  = 'column';
+        resizableBar.style.alignItems     = 'center';
+    } else if (position === 'right') {
+        barOrientation = 'vertical';
+        resizableBar.style.right          = '0';
+        resizableBar.style.top            = '50%';
+        resizableBar.style.transform      = 'translateY(-50%)';
+        resizableBar.style.width          = thickness;
+        resizableBar.style.height         = widthPct + '%';
+        resizableBar.style.flexDirection  = 'column';
+        resizableBar.style.alignItems     = 'center';
+    }
+
+    // Reposition the drag-resize handle
+    _repositionResizeHandle();
+}
+
+function _repositionResizeHandle() {
+    var handle = document.getElementById('barResizeID');
+    handle.style.top    = '';
+    handle.style.bottom = '';
+    handle.style.left   = '';
+    handle.style.right  = '';
+    handle.style.width  = '';
+    handle.style.height = '';
+    handle.style.cursor = '';
+
+    if (barPosition === 'bottom') {
+        handle.style.bottom = resizableBar.offsetHeight + 'px';
+        handle.style.left   = resizableBar.offsetLeft   + 'px';
+        handle.style.width  = resizableBar.offsetWidth  + 'px';
+        handle.style.height = '6px';
+        handle.style.cursor = 'ns-resize';
+    } else if (barPosition === 'top') {
+        handle.style.top    = resizableBar.offsetHeight + 'px';
+        handle.style.left   = resizableBar.offsetLeft   + 'px';
+        handle.style.width  = resizableBar.offsetWidth  + 'px';
+        handle.style.height = '6px';
+        handle.style.cursor = 'ns-resize';
+    } else if (barPosition === 'left') {
+        handle.style.left   = resizableBar.offsetWidth  + 'px';
+        handle.style.top    = resizableBar.offsetTop    + 'px';
+        handle.style.width  = '6px';
+        handle.style.height = resizableBar.offsetHeight + 'px';
+        handle.style.cursor = 'ew-resize';
+    } else if (barPosition === 'right') {
+        handle.style.right  = resizableBar.offsetWidth  + 'px';
+        handle.style.top    = resizableBar.offsetTop    + 'px';
+        handle.style.width  = '6px';
+        handle.style.height = resizableBar.offsetHeight + 'px';
+        handle.style.cursor = 'ew-resize';
+    }
+}
+
+function updateBarSize(size) {
+    document.getElementById('barSizeValue').textContent = size + 'px';
+    // "size" is the thickness of the bar (height for horizontal, width for vertical)
+    if (barOrientation === 'horizontal') {
+        resizableBar.style.height = size + 'px';
+    } else {
+        resizableBar.style.width = size + 'px';
+    }
+    _repositionResizeHandle();
+}
+
+function updateBarTransparency(value) {
+    applyTaskbarTheme({ surfaceAlpha: Number(value) });
+}
+
+function updateBarWidth(value) {
+    // "width" slider controls the span of the bar (width for horizontal, height for vertical)
+    if (barOrientation === 'horizontal') {
+        resizableBar.style.width = value + '%';
+    } else {
+        resizableBar.style.height = value + '%';
+    }
+    _repositionResizeHandle();
+}
+
+function updateBarBorderRadius(value) {
+    resizableBar.style.borderRadius = value + 'px';
+}
+
+function closeSettings() {
+    document.getElementById('settingsContainerId').style.display = 'none';
+}
+
+// Keep existing openSettings function
+function openSettings() {
+    document.getElementById('settingsContainerId').style.display = 'flex';
+}
+
+//////////////////////////////////////// Auto-hide taskbar
+var autoHideEnabled = false;
+var autoHideNormalHeight = null;
+var autoHideNormalWidth = null;
+var autoHideTimeout = null;
+
+function toggleAutoHide(enabled) {
+    autoHideEnabled = enabled;
+    // Update toggle knob UI
+    const knob = document.getElementById('autoHideKnob');
+    const slider = document.getElementById('autoHideSliderUI');
+    if (enabled) {
+        knob.style.transform = 'translateX(22px)';
+        slider.style.background = 'rgba(59,130,246,0.7)';
+        // Attach hover listeners
+        resizableBar.addEventListener('mouseenter', autoHideExpand);
+        resizableBar.addEventListener('mouseleave', autoHideCollapse);
+        // Collapse immediately
+        autoHideCollapse();
+    } else {
+        knob.style.transform = 'translateX(0px)';
+        slider.style.background = 'rgba(255,255,255,0.2)';
+        resizableBar.removeEventListener('mouseenter', autoHideExpand);
+        resizableBar.removeEventListener('mouseleave', autoHideCollapse);
+        // Restore bar
+        autoHideExpand();
+    }
+}
+
+function autoHideCollapse() {
+    clearTimeout(autoHideTimeout);
+    autoHideTimeout = setTimeout(function() {
+        if (!autoHideEnabled) return;
+        // Save current size before collapsing (only once)
+        if (autoHideNormalHeight === null && autoHideNormalWidth === null) {
+            autoHideNormalHeight = resizableBar.style.height || resizableBar.offsetHeight + 'px';
+            autoHideNormalWidth  = resizableBar.style.width  || resizableBar.offsetWidth  + 'px';
+        }
+        // Hide all children except the clock
+        Array.from(resizableBar.children).forEach(function(child) {
+            if (child.id !== 'barClockID') {
+                child._autoHideDisplay = child.style.display || '';
+                child.style.display = 'none';
+            }
+        });
+        // Shrink bar to 16px
+        if (barOrientation === 'horizontal') {
+            resizableBar.style.height = '16px';
+        } else {
+            resizableBar.style.width = '16px';
+        }
+        // Center clock in the collapsed bar
+        var clock = document.getElementById('barClockID');
+        clock.style.margin = 'auto';
+        clock.style.fontSize = '10px';
+        clock.style.textAlign = 'center';
+    }, 400);
+}
+
+function autoHideExpand() {
+    clearTimeout(autoHideTimeout);
+    // Restore size
+    if (barOrientation === 'horizontal') {
+        resizableBar.style.height = autoHideNormalHeight || '94px';
+    } else {
+        resizableBar.style.width = autoHideNormalWidth || '94px';
+    }
+    // Restore all children
+    Array.from(resizableBar.children).forEach(function(child) {
+        if (child.id !== 'barClockID') {
+            child.style.display = child._autoHideDisplay !== undefined ? child._autoHideDisplay : '';
+        }
+    });
+    // Reset clock styles
+    var clock = document.getElementById('barClockID');
+    clock.style.margin = '';
+    clock.style.fontSize = '';
+    clock.style.textAlign = '';
+}
+function acentColorChange(color){
+    applyTaskbarTheme({ accentColor: color });
+}
+//////////////////////////////////////// AppMenu
+var appMenuOn=false;
+let appMenuElement=document.getElementById('appMenuID');
+function openAppMenu()
+{
+    if (appMenuOn==false)
+    {
+        appMenuOn=true;
+        appMenuElement.classList.remove("hide");
+    }
+    else if (appMenuOn==true)
+    {
+        appMenuOn=false;
+        appMenuElement.classList.add("hide");
+    }
+}
+console.log("checkpoint 22");
+//////////////////////////////////////// File copying testing function, now in seperate file
+    /* const fs = require('fs');
+    async function copy() 
+    {
+        const sourceFile = 'copyTest.iso'
+        const destFile = 'copyTest_done.iso'
+        fs.stat(sourceFile, function(err, stat){
+        const filesize = stat.size
+        let bytesCopied = 0
+        let bufferR=0; 
+        const readStream = fs.createReadStream(sourceFile)
+        
+        readStream.on('data', function(buffer)
+        {
+            bufferR =bufferR+ buffer.length;
+        })
+
+        readStream.on('end', function()
+        {
+            console.log("done");
+            console.timeEnd('copying')
+        })
+
+        setInterval(() => 
+        {
+            let prcentage = ((bufferR/filesize)*100).toFixed(2)
+            console.log(prcentage+'%') 
+        }
+        , 1000);
+        readStream.pipe(fs.createWriteStream(destFile));
+        });
+            };
+        copy(); */
+
+//////////////////////////////////////////
+////////////////////////////////////////// Global key bindings START
+/* document.addEventListener("keydown", (event) => 
+        {
+            //To add keyboard langugage keyboard shortcut, copy/cut/paste shortcut, edgy sideBar shortcut, 
+            //print screen shortcut (create tool for screen capture also : shadow wholescreen like in windows 10 snip/sketh)
+            //print screen shortcut double press captures the whole screen
+            if(event.code=='AudioVolumeMute'){openMediaCenter();volumeMute()}
+            if(event.code=='AudioVolumeUp'){openMediaCenter();volumeUp()}
+            if(event.code=='AudioVolumeDown'){openMediaCenter();volumeDown()}
+            if(event.code=='Fn+F3'){} 
+            if(event.code=='ArrowDown'){}
+            console.log(event);
+        }); */
+   /*Global shortcut key*/
+ /* var option = {
+  key : "AudioVolumeUp",
+  active : function() {
+    console.log("Global desktop keyboard shortcut: " + this.key + " active."); 
+  },
+  failed : function(msg) {
+    // :(, fail to register the |key| or couldn't parse the |key|.
+    console.log(msg);
+  }
+};
+
+// Create a shortcut with |option|.
+var shortcut = new nw.Shortcut(option);
+
+// Register global desktop shortcut, which can work without focus.
+nw.App.registerGlobalHotKey(shortcut);
+  /*Global shortcut key END*/ 
+  console.log("checkpoint 23");
+</script>
+<script src="./Sortable.js"></script>
+<script>
+    ////////////////////////////////////////// Making icons in bar sortable
+    new Sortable(barElement, 
+    {
+    animation: 200,
+    ghostClass: 'blue-background-class'
+    });
+/*   new Sortable(dragableIcons , {
+    animation: 200,
+    ghostClass: 'blue-background-class'
+  }); */
+  </script>
+
+<script>
+      console.log("checkpoint 24");
+const native = require("./nw-input-region/build/Release/nw_input_region.node");
+  console.log("checkpoint 25");
+let ctl;
+setTimeout(()=>{native.setPID(process.ppid);
+ctl = domRegion.start({
+    native: {
+      setInputRegion: rects => native.setInputRegion(rects)
+    },
+    selector: '*', // all elements
+    tileSize: 12,
+    minIntervalMs: 16,
+    pixelRatio: window.devicePixelRatio || 1,
+    maxRects: 800
+  });
+
+},4000);
+    
+</script>
+
+<!-- Load labwc client and integration -->
+<script src="integrated-shell.js"></script>
+
+<!-- Update button clicks to pass event -->
+<script>
+// Update the apps button to pass click event
+const appsButton = document.querySelector('[onclick="openAppMenu(event)"]');
+if (appsButton) {
+    appsButton.onclick = function(e) {
+        e.stopPropagation();
+        openAppMenu(e);
+    };
+}
+
+// Update calendar button
+const clockButton = document.getElementById('barClockID');
+if (clockButton) {
+    clockButton.onclick = function(e) {
+        e.stopPropagation();
+        openCalendar(e);
+    };
+}
+
+// Update control center button
+const toggleButton = document.querySelector('[onclick*="openControlCenter"]');
+if (toggleButton) {
+    toggleButton.onclick = function(e) {
+        e.stopPropagation();
+        openControlCenter(e);
+    };
+}
+
+window.addEventListener('load', () => {
+    initializeShellWindow();
+    applyAppMenuBounds();
+    watchAppMenuResize();
+    document.querySelectorAll('webview').forEach((view) => {
+        view.addEventListener('loadstop', broadcastTaskbarTheme);
+    });
+    broadcastTaskbarTheme();
+});
+
+// Close menus when clicking outside
+document.addEventListener('click', () => {
+  closeElements();
+});
+win.on('blur', function () {
+    closeElements();
+  });
+function closeElements()
+{
+    const appMenuElement = document.getElementById('appMenuID');
+    const calendarElement = document.getElementById('calendarID');
+    const controlElement = document.getElementById('controlCenterID');
+    
+    // Close app menu if clicking outside
+    if (appMenuElement && !appMenuElement.classList.contains('hide')) {
+        if (appMenuElement._popperInstance) {
+            appMenuElement._popperInstance.destroy();
+            appMenuElement._popperInstance = null;
+        }
+        appMenuElement.classList.add('hide');
+    }
+    
+    // Close calendar if clicking outside
+    if (calendarElement && !calendarElement.classList.contains('hide')) {
+        if (calendarElement._popperInstance) {
+            calendarElement._popperInstance.destroy();
+            calendarElement._popperInstance = null;
+        }
+        calendarElement.classList.add('hide');
+    }
+    
+    // Close control center if clicking outside
+    if (controlElement && !controlElement.classList.contains('hide')) {
+        if (controlElement._popperInstance) {
+            controlElement._popperInstance.destroy();
+            controlElement._popperInstance = null;
+        }
+        controlElement.classList.add('hide');
+    }
+}
+
+console.log('[Shell] Menu positioning integration loaded');
+</script>
+
+<!-- Add styles for window states and thumbnails -->
+<style>
+    .taskbutton.active-window {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-bottom: 3px solid rgba(59, 130, 246, 0.9) !important;
+    }
+    
+    .appThumb {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    
+    .appThumb.hide {
+        display: none !important;
+    }
+    
+    #cursor-position {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.8);
+        color: white;
+        padding: 5px 10px;
+        border-radius: 5px;
+        font-size: 12px;
+        font-family: monospace;
+        z-index: 100001;
+        pointer-events: none;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .window-context-menu {
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+    
+</style>
+</body>
+</html>

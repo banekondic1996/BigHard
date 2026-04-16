@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="transparent" content="true">
+    <title>Document</title>
+    <style>
+    .controlCenterContainer{
+        display: block;
+        position: relative;
+        background-color: #353535ba;
+        /* background-color: #ffffffba; */
+        width: 300px;
+        height:390px;
+        border-radius: 12px;
+        user-select: none;
+    }
+    .controlCenterButton{
+        display: flex;
+        background: rgb(248 125 166 / 44%);
+        border-radius: 12px;
+        width: 90px;
+        height: 60px;
+        margin: 10px;
+        text-align: center;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+    .controlCenterButton img{
+        width: auto;
+        height: 22px;
+       /*  mix-blend-mode: overlay; */
+        opacity: 0.5;
+    }
+    .optionPanel{
+    display: flex;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #5656569c;
+    z-index: 99;
+    border-radius: 12px;
+    backdrop-filter: blur(7px);
+    align-content: center;
+    justify-content: center;
+    align-items: center;
+    }
+    .optionPanelBox{
+    background: #7e7e7e66;
+    position: absolute;
+    width: 70%;
+    height: 75%;
+    margin: auto;
+    border-radius: 12px;
+    display: flex;
+    padding: 20px;
+    }
+    .flexContainer{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        padding: 24px;
+        justify-content: space-between;
+    }
+    .sliderContainer{
+        text-align: center;
+    }
+    .slider {
+    -webkit-appearance: none;
+    width: 70%;
+    height: 20px;
+    background: #979797;
+    outline: none;
+    -webkit-transition: .2s;
+    transition: opacity .2s;
+    margin: 10px;
+    border-radius: 10px;
+    }
+
+    .slider:hover {
+    opacity: 1;
+    }
+ /*    .slider::-webkit-slider-runnable-track {
+    contain: content;
+    background: linear-gradient(to Right, #ff80db 0%, #ff80db 50%, white 50%, white 100%);
+    }
+    .slider::-moz-range-track {
+    background-color: linear-gradient(to right, red 0%, red 50%, white 50%, white 100%);
+    } */
+     .sliderTrack{
+        -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background: rgb(248 125 166 / 44%);;
+    cursor: pointer;
+    position: absolute;
+    border-radius: 10px;
+    margin: 13px;
+    z-index: 0;
+    pointer-events: none;
+    max-width: 204px; 
+    min-width: 10px;
+     }
+    .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 15px;
+    height: 15px;
+    background: #ff80db00;
+    cursor: pointer;
+    border-radius: 100%;
+    z-index:999;
+    }
+
+    .slider::-moz-range-thumb {
+    width: 15px;
+    height: 15px;
+    background: #ff80db;
+    cursor: pointer;
+    z-index:999;
+    }
+    .trayContainer{
+        display: flex;
+        width: 100%;
+        height: 10%;
+        background:rgb(113 113 113 / 58%);
+        border-radius: 0px 0px 10px 10px;
+        margin-top: 37px;
+    }
+    .tray{
+        background:rgb(113, 113, 113);
+        width: 90%;
+        height: 70%;
+        border-radius: 10px;
+        margin:auto;
+    }
+    .sliderContainer img{
+        width: 22px;
+        height:22px;
+        opacity: 0.5;
+    }
+    .indicator{
+        background: #00ff03;
+        width: 7px;
+        height: 7px;
+        border-radius: 100%;
+        position: absolute;
+        box-shadow: 0px 0px 3px 1px black;
+        opacity: 0.8;
+    }
+    .indicatorTrue{
+        background: #00ff03;
+    }
+    .indicatorFalse{
+        background: #ff0000;
+    }
+    .indicatorWarrning {
+        background: #fbff00;
+    }
+    .indicatorNeutral{
+        background: #7f7f7f;
+    }
+    .color{
+        background: rgba(199,199,199,0.8);
+    }
+    .colorDarker{
+        background: rgba(193, 35, 35, 0.8);
+    }
+    .darkMode{
+    filter:invert(1);
+    }
+    .hide
+    {
+        display: none!important;
+        opacity: 0;
+        transition: cubic-bezier(0.4, 0, 1, 1) 0.3s;
+    }
+    </style>
+</head>
+<body>
+    <div class="controlCenterContainer">
+        <div class="optionPanel hide" onclick="this.classList.add('hide')"><div style="" class="optionPanelBox">Available Wi-Fi's:</div></div>
+        <div class="flexContainer">
+            <div class="controlCenterButton color" tooltip="Wi-Fi" onclick="this.parentElement.parentElement.children[0].classList.remove('hide')">
+                <div class="indicator indicatorNeutral" style="left: 77px;bottom: 5px;"></div><img src='wifi.png'></div>
+            <div class="controlCenterButton color">
+                <div class="indicator indicatorWarrning" style="left: 77px;bottom: 5px;"></div><img src='bluetooth.png'></div>
+            <div class="controlCenterButton color">
+                <div class="indicator indicatorFalse" style="left: 77px;bottom: 5px;"></div><img src='airplane.png'></div>
+            <div class="controlCenterButton color"><img src='settingsControl.png'></div>
+            <div class="controlCenterButton color"><img src='test.png'></div>
+            <div class="controlCenterButton color"><img src='darkMode.png'></div>
+        </div>
+        <div class="sliderContainer">
+            <div>
+                <img class="darkMode" src='brightness.png'>
+                <span class="sliderTrack color"></span>
+                <input type="range" min="1" max="100" value="0" class="slider" id="myRange" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)">
+            </div>
+          </div>
+            <div class="sliderContainer">
+                <img class="darkMode" src='sound.png'  onclick="muteVolume()">
+                <span class="sliderTrack color"></span>
+                <input type="range" min="1" max="100" value="50" class="slider" id="myRange" oninput="sliderTrackChange(this);changeVolume(this.value)" onchange="sliderTrackChange(this)">
+            </div>
+    <div class="trayContainer colorDarker">
+        <div class="tray color"> </div>
+    </div>
+    <!-- <input type="color" oninput="console.log(hexToRgbA(this.value))" value="rgba(0,0,0 / 100)" style="width:85%;border:none;position: absolute;width: 30px;"> -->
+    </div>
+    <script>
+        var controlWin = nw.Window.get();
+        var PowerShell = require("node-powershell");
+        controlWin.window.moveTo(15,287);
+        function injectVoumeControl(){
+            volume=new PowerShell.PowerShell;
+            volume.invokeCommand("C:/Users/X.000000000000000000/VolumeAndMute.ps1");
+        }
+        injectVoumeControl();
+        function changeVolume(value){
+            volume.invokeCommand('[audio]::Volume='+value/100+';');
+        };
+        function muteVolume(){
+            volume.invokeCommand('[audio]::Mute').then(data=>{
+                if(data.raw=="False"){
+                    volume.invokeCommand('[audio]::Mute='+1+';');
+                }
+                if(data.raw=="True"){
+                    volume.invokeCommand('[audio]::Mute='+0+';');
+                }
+            });
+        }
+        var styleElement=document.getElementsByTagName("style");
+        var oldStyle=styleElement[0].innerHTML;
+        colorChange("rgba(199,199,199,0.8);","rgba(168,168,168,0.8);");
+        function sliderTrackChange(el){
+            console.log(el.parentElement.children[1]);
+            el.parentElement.children[1].style.width=((el.offsetWidth/100)*el.value)+'px'
+        }
+        function hexToRgbA(hex){
+            var c;
+            if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                c= hex.substring(1).split('');
+                if(c.length== 3){
+                    c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+                }
+                c= '0x'+c.join('');
+                color='rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',0.8)';
+                colorDarker='rgba('+[((c>>16)&255)*0.6, ((c>>8)&255)*0.6, (c&255)*0.6].join(',')+',0.8)';
+                colorChange(color,colorDarker);
+                return color+" "+colorDarker;
+            }
+            throw new Error('Bad Hex');
+        }
+        function colorChange(color,colorDarker){
+            styleElement[0].innerHTML=oldStyle;
+            var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .controlCenterButton.color:hover{ background-color: '+colorDarker+' }';
+            oldStyle=styleElement[0].innerHTML;
+            styleElement[0].innerHTML=oldStyle+css;
+            console.log(styleElement[0]);
+        }
+    
+    </script>
+</body>
+</html>

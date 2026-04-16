@@ -1,0 +1,3498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Desktop</title>
+<style>
+:root {
+    --accent: #4a9eff;
+    --accent-rgb: 74, 158, 255;
+    /* --accent: 175, 58, 255 */
+    /* --accent-rgb: 175, 58, 255; */
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+    overflow: hidden;
+    width: 100vw; height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #1a1a2e;
+    position: relative;
+}
+
+#wallpaperLayer {
+    position: fixed;
+    inset: 0;
+    z-index: -2;
+    background: #1a1a2e no-repeat center center fixed;
+    background-size: cover;
+    pointer-events: none;
+}
+
+#wallpaperDim {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    background: rgba(0,0,0,0);
+    pointer-events: none;
+}
+
+#desktopGrid {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 200vh;
+    transition: transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94);
+    will-change: transform;
+    overflow: visible;
+}
+
+#select {
+    display: none;
+    background: rgba(var(--accent-rgb),0.15);
+    border: 1.5px solid rgba(var(--accent-rgb),0.9);
+    position: fixed;
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 5000;
+}
+
+body.launching * { cursor: progress !important; }
+
+.desktopIcon {
+    position: absolute;
+    cursor: default;
+    user-select: none;
+    z-index: 10;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+}
+
+.desktopIcon .iconInner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 5px 4px 5px;
+    border-radius: 8px;
+    width: 100%;
+    transition: background 0.1s;
+}
+
+.desktopIcon:hover .iconInner { background: rgba(255,255,255,0.13); }
+.desktopIcon.selected .iconInner {
+    background: rgba(var(--accent-rgb),0.32);
+    outline: 1.5px solid rgba(var(--accent-rgb),0.75);
+    outline-offset: -1px;
+}
+.desktopIcon.dragging { opacity: 1; z-index: 4999; }
+.desktopIcon.dragging .iconInner { background: rgba(255,255,255,0.20); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+
+.desktopIcon .iconImg {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    overflow: hidden;
+    pointer-events: none;
+}
+.desktopIcon .iconImg img {
+    object-fit: cover;
+    display: block;
+    border-radius: 4px;
+    width: 100%;
+    height: 100%;
+}
+.desktopIcon .iconEmoji {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    line-height: 1;
+}
+
+.desktopIcon .iconLabel {
+    margin-top: 4px;
+    color: white;
+    text-align: center;
+    text-shadow: 0 1px 4px rgba(0,0,0,1), 0 0 10px rgba(0,0,0,0.8);
+    line-height: 1.3;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    width: 100%;
+    pointer-events: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.desktopIcon.selected .iconLabel {
+    display: block;
+    overflow: visible;
+    -webkit-line-clamp: unset;
+}
+
+.gridGhost { display: none !important; }
+.desktopIcon[data-trash="1"] .iconEmoji { font-size: inherit; }
+
+/* ── Context Menus ────────────────────────────────────────── */
+.ctxMenu {
+    display: none;
+    position: fixed;
+    background: rgba(20,20,22,0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 4px 0;
+    min-width: 215px;
+    z-index: 10000;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+}
+.ctxMenu.show { display: block; }
+.ctxItem {
+    padding: 8px 13px;
+    color: rgba(255,255,255,0.9);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    position: relative;
+    border-radius: 6px;
+    margin: 0 4px;
+    white-space: nowrap;
+}
+.ctxItem:hover { background: rgba(255,255,255,0.1); }
+.ctxItem.sep { height:1px; background:rgba(255,255,255,0.1); margin:3px 10px; padding:0; cursor:default; border-radius:0; }
+.ctxItem.sep:hover { background:rgba(255,255,255,0.1); }
+.ctxItem .arr { margin-left:auto; opacity:0.4; font-size:10px; }
+
+.subMenu {
+    display: none;
+    position: absolute;
+    left: calc(100% + 4px);
+    top: -4px;
+    background: rgba(20,20,22,0.97);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 10px;
+    padding: 4px 0;
+    min-width: 185px;
+    z-index: 10001;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.75);
+}
+.ctxItem:hover > .subMenu { display: block; }
+
+.sliderRow { padding:6px 13px 10px; margin:0 4px; cursor:default; }
+.sliderRow label { display:block; color:rgba(255,255,255,0.55); font-size:11.5px; margin-bottom:5px; }
+.sliderRow input[type=range] { width:100%; accent-color:var(--accent); cursor:pointer; }
+
+/* ── Dialogs ──────────────────────────────────────────────── */
+.overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 20000;
+    align-items: center; justify-content: center;
+}
+.overlay.show { display: flex; }
+.dialog {
+    background: rgba(22,22,24,0.98);
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255,255,255,0.13);
+    border-radius: 14px;
+    width: 480px;
+    max-height: 86vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 70px rgba(0,0,0,0.85);
+    color: white; overflow: hidden;
+}
+.dlgHead {
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.09);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+}
+.dlgHead h2 { font-size: 14px; font-weight: 600; }
+.dlgClose {
+    width: 24px; height: 24px;
+    background: rgba(255,255,255,0.08); border: none; border-radius: 50%;
+    color: rgba(255,255,255,0.8); cursor: pointer; font-size: 13px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.12s;
+}
+.dlgClose:hover { background: rgba(220,60,60,0.5); color: white; }
+.dlgTabs {
+    display: flex; gap: 2px; padding: 0 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.09); flex-shrink: 0;
+}
+.dlgTab {
+    padding: 9px 14px; font-size: 12.5px;
+    color: rgba(255,255,255,0.45); cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.13s;
+}
+.dlgTab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.dlgBody { flex: 1; overflow-y: auto; padding: 16px; }
+.dlgBody::-webkit-scrollbar { width: 4px; }
+.dlgBody::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 2px; }
+.tabPanel { display: none; }
+.tabPanel.active { display: block; }
+
+.propRow {
+    display: flex; gap: 10px; padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 12.5px; align-items: flex-start;
+}
+.propRow:last-child { border: none; }
+.propKey { color: rgba(255,255,255,0.4); min-width: 85px; flex-shrink: 0; }
+.propVal { color: rgba(255,255,255,0.88); word-break: break-all; }
+.propCheck {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 0 2px; font-size: 12.5px;
+    color: rgba(255,255,255,0.75); cursor: pointer;
+}
+.propCheck input { accent-color:var(--accent); width: 14px; height: 14px; cursor: pointer; }
+.permSection { margin-bottom: 16px; }
+.permSection h3 { font-size: 10.5px; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+.permRow { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12.5px; }
+.permRow > label { min-width: 52px; color: rgba(255,255,255,0.5); }
+.permChecks { display: flex; gap: 14px; }
+.permChecks label { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.82); cursor: pointer; }
+.permChecks input { accent-color:var(--accent); }
+.txtInput { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 5px 10px; font-size: 12.5px; flex: 1; }
+.txtInput:focus { outline: none; border-color: var(--accent); }
+.dlgFoot { display: flex; justify-content: flex-end; gap: 8px; padding: 11px 16px; border-top: 1px solid rgba(255,255,255,0.09); flex-shrink: 0; }
+.btn { padding: 6px 16px; border-radius: 7px; border: none; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all 0.13s; }
+.btn.cancel { background: rgba(255,255,255,0.09); color: white; }
+.btn.cancel:hover { background: rgba(255,255,255,0.16); }
+.btn.ok { background: var(--accent); color: white; }
+.btn.ok:hover { filter: brightness(0.88); }
+
+/* Open With */
+.owList { display: flex; flex-direction: column; gap: 3px; max-height: 260px; overflow-y: auto; }
+.owItem { display: flex; align-items: center; gap: 11px; padding: 8px 10px; border-radius: 8px; cursor: pointer; font-size: 12.5px; color: rgba(255,255,255,0.85); border: 1px solid transparent; transition: all 0.11s; }
+.owItem:hover { background: rgba(255,255,255,0.07); }
+.owItem.active { background: rgba(var(--accent-rgb),0.18); border-color: rgba(var(--accent-rgb),0.45); }
+.owIcon { font-size: 20px; }
+.owName { font-weight: 500; }
+.owCmd { font-size: 10.5px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+.owSep { height: 1px; background: rgba(255,255,255,0.08); margin: 8px 0; }
+.owHint { font-size: 11.5px; color: rgba(255,255,255,0.35); margin-bottom: 5px; }
+.owSaveRow { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 12px; color: rgba(255,255,255,0.6); cursor: pointer; }
+.owSaveRow input { accent-color:var(--accent); }
+.customCmdRow { display: flex; gap: 8px; margin-top: 8px; }
+.customCmdRow input { flex: 1; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 6px 10px; font-size: 12.5px; }
+.customCmdRow input:focus { outline: none; border-color: var(--accent); }
+
+/* Inline rename input */
+.iconRenameInput {
+    background: rgba(20,20,30,0.92);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    color: white;
+    font-size: inherit;
+    text-align: center;
+    width: 100%;
+    padding: 1px 3px;
+    outline: none;
+    line-height: 1.3;
+    resize: none;
+    overflow: hidden;
+    display: block;
+}
+/* Emoji picker */
+.emojiBtn {
+    width: 36px; height: 36px; font-size: 20px;
+    background: rgba(255,255,255,0.06); border: 1px solid transparent;
+    border-radius: 6px; cursor: pointer; display:flex; align-items:center; justify-content:center;
+    transition: all 0.1s;
+}
+.emojiBtn:hover { background: rgba(255,255,255,0.14); }
+.emojiBtn.active { border-color: var(--accent); background: rgba(var(--accent-rgb),0.2); }
+.wpGrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 12px; }
+.wpThumb { width: 100%; aspect-ratio: 16/9; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; transition: border-color 0.15s; }
+.wpThumb:hover { border-color: rgba(var(--accent-rgb),0.5); }
+.wpThumb.active { border-color: var(--accent); }
+.wpCustomRow { display: flex; gap: 8px; margin-top: 4px; align-items: center; }
+.wpCustomRow input { flex:1; }
+.wpBrowseBtn { background: rgba(255,255,255,0.09); border: 1px solid rgba(255,255,255,0.13); border-radius: 6px; color: white; padding: 6px 12px; font-size: 12.5px; cursor: pointer; white-space: nowrap; }
+.wpBrowseBtn:hover { background: rgba(255,255,255,0.16); }
+
+/* ── Find bar ───────────────────────────────────────────── */
+#findBar {
+    display: none; position: fixed;
+    top: 18px; left: 50%; transform: translateX(-50%);
+    z-index: 30000;
+    background: rgba(18,18,20,0.97);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-radius: 12px; padding: 10px 14px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
+    flex-direction: column; gap: 8px; min-width: 340px;
+}
+#findBar.show { display: flex; }
+#findBarRow { display: flex; align-items: center; gap: 8px; cursor: move; }
+#findInput {
+    flex: 1; background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 7px;
+    color: white; font-size: 14px; padding: 6px 10px; outline: none;
+    cursor: text;
+}
+#findInput:focus { border-color: var(--accent); }
+#findCount { font-size: 11.5px; color: rgba(255,255,255,0.4); white-space: nowrap; }
+#findClose { background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 16px; padding: 0 2px; line-height: 1; }
+#findClose:hover { color: white; }
+#findResults { display: flex; flex-wrap: wrap; gap: 5px; max-height: 240px; overflow-y: auto; padding: 2px 0; }
+.findResult {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 9px; border-radius: 7px;
+    background: rgba(255,255,255,0.07); border: 1px solid transparent;
+    cursor: pointer; font-size: 12px; color: rgba(255,255,255,0.85);
+    transition: all 0.1s; max-width: 180px;
+}
+.findResult:hover { background: rgba(255,255,255,0.13); }
+.findResult.active { background: rgba(var(--accent-rgb),0.25); border-color: rgba(var(--accent-rgb),0.5); }
+.findResult .frName { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#typeSearchBar {
+    display: none; position: fixed;
+    bottom: 22px; left: 50%; transform: translateX(-50%);
+    background: rgba(18,18,20,0.93);
+    border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+    padding: 6px 16px; font-size: 13px; color: rgba(255,255,255,0.75);
+    z-index: 25000; pointer-events: none; letter-spacing: 0.04em;
+}
+#typeSearchBar.show { display: block; }
+</style>
+</head>
+<body>
+
+<div id="wallpaperLayer"></div>
+<div id="wallpaperDim"></div>
+<div id="select"></div>
+<div id="desktopGrid"><div class="gridGhost" id="gridGhost"></div></div>
+<div id="pageIndicator"></div>
+
+<!-- Find bar -->
+<div id="findBar">
+    <div id="findBarRow">
+        <span style="font-size:13px;color:rgba(255,255,255,0.5);margin-right:2px">🔍</span>
+        <input id="findInput" type="text" placeholder="Search desktop…" autocomplete="off" spellcheck="false">
+        <span id="findCount"></span>
+        <button id="findClose" onclick="closeFindBar()">✕</button>
+    </div>
+    <div id="findResults"></div>
+</div>
+
+<!-- Type-to-select bar -->
+<div id="typeSearchBar"></div>
+
+<!-- Desktop right-click -->
+<div class="ctxMenu" id="menuDesktop">
+    <div class="ctxItem" style="position:relative">📁 Create New <span class="arr">›</span>
+        <div class="subMenu">
+            <div class="ctxItem" onclick="createNew('folder')">📁 Folder</div>
+            <div class="ctxItem" onclick="createNew('empty')">📄 Empty File</div>
+            <div class="ctxItem" onclick="createNew('text')">📝 Text File (.txt)</div>
+        </div>
+    </div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="pasteIcons()">📋 Paste</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" style="position:relative">🗂️ Sort Icons <span class="arr">›</span>
+        <div class="subMenu">
+            <div class="ctxItem" id="sortName" onclick="sortIcons('name')">By Name</div>
+            <div class="ctxItem" id="sortSize" onclick="sortIcons('size')">By Size</div>
+            <div class="ctxItem" id="sortDate" onclick="sortIcons('date')">By Date Modified</div>
+            <div class="ctxItem" id="sortNone" onclick="sortIcons('none')">Unsorted</div>
+            <div class="ctxItem sep"></div>
+            <div class="ctxItem" onclick="toggleFoldFirst()" id="itemFoldFirst">Folders First</div>
+        </div>
+    </div>
+    <div class="sliderRow">
+        <label>Cell size: <b id="szLabel">90</b>px</label>
+        <input type="range" id="szSlider" min="60" max="180" value="90" oninput="onSzSlide(this.value)">
+    </div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" id="menuToggleIcons" onclick="toggleShowIcons()">👁️ Hide Desktop Icons</div>
+    <div class="ctxItem" id="menuToggleHidden" onclick="toggleShowHidden()">🫥 Show Hidden Files</div>
+    <div class="ctxItem" id="menuToggleWidgets" onclick="toggleShowWidgets()">🧩 Hide Widgets</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" style="position:relative">📐 Taskbar Offset <span class="arr">›</span>
+        <div class="subMenu" style="min-width:220px;padding:8px 12px">
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px">Move grid away from taskbar</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px">
+                <label style="color:rgba(255,255,255,0.6)">Top (px)</label>
+                <input class="txtInput" id="offTop" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+                <label style="color:rgba(255,255,255,0.6)">Bottom (px)</label>
+                <input class="txtInput" id="offBottom" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+                <label style="color:rgba(255,255,255,0.6)">Left (px)</label>
+                <input class="txtInput" id="offLeft" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+                <label style="color:rgba(255,255,255,0.6)">Right (px)</label>
+                <input class="txtInput" id="offRight" type="number" min="0" max="300" value="0" style="padding:3px 6px;font-size:12px" onchange="saveOffsets()">
+            </div>
+        </div>
+    </div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="showWallpaper()">🖼️ Change Wallpaper</div>
+    <div class="ctxItem" onclick="showMultiScreenSettings()">🖥️ Multi-Screen Settings</div>
+    <div class="ctxItem" onclick="openWidgetSidebar()">🧩 Widgets</div>
+    <div class="ctxItem" onclick="refresh()">🔄 Refresh</div>
+</div>
+
+<!-- Icon right-click -->
+<div class="ctxMenu" id="menuIcon">
+    <div class="ctxItem" onclick="openSelected()">📂 Open</div>
+    <div class="ctxItem" onclick="showOpenWith()">↗️ Open With…</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="copyIcons()">📋 Copy</div>
+    <div class="ctxItem" onclick="cutIcons()">✂️ Cut</div>
+    <div class="ctxItem" onclick="deleteIcons()">🗑️ Delete</div>
+    <div class="ctxItem" onclick="startInlineRename(activeIcon)">✏️ Rename</div>
+    <div class="ctxItem" id="menuCopyPath" onclick="copyPath()" style="display:none">📎 Copy Path</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" id="menuExtract" onclick="extractArchive()" style="display:none">📂 Extract Here</div>
+    <div class="ctxItem" onclick="compressIcons()">📦 Compress to .tar.gz</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" onclick="showProperties()">ℹ️ Properties</div>
+    <div class="ctxItem sep"></div>
+    <div class="ctxItem" id="menuGroupWidget" onclick="createGroupWidget()">🗃️ Create Group Widget</div>
+</div>
+
+<!-- Trash right-click -->
+<div class="ctxMenu" id="menuTrash">
+    <div class="ctxItem" onclick="openTrash()">📂 Open Trash</div>
+    <div class="ctxItem" onclick="emptyTrash()">🗑️ Empty Trash</div>
+</div>
+
+<!-- Properties -->
+<div class="overlay" id="ovProps">
+<div class="dialog">
+    <div class="dlgHead"><h2 id="propsTitle">Properties</h2><button class="dlgClose" onclick="closeOv('ovProps')">✕</button></div>
+    <div class="dlgTabs">
+        <div class="dlgTab active" data-tab="details" onclick="switchTab(this)">Details</div>
+        <div class="dlgTab" data-tab="perms" onclick="switchTab(this)">Permissions</div>
+        <div class="dlgTab" data-tab="icon" onclick="switchTab(this)">Icon</div>
+    </div>
+    <div class="dlgBody">
+        <div class="tabPanel active" id="tab-details">
+            <div class="propRow"><span class="propKey">Name</span><input class="txtInput" id="pi-name" type="text" style="flex:1"></div>
+            <div class="propRow"><span class="propKey">Type</span><span class="propVal" id="pi-type"></span></div>
+            <div class="propRow"><span class="propKey">Size</span><span class="propVal" id="pi-size"></span></div>
+            <div class="propRow"><span class="propKey">Location</span><span class="propVal" id="pi-loc"></span></div>
+            <div class="propRow"><span class="propKey">Created</span><span class="propVal" id="pi-cre"></span></div>
+            <div class="propRow"><span class="propKey">Modified</span><span class="propVal" id="pi-mod"></span></div>
+            <div class="propRow"><span class="propKey">Accessed</span><span class="propVal" id="pi-acc"></span></div>
+            <div id="pi-img-rows" style="display:none">
+                <div class="propRow"><span class="propKey">Dimensions</span><span class="propVal" id="pi-dimensions"></span></div>
+                <div class="propRow"><span class="propKey">Camera</span><span class="propVal" id="pi-camera"></span></div>
+                <div class="propRow"><span class="propKey">Focal len.</span><span class="propVal" id="pi-focal"></span></div>
+                <div class="propRow"><span class="propKey">Aperture</span><span class="propVal" id="pi-aperture"></span></div>
+                <div class="propRow"><span class="propKey">Shutter</span><span class="propVal" id="pi-shutter"></span></div>
+                <div class="propRow"><span class="propKey">ISO</span><span class="propVal" id="pi-iso"></span></div>
+                <div class="propRow"><span class="propKey">Date taken</span><span class="propVal" id="pi-datetaken"></span></div>
+                <div class="propRow"><span class="propKey">GPS</span><span class="propVal" id="pi-gps"></span></div>
+            </div>
+            <label class="propCheck"><input type="checkbox" id="pi-hidden"> Hide (add "." prefix)</label>
+        </div>
+        <div class="tabPanel" id="tab-perms">
+            <div class="permSection">
+                <h3>Owner &amp; Group</h3>
+                <div class="permRow"><label>Owner</label><input class="txtInput" id="pm-owner" type="text"></div>
+                <div class="permRow"><label>Group</label><input class="txtInput" id="pm-group" type="text"></div>
+            </div>
+            <div class="permSection">
+                <h3>Access Rights</h3>
+                <div class="permRow"><label>Owner</label><div class="permChecks"><label><input type="checkbox" id="p-ur"> Read</label><label><input type="checkbox" id="p-uw"> Write</label><label><input type="checkbox" id="p-ux"> Exec</label></div></div>
+                <div class="permRow"><label>Group</label><div class="permChecks"><label><input type="checkbox" id="p-gr"> Read</label><label><input type="checkbox" id="p-gw"> Write</label><label><input type="checkbox" id="p-gx"> Exec</label></div></div>
+                <div class="permRow"><label>Others</label><div class="permChecks"><label><input type="checkbox" id="p-or"> Read</label><label><input type="checkbox" id="p-ow"> Write</label><label><input type="checkbox" id="p-ox"> Exec</label></div></div>
+            </div>
+        </div>
+        <div class="tabPanel" id="tab-icon">
+            <div style="display:flex;align-items:center;gap:16px;margin-bottom:16px">
+                <div id="iconPreviewWrap" style="width:72px;height:72px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.07);border-radius:10px;font-size:48px;flex-shrink:0"></div>
+                <div style="flex:1">
+                    <div style="font-size:12.5px;color:rgba(255,255,255,0.5);margin-bottom:8px">Current icon</div>
+                    <button class="wpBrowseBtn" style="margin-bottom:6px" onclick="browseCustomIcon()">Browse image…</button>
+                    <button class="wpBrowseBtn" onclick="resetCustomIcon()">Reset to default</button>
+                </div>
+            </div>
+            <div style="font-size:11.5px;color:rgba(255,255,255,0.35);margin-bottom:6px">Or pick an emoji</div>
+            <div id="emojiPicker" style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto"></div>
+            <div style="margin-top:10px">
+                <div style="font-size:11.5px;color:rgba(255,255,255,0.35);margin-bottom:5px">Custom image path</div>
+                <input class="txtInput" type="text" id="iconCustomPath" style="width:100%" placeholder="/path/to/image.png">
+            </div>
+        </div>
+    </div>
+    <div class="dlgFoot">
+        <button class="btn cancel" onclick="closeOv('ovProps')">Cancel</button>
+        <button class="btn ok" onclick="applyProps()">Apply</button>
+    </div>
+</div>
+</div>
+
+<!-- Open With -->
+<div class="overlay" id="ovOpenWith">
+<div class="dialog" style="width:410px">
+    <div class="dlgHead"><h2>Open With</h2><button class="dlgClose" onclick="closeOv('ovOpenWith')">✕</button></div>
+    <div class="dlgBody">
+        <div class="owList" id="owList"></div>
+        <div class="owSep"></div>
+        <div class="owHint">Custom command</div>
+        <div class="customCmdRow"><input type="text" id="owCustom" placeholder="e.g. mpv, subl, xterm -e nano …"></div>
+        <label class="owSaveRow"><input type="checkbox" id="owSave"> Remember for this file type</label>
+    </div>
+    <div class="dlgFoot">
+        <button class="btn cancel" onclick="closeOv('ovOpenWith')">Cancel</button>
+        <button class="btn ok" onclick="applyOpenWith()">Open</button>
+    </div>
+</div>
+</div>
+
+<!-- Wallpaper picker -->
+<div class="overlay" id="ovWallpaper">
+<div class="dialog" style="width:500px">
+    <div class="dlgHead"><h2>Change Wallpaper</h2><button class="dlgClose" onclick="closeOv('ovWallpaper')">✕</button></div>
+    <div class="dlgBody">
+        <div style="font-size:11.5px;color:rgba(255,255,255,0.4);margin-bottom:10px">Current wallpaper folder images</div>
+        <div class="wpGrid" id="wpGrid"></div>
+        <div class="owSep"></div>
+        <div class="owHint">Or enter a full path / URL</div>
+        <div class="wpCustomRow">
+            <input class="txtInput" type="text" id="wpCustom" placeholder="/home/user/Pictures/wall.jpg">
+            <button class="wpBrowseBtn" onclick="browseWallpaper()">Browse…</button>
+        </div>
+        <div class="owSep"></div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+            <div>
+                <label style="display:block;font-size:12px;color:rgba(255,255,255,0.62);margin-bottom:4px">Dim wallpaper: <b id="wpDimLabel">0%</b></label>
+                <input type="range" id="wpDim" min="0" max="90" step="1" value="0" oninput="updateWallpaperEffectLabels()" style="width:100%;accent-color:var(--accent)">
+            </div>
+            <div>
+                <label style="display:block;font-size:12px;color:rgba(255,255,255,0.62);margin-bottom:4px">Blur wallpaper: <b id="wpBlurLabel">0px</b></label>
+                <input type="range" id="wpBlur" min="0" max="24" step="1" value="0" oninput="updateWallpaperEffectLabels()" style="width:100%;accent-color:var(--accent)">
+            </div>
+        </div>
+    </div>
+    <div class="dlgFoot">
+        <button class="btn cancel" onclick="closeOv('ovWallpaper')">Cancel</button>
+        <button class="btn ok" onclick="applyWallpaper()">Apply</button>
+    </div>
+</div>
+</div>
+
+<script>
+'use strict';
+const fs   = require('fs');
+const path = require('path');
+const { exec, execSync } = require('child_process');
+
+// ─────────────────────────────────────────────────────────────────────
+//  CONFIG
+// ─────────────────────────────────────────────────────────────────────
+const DESKTOP   = path.join(process.env.HOME, 'Desktop');
+const DATA_FILE = path.join(nw.App.dataPath, 'deskv4.json');
+const THUMB_DIR = path.join(nw.App.dataPath, 'thumbs');
+const IMG_EXTS  = new Set(['.png','.jpg','.jpeg','.gif','.webp','.bmp','.svg']);
+const TRASH_PATH = path.join(process.env.HOME, '.local/share/Trash');
+
+if (!fs.existsSync(THUMB_DIR)) fs.mkdirSync(THUMB_DIR, { recursive:true });
+
+let CFG = {
+    cellSize: 90,
+    sort: 'none',
+    foldersFirst: false,
+    showIcons: true,
+    showHidden: false,
+    offsets: { top:0, bottom:0, left:0, right:0 },
+    icons: [],
+    openWithMap: {},
+    wallpaper: '',
+    wallpaperDim: 0,
+    wallpaperBlur: 0,
+    iconOverrides: {},
+};
+
+function loadCFG() {
+    try { Object.assign(CFG, JSON.parse(fs.readFileSync(DATA_FILE,'utf8'))); } catch {}
+}
+function saveCFG() {
+    if (CFG.sort === 'none') {
+        CFG.icons = Array.from(document.querySelectorAll('.desktopIcon')).map(el => ({
+            path: el.dataset.path, col: +el.dataset.col, row: +el.dataset.row,
+            page: parseInt(el.dataset.page)||0
+        }));
+    }
+    try { fs.writeFileSync(DATA_FILE, JSON.stringify(CFG,null,2),'utf8'); } catch(e) { console.error(e); }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  ACCENT COLOR — runtime change via CSS variable
+// ─────────────────────────────────────────────────────────────────────
+function setAccentColor(hex) {
+    // hex like '#4a9eff'
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    document.documentElement.style.setProperty('--accent', hex);
+    document.documentElement.style.setProperty('--accent-rgb', `${r}, ${g}, ${b}`);
+    CFG.accentColor = hex;
+    saveCFG();
+}
+// Apply saved accent on load
+function applyAccentColor() {
+    if (CFG.accentColor) setAccentColor(CFG.accentColor);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  WALLPAPER
+// ─────────────────────────────────────────────────────────────────────
+function applyWallpaperCSS(wp) {
+    const layer = document.getElementById('wallpaperLayer');
+    const dimLayer = document.getElementById('wallpaperDim');
+    if (!layer || !dimLayer) return;
+    if (!wp) {
+        layer.style.background = '#1a1a2e';
+        layer.style.backgroundImage = 'none';
+    } else {
+        const url = wp.startsWith('http')||wp.startsWith('data:') ? wp : `file://${wp}`;
+        layer.style.background = `url('${url}') no-repeat center center fixed`;
+        layer.style.backgroundSize = 'cover';
+    }
+    const dim = Math.max(0, Math.min(90, parseInt(CFG.wallpaperDim)||0));
+    const blur = Math.max(0, Math.min(24, parseInt(CFG.wallpaperBlur)||0));
+    dimLayer.style.background = `rgba(0,0,0,${(dim/100).toFixed(3)})`;
+    layer.style.filter = blur ? `blur(${blur}px)` : 'none';
+    layer.style.transform = blur ? 'scale(1.06)' : 'none';
+}
+
+function updateWallpaperEffectLabels() {
+    const dimEl = document.getElementById('wpDim');
+    const blurEl = document.getElementById('wpBlur');
+    const dim = parseInt(dimEl ? dimEl.value : 0)||0;
+    const blur = parseInt(blurEl ? blurEl.value : 0)||0;
+    const dl = document.getElementById('wpDimLabel');
+    const bl = document.getElementById('wpBlurLabel');
+    if (dl) dl.textContent = `${dim}%`;
+    if (bl) bl.textContent = `${blur}px`;
+}
+
+function showWallpaper() {
+    hideCtx();
+    const dirs = [
+        '/usr/share/wallpapers',
+        '/usr/share/backgrounds',
+        path.join(process.env.HOME, 'Pictures'),
+        path.join(process.env.HOME, '.local/share/wallpapers'),
+    ];
+    const wpGrid = document.getElementById('wpGrid');
+    wpGrid.innerHTML = '';
+    const found = [];
+    dirs.forEach(dir => {
+        if (!fs.existsSync(dir)) return;
+        try {
+            const items = fs.readdirSync(dir).slice(0,30);
+            items.forEach(f => {
+                const fp = path.join(dir, f);
+                if (IMG_EXTS.has(path.extname(f).toLowerCase())) found.push(fp);
+                try {
+                    const st = fs.statSync(fp);
+                    if (st.isDirectory()) {
+                        fs.readdirSync(fp).slice(0,10).forEach(ff => {
+                            const ffp = path.join(fp,ff);
+                            if (IMG_EXTS.has(path.extname(ff).toLowerCase())) found.push(ffp);
+                        });
+                    }
+                } catch {}
+            });
+        } catch {}
+    });
+    found.slice(0,18).forEach(fp => {
+        const img = document.createElement('img');
+        img.className = 'wpThumb' + (CFG.wallpaper===fp?' active':'');
+        img.src = `file://${fp}`;
+        img.loading = 'lazy';
+        img.addEventListener('click', () => {
+            document.querySelectorAll('.wpThumb').forEach(t=>t.classList.remove('active'));
+            img.classList.add('active');
+            document.getElementById('wpCustom').value = fp;
+        });
+        wpGrid.appendChild(img);
+    });
+    document.getElementById('wpCustom').value = CFG.wallpaper||'';
+    document.getElementById('wpDim').value = Math.max(0, Math.min(90, parseInt(CFG.wallpaperDim)||0));
+    document.getElementById('wpBlur').value = Math.max(0, Math.min(24, parseInt(CFG.wallpaperBlur)||0));
+    updateWallpaperEffectLabels();
+    document.getElementById('ovWallpaper').classList.add('show');
+}
+
+function browseWallpaper() {
+    exec(`zenity --file-selection --file-filter="Images | *.png *.jpg *.jpeg *.webp *.bmp" 2>/dev/null || kdialog --getopenfilename ~ "*.png *.jpg *.jpeg *.webp" 2>/dev/null`, (err, stdout) => {
+        const p = stdout.trim();
+        if (p) document.getElementById('wpCustom').value = p;
+    });
+}
+
+function applyWallpaper() {
+    const wp = document.getElementById('wpCustom').value.trim();
+    CFG.wallpaper = wp;
+    CFG.wallpaperDim = Math.max(0, Math.min(90, parseInt(document.getElementById('wpDim').value)||0));
+    CFG.wallpaperBlur = Math.max(0, Math.min(24, parseInt(document.getElementById('wpBlur').value)||0));
+    saveCFG();
+    applyWallpaperCSS(wp);
+    closeOv('ovWallpaper');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  GRID MATH
+// ─────────────────────────────────────────────────────────────────────
+const EDGE_PAD = 8;
+let COLS=1, ROWS=1, GAP_X=12, GAP_Y=12, GRID_LEFT=0, GRID_TOP=0, GRID_W=0, GRID_H=0;
+
+function calcGrid() {
+    const cs = CFG.cellSize;
+    const off = CFG.offsets || { top:0, bottom:0, left:0, right:0 };
+    GRID_LEFT = EDGE_PAD + (off.left||0);
+    GRID_TOP  = EDGE_PAD + (off.top||0);
+    GRID_W = window.innerWidth  - EDGE_PAD*2 - (off.left||0) - (off.right||0);
+    GRID_H = window.innerHeight - EDGE_PAD*2 - (off.top||0)  - (off.bottom||0);
+
+    const minGap = Math.max(10, Math.round(cs * 0.15));
+    COLS = Math.max(1, Math.floor((GRID_W + minGap) / (cs + minGap)));
+    ROWS = Math.max(1, Math.floor((GRID_H + minGap) / (cs + minGap)));
+    GAP_X = COLS > 1 ? Math.min((GRID_W - COLS*cs) / (COLS-1), cs*0.5) : 0;
+    GAP_Y = ROWS > 1 ? Math.min((GRID_H - ROWS*cs) / (ROWS-1), cs*0.5) : 0;
+}
+
+function cellPx(col, row) {
+    return {
+        x: GRID_LEFT + col * (CFG.cellSize + GAP_X),
+        y: GRID_TOP  + row * (CFG.cellSize + GAP_Y),
+    };
+}
+
+function pxToCell(px, py) {
+    const stepX = CFG.cellSize + GAP_X;
+    const stepY = CFG.cellSize + GAP_Y;
+    return {
+        col: Math.max(0, Math.min(COLS-1, Math.floor((px - GRID_LEFT) / stepX))),
+        row: Math.max(0, Math.min(ROWS-1, Math.floor((py - GRID_TOP)  / stepY))),
+    };
+}
+
+function saveOffsets() {
+    CFG.offsets = {
+        top:    parseInt(document.getElementById('offTop').value)||0,
+        bottom: parseInt(document.getElementById('offBottom').value)||0,
+        left:   parseInt(document.getElementById('offLeft').value)||0,
+        right:  parseInt(document.getElementById('offRight').value)||0,
+    };
+    saveCFG();
+    loadDesktopIcons();
+}
+
+function getNumPages() {
+    return (typeof NUM_PAGES==='number' && NUM_PAGES>0) ? NUM_PAGES : 2;
+}
+
+function clampPage(p) {
+    return Math.max(0, Math.min(getNumPages()-1, parseInt(p)||0));
+}
+
+function gridPointToPageCell(px, gridY) {
+    const vh = Math.max(1, window.innerHeight);
+    const page = clampPage(Math.floor(gridY / vh));
+    const localY = gridY - page * vh;
+    const local = pxToCell(px, localY);
+    return { col: local.col, row: local.row, page };
+}
+
+function screenToPageCell(px, py) {
+    const off = (typeof gridOffset==='number') ? gridOffset : 0;
+    return gridPointToPageCell(px, py - off);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  CELL MAP
+// ─────────────────────────────────────────────────────────────────────
+const cellMap = {};
+const ck = (c,r,p=0) => `${p}:${c},${r}`;
+
+function nextFree(pref, page=0) {
+    const pg = clampPage(pref&&pref.page!==undefined ? pref.page : page);
+    if (pref) {
+        const k = ck(pref.col, pref.row, pg);
+        if (pref.col < COLS && pref.row < ROWS && !cellMap[k]) return { col:pref.col, row:pref.row, page:pg };
+    }
+    for (let r=0; r<ROWS; r++)
+        for (let c=0; c<COLS; c++)
+            if (!cellMap[ck(c,r,pg)]) return { col:c, row:r, page:pg };
+    return { col:0, row:0, page:pg };
+}
+
+function snapIcon(el, pref, page=0) {
+    const { col, row, page:pg } = nextFree(pref, page);
+    const { x, y } = cellPx(col, row);
+    const cs = CFG.cellSize;
+    el.style.left   = x+'px';
+    el.style.top    = (y + pg * window.innerHeight)+'px';
+    el.style.width  = cs+'px';
+    el.style.height = cs+'px';
+    el.dataset.col  = col;
+    el.dataset.row  = row;
+    el.dataset.page = pg;
+    cellMap[ck(col,row,pg)] = el;
+    resizeContents(el);
+}
+
+function resizeContents(el) {
+    const cs    = CFG.cellSize;
+    const imgSz = Math.round(cs * 0.50);
+    const wrap  = el.querySelector('.iconImg');
+    if (wrap)  { wrap.style.width=imgSz+'px'; wrap.style.height=imgSz+'px'; }
+    const emo   = el.querySelector('.iconEmoji');
+    if (emo)   emo.style.fontSize = Math.round(imgSz*0.70)+'px';
+    const lbl   = el.querySelector('.iconLabel');
+    if (lbl) {
+        lbl.style.fontSize = Math.max(9, Math.round(cs * 0.122))+'px';
+        lbl.style.width    = (cs - 8)+'px';
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  THUMBNAILS
+// ─────────────────────────────────────────────────────────────────────
+function thumbPath(fp) {
+    let h=5381;
+    for (let i=0;i<fp.length;i++) h=(h*33)^fp.charCodeAt(i);
+    return path.join(THUMB_DIR,(h>>>0)+'.jpg');
+}
+function getThumbnail(fp, cb) {
+    const tp = thumbPath(fp);
+    if (fs.existsSync(tp)) { cb(tp); return; }
+    const q=`"${fp}"`, qt=`"${tp}"`;
+    exec(`convert ${q}[0] -thumbnail 160x160^ -gravity center -extent 160x160 ${qt} 2>/dev/null`,
+        err => {
+            if (!err && fs.existsSync(tp)) { cb(tp); return; }
+            exec(`ffmpeg -y -i ${q} -vf "scale=160:160:force_original_aspect_ratio=increase,crop=160:160" ${qt} 2>/dev/null`,
+                e2 => { if (!e2 && fs.existsSync(tp)) cb(tp); });
+        });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  TRASH ICON
+// ─────────────────────────────────────────────────────────────────────
+function getTrashCount() {
+    try { return fs.readdirSync(path.join(TRASH_PATH,'files')).length; } catch { return 0; }
+}
+function getTrashSize() {
+    try {
+        const out=execSync(`du -sb "${path.join(TRASH_PATH,'files')}" 2>/dev/null`).toString();
+        return parseInt(out)||0;
+    } catch { return 0; }
+}
+
+function buildTrashIcon() {
+    const el = document.createElement('div');
+    el.className = 'desktopIcon';
+    el.dataset.path  = TRASH_PATH;
+    el.dataset.name  = 'Trash';
+    el.dataset.trash = '1';
+    el.dataset.isdir = '0';
+    const count = getTrashCount();
+    const full  = count > 0;
+    el.innerHTML = `
+        <div class="iconInner">
+            <div class="iconImg"><div class="iconEmoji" style="position:relative">
+                🗑️
+                ${full ? `<span style="position:absolute;top:-4px;right:-6px;background:#e55;color:white;border-radius:8px;font-size:9px;padding:0 4px;min-width:14px;text-align:center;line-height:14px">${count>99?'99+':count}</span>` : ''}
+            </div></div>
+            <div class="iconLabel">Trash${full?' ('+count+')':''}</div>
+        </div>`;
+    el.addEventListener('mousedown', onIconMD);
+    el.addEventListener('click',     onIconClick);
+    el.addEventListener('dblclick',  openTrash);
+    el.addEventListener('contextmenu', e => {
+        e.preventDefault(); e.stopPropagation();
+        activeIcon = el;
+        showCtx('menuTrash', e.clientX, e.clientY);
+    });
+    return el;
+}
+
+function openTrash() {
+    exec(`xdg-open "${TRASH_PATH}" 2>/dev/null || thunar trash:// 2>/dev/null || nautilus trash:// 2>/dev/null`);
+    hideCtx();
+}
+function emptyTrash() {
+    if (!confirm('Empty the trash? This cannot be undone.')) return;
+    exec(`gio trash --empty 2>/dev/null || rm -rf "${path.join(TRASH_PATH,'files')}"/* "${path.join(TRASH_PATH,'info')}"/*`, () => {
+        loadDesktopIcons();
+    });
+    hideCtx();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  LOAD ICONS
+// ─────────────────────────────────────────────────────────────────────
+function loadDesktopIcons() {
+    calcGrid();
+    const grid = document.getElementById('desktopGrid');
+    grid.querySelectorAll('.desktopIcon').forEach(e=>e.remove());
+    Object.keys(cellMap).forEach(k=>delete cellMap[k]);
+
+    if (!fs.existsSync(DESKTOP)) fs.mkdirSync(DESKTOP,{recursive:true});
+    let files;
+    try { files = fs.readdirSync(DESKTOP); } catch(e) { console.error(e); return; }
+
+    const entries = [];
+    files.forEach(file => {
+        if (!CFG.showHidden && file.startsWith('.')) return;
+        const fp = path.join(DESKTOP,file);
+        let st; try { st=fs.statSync(fp); } catch(e) { console.warn('skip',file,e.message); return; }
+        entries.push({ file, fp, st });
+    });
+
+    doSort(entries);
+
+    // Saved positions
+    const saved = {};
+    (CFG.icons||[]).forEach(e => {
+        saved[e.path]={
+            col:e.col,
+            row:e.row,
+            page:clampPage(e.page||0)
+        };
+    });
+
+    entries.forEach(({ file, fp, st }) => {
+        const el = buildIcon(file, fp, st);
+        let pref = (CFG.sort === 'none') ? saved[fp] : null;
+        if(!pref && !saved[fp]) {
+            if(CFG._createHint){pref=CFG._createHint;CFG._createHint=null;}
+            else if(CFG._dropHint){pref=CFG._dropHint;CFG._dropHint=null;}
+        }
+        snapIcon(el, pref, pref&&pref.page!==undefined?pref.page:0);
+        grid.appendChild(el);
+    });
+
+    // Trash — use saved position if available, else bottom-right
+    const trashEl = buildTrashIcon();
+    const trashSaved = saved[TRASH_PATH];
+    const trashPref = trashSaved || findLastCell(0);
+    snapIcon(trashEl, { col: trashPref.col, row: trashPref.row, page: clampPage(trashPref.page||0) }, clampPage(trashPref.page||0));
+    grid.appendChild(trashEl);
+
+    const ghost = document.getElementById('gridGhost');
+    ghost.style.width  = CFG.cellSize+'px';
+    ghost.style.height = CFG.cellSize+'px';
+
+    updateSortUI();
+    updateMenuToggles();
+    setTimeout(()=>{ if(typeof loadWidgets==='function'){ loadWidgets(); applyPageVisibility(); } },0);
+}
+
+function doSort(entries) {
+    if (CFG.sort === 'none' && !CFG.foldersFirst) return;
+
+    entries.sort((a, b) => {
+        if (CFG.foldersFirst) {
+            const ad = a.st.isDirectory(), bd = b.st.isDirectory();
+            if (ad !== bd) return ad ? -1 : 1;
+        }
+        switch (CFG.sort) {
+            case 'name': return a.file.localeCompare(b.file, undefined, {sensitivity:'base'});
+            case 'size': return (a.st.size||0) - (b.st.size||0);
+            case 'date': return b.st.mtimeMs  - a.st.mtimeMs;
+            default:     return 0;
+        }
+    });
+}
+
+function findLastCell(page=0) {
+    const pg = clampPage(page);
+    for (let r=ROWS-1; r>=0; r--)
+        for (let c=COLS-1; c>=0; c--)
+            if (!cellMap[ck(c,r,pg)]) return {col:c,row:r,page:pg};
+    return {col:0,row:0,page:pg};
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  BUILD ICON ELEMENT
+// ─────────────────────────────────────────────────────────────────────
+function buildIcon(file, fp, st) {
+    const el = document.createElement('div');
+    el.className    = 'desktopIcon';
+    el.dataset.path = fp;
+    el.dataset.name = file;
+    el.dataset.isdir = st.isDirectory() ? '1' : '0';
+    const isDir = st.isDirectory();
+    const ext   = path.extname(file).toLowerCase();
+
+    const override = CFG.iconOverrides && CFG.iconOverrides[fp];
+    let iconHtml;
+    if (override && override.type==='image') {
+        iconHtml=`<div class="iconImg"><img src="file://${override.value}" style="width:100%;height:100%;object-fit:cover;border-radius:4px"></div>`;
+    } else {
+        const emoji = override&&override.type==='emoji' ? override.value : emojiFor(file,isDir);
+        iconHtml=`<div class="iconImg"><div class="iconEmoji">${emoji}</div></div>`;
+    }
+
+    el.innerHTML = `
+        <div class="iconInner">
+            ${iconHtml}
+            <div class="iconLabel">${esc(file)}</div>
+        </div>`;
+
+    if (!override && IMG_EXTS.has(ext) && !isDir) {
+        getThumbnail(fp, tp => {
+            const wrap=el.querySelector('.iconImg'); if(!wrap) return;
+            wrap.innerHTML=`<img src="file://${tp}?v=${Date.now()}" alt="">`;
+            resizeContents(el);
+        });
+    }
+    el.addEventListener('mousedown',   onIconMD);
+    el.addEventListener('click',       onIconClick);
+    el.addEventListener('dblclick',    () => openFile(fp));
+    el.addEventListener('contextmenu', onIconCtx);
+    return el;
+}
+
+function emojiFor(file, isDir) {
+    if (isDir) return '📁';
+    const m={
+        '.txt':'📝','.md':'📝','.pdf':'📕',
+        '.zip':'📦','.tar':'📦','.gz':'📦','.bz2':'📦','.xz':'📦','.7z':'📦','.rar':'📦',
+        '.mp4':'🎬','.mkv':'🎬','.avi':'🎬','.webm':'🎬','.mov':'🎬',
+        '.mp3':'🎵','.ogg':'🎵','.flac':'🎵','.wav':'🎵','.aac':'🎵',
+        '.js':'💻','.ts':'💻','.py':'💻','.cpp':'💻','.c':'💻',
+        '.h':'💻','.rs':'💻','.go':'💻','.rb':'💻','.php':'💻',
+        '.sh':'⚙️','.bash':'⚙️',
+        '.png':'🖼️','.jpg':'🖼️','.jpeg':'🖼️','.gif':'🖼️','.webp':'🖼️','.svg':'🖼️',
+    };
+    return m[path.extname(file).toLowerCase()]||'📄';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  DRAG  — multi-icon, folder-drop, 5px dead-zone
+// ─────────────────────────────────────────────────────────────────────
+let drag = null;
+
+function onIconMD(e) {
+    if (e.button!==0) return;
+    e.stopPropagation();
+    const el=e.currentTarget, rect=el.getBoundingClientRect();
+    drag={
+        leader: el,
+        offX: e.clientX-rect.left,
+        offY: e.clientY-rect.top,
+        origCol: +el.dataset.col,
+        origRow: +el.dataset.row,
+        origPage: parseInt(el.dataset.page)||0,
+        startX: e.clientX,
+        startY: e.clientY,
+        active: false,
+        followers: [],
+        folderTarget: null,
+    };
+}
+
+document.addEventListener('mousemove', e => {
+    if (drag) {
+        const dx=e.clientX-drag.startX, dy=e.clientY-drag.startY;
+        if (!drag.active) {
+            if (Math.abs(dx)<5&&Math.abs(dy)<5) return;
+            drag.active=true;
+
+            const selected=Array.from(document.querySelectorAll('.desktopIcon.selected'));
+            if (!drag.leader.classList.contains('selected')) {
+                drag.followers = [];
+            } else {
+                drag.followers = selected.filter(ic=>ic!==drag.leader);
+            }
+
+            drag.leader.classList.add('dragging');
+            drag.leader.style.zIndex=5000;
+            drag.leader.style.transition='none';
+            drag.leader.style.pointerEvents='none';
+            delete cellMap[ck(drag.origCol,drag.origRow,drag.origPage)];
+
+            const lx=parseFloat(drag.leader.style.left), ly=parseFloat(drag.leader.style.top);
+            drag.followers.forEach(ic=>{
+                ic._dragRelX = parseFloat(ic.style.left)-lx;
+                ic._dragRelY = parseFloat(ic.style.top )-ly;
+                ic.classList.add('dragging');
+                ic.style.zIndex=4999;
+                ic.style.transition='none';
+                ic.style.pointerEvents='none';
+                delete cellMap[ck(+ic.dataset.col,+ic.dataset.row,parseInt(ic.dataset.page)||0)];
+            });
+        }
+
+        const nx=e.clientX-drag.offX;
+        const ny=e.clientY-drag.offY-gridOffset;
+        drag.leader.style.left=nx+'px';
+        drag.leader.style.top =ny+'px';
+
+        drag.followers.forEach(ic=>{
+            ic.style.left=(nx+ic._dragRelX)+'px';
+            ic.style.top =(ny+ic._dragRelY)+'px';
+        });
+
+        const cx=nx+CFG.cellSize/2, cy=ny+CFG.cellSize/2;
+        const {col,row,page}=gridPointToPageCell(cx,cy);
+        const cellOccupant=cellMap[ck(col,row,page)];
+        const ghost=document.getElementById('gridGhost');
+
+        const isTrash = cellOccupant && cellOccupant.dataset.trash==='1';
+        const isFolder = cellOccupant && cellOccupant.dataset.isdir==='1' && !isTrash && cellOccupant!==drag.leader;
+
+        if (isTrash) {
+            if (drag.folderTarget && drag.folderTarget!==cellOccupant)
+                drag.folderTarget.querySelector('.iconInner').style.outline='';
+            drag.folderTarget=cellOccupant;
+            cellOccupant.querySelector('.iconInner').style.outline='2px solid #e55';
+            ghost.style.display='none';
+        } else if (isFolder) {
+            if (drag.folderTarget && drag.folderTarget!==cellOccupant)
+                drag.folderTarget.querySelector('.iconInner').style.outline='';
+            drag.folderTarget=cellOccupant;
+            cellOccupant.querySelector('.iconInner').style.outline='2px solid var(--accent)';
+            ghost.style.display='none';
+        } else {
+            if (drag.folderTarget) {
+                drag.folderTarget.querySelector('.iconInner').style.outline='';
+                drag.folderTarget=null;
+            }
+            if (!cellOccupant) {
+                const gp=cellPx(col,row);
+                ghost.style.left=gp.x+'px';
+                ghost.style.top=(gp.y + page * window.innerHeight)+'px';
+                ghost.style.display='block';
+            } else ghost.style.display='none';
+        }
+        return;
+    }
+    if (isSelecting) updateRubberBand(e);
+});
+
+document.addEventListener('mouseup', e => {
+    if (isSelecting) {
+        document.getElementById('select').style.display='none';
+        isSelecting=false;
+        justFinishedRubberBand=true;
+        setTimeout(()=>{ justFinishedRubberBand=false; }, 80);
+    }
+    if (!drag) return;
+    const {leader,active,followers,folderTarget}=drag; drag=null;
+    if (!active) return;
+
+    [leader,...followers].forEach(ic=>{
+        ic.classList.remove('dragging');
+        ic.style.zIndex=ic.style.transition=ic.style.pointerEvents='';
+    });
+    if (folderTarget) folderTarget.querySelector('.iconInner').style.outline='';
+    document.getElementById('gridGhost').style.display='none';
+
+    const cx=parseFloat(leader.style.left)+CFG.cellSize/2;
+    const cy=parseFloat(leader.style.top )+CFG.cellSize/2;
+    const {col,row,page}=gridPointToPageCell(cx,cy);
+    const cellOccupant=cellMap[ck(col,row,page)];
+
+    // DROP INTO TRASH
+    const dropTarget = folderTarget || (cellOccupant && cellOccupant!==leader ? cellOccupant : null);
+    if (dropTarget && dropTarget.dataset.trash==='1') {
+        const toMove=[leader,...followers];
+        if(!confirm(`Move ${toMove.length} item(s) to trash?`)) {
+            toMove.forEach(ic=>{
+                snapIcon(ic,{
+                    col:+ic.dataset.col||0,
+                    row:+ic.dataset.row||0,
+                    page:parseInt(ic.dataset.page)||0
+                });
+            });
+            return;
+        }
+        toMove.forEach(ic=>{
+            exec(`gio trash "${ic.dataset.path}" 2>/dev/null || rm -rf "${ic.dataset.path}"`, ()=>{});
+        });
+        setTimeout(loadDesktopIcons, 300);
+        return;
+    }
+
+    // DROP INTO FOLDER — use cp+rm to avoid EXDEV across filesystems
+    if (dropTarget && dropTarget.dataset.isdir==='1') {
+        const targetDir=dropTarget.dataset.path;
+        const toMove=[leader,...followers];
+        let pending2=toMove.length;
+        function folderMoveDone(){ if(--pending2<=0) loadDesktopIcons(); }
+        toMove.forEach(ic=>{
+            const src=ic.dataset.path;
+            const dest=path.join(targetDir,path.basename(src));
+            if(src===dest){ folderMoveDone(); return; }
+            let st2; try{ st2=fs.statSync(src); }catch(e){ folderMoveDone(); return; }
+            if(st2.isDirectory()){
+                exec(`cp -r "${src}" "${dest}" && rm -rf "${src}"`,err=>{ if(err) console.error('move to folder:',err); folderMoveDone(); });
+            } else {
+                exec(`cp "${src}" "${dest}" && rm -f "${src}"`,err=>{ if(err) console.error('move to folder:',err); folderMoveDone(); });
+            }
+        });
+        return;
+    }
+
+    // DROP ON GRID
+    snapIcon(leader,{col,row,page},page);
+
+    followers.forEach(ic=>{
+        const fcx=parseFloat(ic.style.left)+CFG.cellSize/2;
+        const fcy=parseFloat(ic.style.top)+CFG.cellSize/2;
+        const fc=gridPointToPageCell(fcx,fcy);
+        snapIcon(ic, fc, fc.page);
+    });
+
+    saveCFG();
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  RUBBER-BAND SELECTION
+// ─────────────────────────────────────────────────────────────────────
+let isSelecting=false, selSt={x:0,y:0};
+
+document.getElementById('desktopGrid').addEventListener('mousedown', e => {
+    if (e.button!==0) return;
+    if (e.target.closest('.ctxMenu,.overlay')) return;
+    if (e.target.closest('.desktopIcon')) return;
+
+    isSelecting=true;
+    selSt={x:e.clientX,y:e.clientY};
+    const s=document.getElementById('select');
+    s.style.cssText=`display:block;left:${e.clientX}px;top:${e.clientY}px;width:0;height:0;`;
+    if (!e.ctrlKey&&!e.metaKey)
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+});
+
+function updateRubberBand(e) {
+    const s=document.getElementById('select');
+    const x1=selSt.x, y1=selSt.y, x2=e.clientX, y2=e.clientY;
+    s.style.left  =Math.min(x1,x2)+'px';
+    s.style.top   =Math.min(y1,y2)+'px';
+    s.style.width =Math.abs(x2-x1)+'px';
+    s.style.height=Math.abs(y2-y1)+'px';
+    const sr=s.getBoundingClientRect();
+    document.querySelectorAll('.desktopIcon').forEach(ic => {
+        const inner=ic.querySelector('.iconInner')||ic;
+        const r=inner.getBoundingClientRect();
+        const hit=!(r.right<sr.left||r.left>sr.right||r.bottom<sr.top||r.top>sr.bottom);
+        if (hit) ic.classList.add('selected');
+        else if (!e.ctrlKey&&!e.metaKey) ic.classList.remove('selected');
+    });
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  SELECTION CLICK
+// ─────────────────────────────────────────────────────────────────────
+let activeIcon=null;
+let justFinishedRubberBand=false;
+function onIconClick(e) {
+    if (drag&&drag.active) return;
+    if (justFinishedRubberBand) return;
+    e.stopPropagation();
+    const el=e.currentTarget;
+
+    if (e.ctrlKey&&e.shiftKey) {
+        if(!el.classList.contains('selected')) el.classList.add('selected');
+        moveSelectedToOtherPage();
+        return;
+    }
+    if (e.ctrlKey||e.metaKey) {
+        el.classList.toggle('selected');
+    } else if (e.shiftKey) {
+        const all=Array.from(document.querySelectorAll('.desktopIcon'));
+        const lastSel=all.filter(i=>i.classList.contains('selected')).pop();
+        if (lastSel && lastSel!==el) {
+            const ai=all.indexOf(lastSel), bi=all.indexOf(el);
+            const lo=Math.min(ai,bi), hi=Math.max(ai,bi);
+            all.slice(lo,hi+1).forEach(i=>i.classList.add('selected'));
+        } else {
+            el.classList.add('selected');
+        }
+    } else {
+        if (!el.classList.contains('selected')) {
+            document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+            el.classList.add('selected');
+        }
+    }
+    activeIcon=el;
+}
+document.getElementById('desktopGrid').addEventListener('click', e => {
+    if (justFinishedRubberBand) return;
+    if (!e.target.closest('.desktopIcon'))
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  TYPE-TO-SELECT
+// ─────────────────────────────────────────────────────────────────────
+let typeBuffer='';
+let typeTimer=null;
+const TYPE_TIMEOUT=1200;
+
+function typeSelectUpdate() {
+    const bar=document.getElementById('typeSearchBar');
+    bar.textContent='Type to select: '+typeBuffer;
+    bar.classList.add('show');
+
+    const q=typeBuffer.toLowerCase();
+    const icons=Array.from(document.querySelectorAll('.desktopIcon'));
+    let matched=null;
+    for(const ic of icons) {
+        if((ic.dataset.name||'').toLowerCase().startsWith(q)) { matched=ic; break; }
+    }
+    if(matched) {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        matched.classList.add('selected');
+        activeIcon=matched;
+    }
+
+    clearTimeout(typeTimer);
+    typeTimer=setTimeout(()=>{
+        typeBuffer='';
+        bar.classList.remove('show');
+    }, TYPE_TIMEOUT);
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  FIND BAR (Ctrl+F)
+// ─────────────────────────────────────────────────────────────────────
+let findActive=false;
+let findDrag=null;
+
+function resetFindBarPosition() {
+    const bar=document.getElementById('findBar');
+    if (!bar) return;
+    bar.style.left='50%';
+    bar.style.top='18px';
+    bar.style.transform='translateX(-50%)';
+}
+
+function openFindBar() {
+    findActive=true;
+    const bar=document.getElementById('findBar');
+    resetFindBarPosition();
+    bar.classList.add('show');
+    const inp=document.getElementById('findInput');
+    inp.value='';
+    inp.focus();
+    renderFindResults('');
+}
+
+function closeFindBar() {
+    findActive=false;
+    document.getElementById('findBar').classList.remove('show');
+    document.querySelectorAll('.desktopIcon').forEach(ic=>{
+        ic.style.opacity='';
+        ic.style.pointerEvents='';
+    });
+    document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+}
+
+function renderFindResults(q) {
+    const container=document.getElementById('findResults');
+    const count=document.getElementById('findCount');
+    container.innerHTML='';
+    const icons=Array.from(document.querySelectorAll('.desktopIcon'));
+    const ql=q.toLowerCase();
+
+    icons.forEach(ic=>{
+        const name=(ic.dataset.name||'').toLowerCase();
+        const match=!ql||name.includes(ql);
+        ic.style.opacity=match?'':'0.15';
+        ic.style.pointerEvents=match?'':'none';
+    });
+
+    if(!ql) { count.textContent=''; return; }
+
+    const matches=icons.filter(ic=>(ic.dataset.name||'').toLowerCase().includes(ql));
+    count.textContent=matches.length+' found';
+
+    matches.forEach(ic=>{
+        const item=document.createElement('div');
+        item.className='findResult';
+        const emoji=ic.querySelector('.iconEmoji')?ic.querySelector('.iconEmoji').textContent:'📄';
+        item.innerHTML=`<span>${emoji}</span><span class="frName">${esc(ic.dataset.name||'')}</span>`;
+        item.addEventListener('click',()=>{
+            container.querySelectorAll('.findResult').forEach(r=>r.classList.remove('active'));
+            item.classList.add('active');
+            document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+            ic.classList.add('selected');
+            activeIcon=ic;
+        });
+        item.addEventListener('dblclick',()=>{ openFile(ic.dataset.path); closeFindBar(); });
+        container.appendChild(item);
+    });
+}
+
+document.getElementById('findInput').addEventListener('input', e=>{
+    renderFindResults(e.target.value.trim());
+});
+document.getElementById('findInput').addEventListener('keydown', e=>{
+    if(e.key==='Escape') { closeFindBar(); return; }
+    if(e.key==='Enter') {
+        const active=document.querySelector('.findResult.active');
+        if(active) active.dispatchEvent(new MouseEvent('dblclick'));
+        else {
+            const first=document.querySelector('.findResult');
+            if(first) first.dispatchEvent(new MouseEvent('dblclick'));
+        }
+    }
+    e.stopPropagation();
+});
+
+document.getElementById('findBarRow').addEventListener('mousedown', e=>{
+    if (e.button!==0) return;
+    if (e.target.closest('input,button')) return;
+    const bar=document.getElementById('findBar');
+    const r=bar.getBoundingClientRect();
+    findDrag={offX:e.clientX-r.left, offY:e.clientY-r.top};
+    bar.style.transform='none';
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove', e=>{
+    if(!findDrag) return;
+    const bar=document.getElementById('findBar');
+    bar.style.left = Math.max(8, Math.min(window.innerWidth-bar.offsetWidth-8, e.clientX-findDrag.offX))+'px';
+    bar.style.top  = Math.max(8, Math.min(window.innerHeight-bar.offsetHeight-8, e.clientY-findDrag.offY))+'px';
+});
+document.addEventListener('mouseup', ()=>{ findDrag=null; });
+
+// ─────────────────────────────────────────────────────────────────────
+//  KEYBOARD SHORTCUTS
+// ─────────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+    if(e.key==='Escape' && findActive) { closeFindBar(); return; }
+    if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+    if (document.querySelector('.overlay.show')) return;
+
+    const ctrl = e.ctrlKey||e.metaKey;
+    const key = (e.key||'').toLowerCase();
+
+    if (ctrl && key==='f') { e.preventDefault(); openFindBar(); return; }
+    if (ctrl && key==='c') { e.preventDefault(); copyIcons(); return; }
+    if (ctrl && key==='x') { e.preventDefault(); cutIcons();  return; }
+    if (ctrl && key==='v') { e.preventDefault(); pasteIcons(); return; }
+    if (ctrl && key==='a') {
+        e.preventDefault();
+        document.querySelectorAll('.desktopIcon').forEach(i=>i.classList.add('selected'));
+        return;
+    }
+    if (e.key==='Delete') { deleteIcons(); return; }
+    if (e.key==='Enter') {
+        sel().forEach(ic=>openFile(ic.dataset.path));
+        return;
+    }
+    if (e.key==='F2' && activeIcon) { startInlineRename(activeIcon); return; }
+    if (e.key==='Escape') {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        typeBuffer='';
+        document.getElementById('typeSearchBar').classList.remove('show');
+        return;
+    }
+    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+        arrowNav(e.key);
+        return;
+    }
+
+    if (!ctrl && !e.altKey && e.key.length===1 && !findActive) {
+        typeBuffer+=e.key;
+        typeSelectUpdate();
+    }
+});
+
+function arrowNav(key) {
+    const page = clampPage(typeof currentPage==='number'?currentPage:0);
+    const icons = Array.from(document.querySelectorAll('.desktopIcon'))
+        .filter(i=>(parseInt(i.dataset.page)||0)===page);
+    const curSelected = icons.filter(i=>i.classList.contains('selected'));
+    if (!curSelected.length) {
+        if (icons.length) { icons[0].classList.add('selected'); activeIcon=icons[0]; }
+        return;
+    }
+    const ref = curSelected[curSelected.length-1];
+    const refC=+ref.dataset.col, refR=+ref.dataset.row;
+    let targetC=refC, targetR=refR;
+    if (key==='ArrowRight') targetC=Math.min(COLS-1,refC+1);
+    if (key==='ArrowLeft')  targetC=Math.max(0,refC-1);
+    if (key==='ArrowDown')  targetR=Math.min(ROWS-1,refR+1);
+    if (key==='ArrowUp')    targetR=Math.max(0,refR-1);
+    const target = icons.find(i=>+i.dataset.col===targetC&&+i.dataset.row===targetR);
+    if (target) {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        target.classList.add('selected');
+        activeIcon=target;
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  CONTEXT MENUS
+// ─────────────────────────────────────────────────────────────────────
+function onIconCtx(e) {
+    if (e.currentTarget.dataset.trash) return;
+    e.preventDefault(); e.stopPropagation();
+    const el=e.currentTarget;
+    if (!el.classList.contains('selected')) {
+        document.querySelectorAll('.desktopIcon.selected').forEach(i=>i.classList.remove('selected'));
+        el.classList.add('selected');
+    }
+    activeIcon=el;
+    const fp=el.dataset.path;
+    const isDir=el.dataset.isdir==='1';
+    const ext=path.extname(fp).toLowerCase();
+    const archive=isArchive(fp);
+    document.getElementById('menuCopyPath').style.display=isDir?'':'none';
+    document.getElementById('menuExtract').style.display=archive?'':'none';
+    const selCount=document.querySelectorAll('.desktopIcon.selected').length;
+    const gw=document.getElementById('menuGroupWidget');
+    if(gw) gw.style.display=selCount>1?'':'none';
+    showCtx('menuIcon',e.clientX,e.clientY);
+}
+document.addEventListener('contextmenu', e => {
+    if (e.target.closest('.desktopIcon,.ctxMenu,.overlay')) return;
+    e.preventDefault(); hideCtx();
+    showCtx('menuDesktop',e.clientX,e.clientY);
+});
+let lastCtxX=0,lastCtxY=0;
+function showCtx(id,x,y) {
+    lastCtxX=x; lastCtxY=y;
+    hideCtx();
+    const m=document.getElementById(id);
+    m.style.left=x+'px'; m.style.top=y+'px'; m.classList.add('show');
+    setTimeout(()=>{
+        const r=m.getBoundingClientRect();
+        if(r.right>window.innerWidth)  m.style.left=(x-r.width)+'px';
+        if(r.bottom>window.innerHeight) m.style.top=(y-r.height)+'px';
+    },0);
+}
+function hideCtx() { document.querySelectorAll('.ctxMenu').forEach(m=>m.classList.remove('show')); }
+document.addEventListener('click', e=>{ if(!e.target.closest('.ctxMenu')) hideCtx(); });
+
+// ─────────────────────────────────────────────────────────────────────
+//  FILE ACTIONS
+// ─────────────────────────────────────────────────────────────────────
+const sel = () => Array.from(document.querySelectorAll('.desktopIcon.selected'));
+
+function openSelected() { sel().forEach(ic=>openFile(ic.dataset.path)); hideCtx(); }
+
+function openFile(fp) {
+    const ext=(path.extname(fp)||'').toLowerCase();
+    const cmd=CFG.openWithMap[ext]||'xdg-open';
+    document.body.classList.add('launching');
+    setTimeout(()=>document.body.classList.remove('launching'), 2500);
+    exec(`${cmd} "${fp}"`, err=>{
+        document.body.classList.remove('launching');
+        if(err) console.error('open:',err);
+    });
+}
+
+function selectedIconsForClipboard() {
+    const picked = sel().filter(i=>i.dataset.trash!=='1');
+    if (picked.length) return picked;
+    if (activeIcon && activeIcon.dataset.trash!=='1') return [activeIcon];
+    return [];
+}
+
+function pathExistsSafe(fp) {
+    try { fs.accessSync(fp); return true; } catch { return false; }
+}
+
+function splitNameForCollision(name, isDir) {
+    if (isDir) return { stem:name, ext:'' };
+    if (name.startsWith('.') && name.indexOf('.',1)===-1) return { stem:name, ext:'' };
+    const ext = path.extname(name);
+    if (!ext) return { stem:name, ext:'' };
+    return { stem:name.slice(0, -ext.length), ext };
+}
+
+function uniqueDestinationPath(destDir, desiredName, isDir, reservedSet) {
+    const reserved = reservedSet || new Set();
+    let cand = path.join(destDir, desiredName);
+    if (!pathExistsSafe(cand) && !reserved.has(cand)) return cand;
+    const { stem, ext } = splitNameForCollision(desiredName, isDir);
+    let n = 1;
+    while (true) {
+        cand = path.join(destDir, `${stem} (${n})${ext}`);
+        if (!pathExistsSafe(cand) && !reserved.has(cand)) return cand;
+        n++;
+    }
+}
+
+let clipboard=null, clipAct=null;
+function copyIcons() {
+    const picked = selectedIconsForClipboard();
+    if (!picked.length) return;
+    clipboard=picked.map(i=>i.dataset.path);
+    clipAct='copy';
+    hideCtx();
+}
+function cutIcons()  {
+    const picked = selectedIconsForClipboard();
+    if (!picked.length) return;
+    clipboard=picked.map(i=>i.dataset.path);
+    clipAct='cut';
+    hideCtx();
+}
+
+function pasteIcons() {
+    if(!clipboard||!clipboard.length) return;
+    hideCtx();
+    const srcs=[...clipboard];
+    const act=(clipAct==='cut')?'cut':'copy';
+    if(clipAct==='cut'){clipboard=null;clipAct=null;}
+    const reserved=new Set();
+    let pending=srcs.length;
+    function done(){ if(--pending<=0) loadDesktopIcons(); }
+    srcs.forEach(src=>{
+        let st; try{st=fs.statSync(src);}catch(e){done();return;}
+        const dest=uniqueDestinationPath(DESKTOP,path.basename(src),st.isDirectory(),reserved);
+        reserved.add(dest);
+        if(src===dest){done();return;}
+        if(act==='copy'){
+            if(st.isDirectory()){
+                exec(`cp -r "${src}" "${dest}"`,err=>{if(err)console.error('paste cp:',err);done();});
+            } else {
+                try{fs.copyFileSync(src,dest);}catch(e){console.error('paste:',e);}
+                done();
+            }
+        } else {
+            try{fs.renameSync(src,dest);}catch(e){console.error('paste mv:',e);}
+            done();
+        }
+    });
+}
+
+function deleteIcons() {
+    const s=sel(); if(!s.length) return;
+    if(!confirm(`Delete ${s.length} item(s)?`)) return;
+    s.forEach(ic=>{
+        exec(`gio trash "${ic.dataset.path}" 2>/dev/null || rm -rf "${ic.dataset.path}"`,()=>loadDesktopIcons());
+    });
+    hideCtx();
+}
+
+function compressIcons() {
+    const s=sel(); if(!s.length) return;
+    const names=s.map(i=>`"${path.basename(i.dataset.path)}"`).join(' ');
+    const archive=path.join(DESKTOP,'archive_'+Date.now()+'.tar.gz');
+    exec(`tar -czf "${archive}" -C "${DESKTOP}" ${names}`,
+        err=>{ if(err)console.error('compress:',err); else loadDesktopIcons(); });
+    hideCtx();
+}
+
+function createNew(type) {
+    const def=type==='folder'?'New Folder':type==='text'?'NewFile.txt':'NewFile';
+    const name=prompt(type==='folder'?'Folder name:':'File name:',def);
+    if(!name) return;
+    const isDir = type==='folder';
+    const np=uniqueDestinationPath(DESKTOP,name,isDir);
+    try {
+        if(isDir) fs.mkdirSync(np);
+        else fs.writeFileSync(np,'','utf8');
+        CFG._createHint=screenToPageCell(lastCtxX,lastCtxY);
+        loadDesktopIcons();
+    } catch(e){alert('Failed: '+e.message);}
+    hideCtx();
+}
+
+function refresh() { loadDesktopIcons(); hideCtx(); }
+
+// ─────────────────────────────────────────────────────────────────────
+//  NATIVE DRAG-DROP FROM FILE MANAGER
+//  Default: MOVE  |  Ctrl held: COPY  |  Shift held: SYMLINK
+// ─────────────────────────────────────────────────────────────────────
+const grid = document.getElementById('desktopGrid');
+
+// Drop-action tooltip element
+const dropTooltip = document.createElement('div');
+dropTooltip.id = 'dropTooltip';
+dropTooltip.style.cssText = [
+    'position:fixed',
+    'z-index:99999',
+    'pointer-events:none',
+    'background:rgba(18,18,22,0.93)',
+    'border:1px solid rgba(255,255,255,0.18)',
+    'border-radius:8px',
+    'padding:5px 11px',
+    'font-size:12.5px',
+    'color:white',
+    'display:none',
+    'align-items:center',
+    'gap:6px',
+    'box-shadow:0 4px 18px rgba(0,0,0,0.55)',
+    'backdrop-filter:blur(12px)',
+    'transition:opacity 0.1s',
+].join(';');
+document.body.appendChild(dropTooltip);
+
+function getDropAction(e) {
+    if (e.shiftKey) return 'link';
+    if (e.ctrlKey)  return 'copy';
+    return 'move';
+}
+
+function dropActionLabel(action) {
+    if (action === 'copy') return { icon: '📋', text: 'Copy here' };
+    if (action === 'link') return { icon: '🔗', text: 'Create link' };
+    return { icon: '✂️', text: 'Move here' };
+}
+
+function showDropTooltip(x, y, action) {
+    const { icon, text } = dropActionLabel(action);
+    dropTooltip.innerHTML = `<span>${icon}</span><span>${text}</span>`;
+    dropTooltip.style.display = 'flex';
+    dropTooltip.style.left = (x + 18) + 'px';
+    dropTooltip.style.top  = (y + 18) + 'px';
+}
+
+function hideDropTooltip() {
+    dropTooltip.style.display = 'none';
+}
+
+grid.addEventListener('dragover', e => {
+    e.preventDefault();
+    const action = getDropAction(e);
+    e.dataTransfer.dropEffect = action === 'copy' ? 'copy' : action === 'link' ? 'link' : 'move';
+    grid.style.outline = '2px solid rgba(var(--accent-rgb),0.5)';
+    showDropTooltip(e.clientX, e.clientY, action);
+});
+
+grid.addEventListener('dragleave', e => {
+    if (!grid.contains(e.relatedTarget)) {
+        grid.style.outline = '';
+        hideDropTooltip();
+    }
+});
+
+grid.addEventListener('drop', e => {
+    e.preventDefault();
+    grid.style.outline = '';
+    hideDropTooltip();
+
+    const action = getDropAction(e);
+    const dropCell = screenToPageCell(e.clientX, e.clientY);
+    CFG._dropHint = dropCell;
+
+    const reserved = new Set();
+    let pending = 0;
+    function dropDone() {
+        if (--pending <= 0) { setTimeout(() => { CFG._dropHint = null; loadDesktopIcons(); }, 300); }
+    }
+
+    function dropSrc(src) {
+        if (!src) return;
+        let st; try { st = fs.statSync(src); } catch { return; }
+        const dest = uniqueDestinationPath(DESKTOP, path.basename(src), st.isDirectory(), reserved);
+        reserved.add(dest);
+        if (src === dest) { if(action === 'move') return; }  // already in place — skip move
+        pending++;
+
+        if (action === 'link') {
+            // Symlink: ln -s <src> <dest>
+            exec(`ln -s "${src}" "${dest}"`, err => {
+                if (err) console.error('symlink:', err);
+                dropDone();
+            });
+        } else if (action === 'copy') {
+            if (st.isDirectory()) {
+                exec(`cp -r "${src}" "${dest}"`, err => { if (err) console.error('drop copy dir:', err); dropDone(); });
+            } else {
+                try { fs.copyFileSync(src, dest); } catch(err) { console.error('drop copy:', err); }
+                dropDone();
+            }
+        } else {
+            // MOVE (default) — cp+rm to handle cross-device
+            if (src === dest) { dropDone(); return; }
+            if (st.isDirectory()) {
+                exec(`mv "${src}" "${dest}"`, err => {
+                    if (err) {
+                        // Fallback: cp -r then rm -rf for cross-device
+                        exec(`cp -r "${src}" "${dest}" && rm -rf "${src}"`, e2 => {
+                            if (e2) console.error('drop move dir:', e2);
+                            dropDone();
+                        });
+                    } else dropDone();
+                });
+            } else {
+                exec(`mv "${src}" "${dest}"`, err => {
+                    if (err) {
+                        try { fs.copyFileSync(src, dest); fs.unlinkSync(src); } catch(e2) { console.error('drop move file:', e2); }
+                    }
+                    dropDone();
+                });
+            }
+        }
+    }
+
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+        Array.from(files).forEach(f => dropSrc(f.path || f.name));
+        if (!pending) { CFG._dropHint = null; setTimeout(loadDesktopIcons, 400); }
+        return;
+    }
+    const uriList = e.dataTransfer.getData('text/uri-list');
+    if (uriList) {
+        uriList.split('\n').forEach(uri => {
+            uri = uri.trim();
+            if (!uri || uri.startsWith('#')) return;
+            dropSrc(decodeURIComponent(uri.replace(/^file:\/\/(?:\/\/)?/, '')));
+        });
+        if (!pending) { CFG._dropHint = null; setTimeout(loadDesktopIcons, 400); }
+    }
+});
+
+// ─────────────────────────────────────────────────────────────────────
+//  SORT
+// ─────────────────────────────────────────────────────────────────────
+function sortIcons(mode) {
+    CFG.sort = mode;
+    saveCFG();
+    loadDesktopIcons();
+    hideCtx();
+}
+function toggleFoldFirst() {
+    CFG.foldersFirst=!CFG.foldersFirst;
+    saveCFG(); loadDesktopIcons(); hideCtx();
+}
+function updateSortUI() {
+    const map={name:'sortName',size:'sortSize',date:'sortDate',none:'sortNone'};
+    Object.entries(map).forEach(([mode,id])=>{
+        const el=document.getElementById(id);
+        if(!el) return;
+        const labels={name:'By Name',size:'By Size',date:'By Date Modified',none:'Unsorted'};
+        el.textContent=(CFG.sort===mode?'✅ ':'')+labels[mode];
+    });
+    const ff=document.getElementById('itemFoldFirst');
+    if(ff) ff.textContent=(CFG.foldersFirst?'✅ ':'')+' Folders First';
+}
+function updateMenuToggles() {
+    const si=document.getElementById('menuToggleIcons');
+    if(si) si.textContent=CFG.showIcons?'👁️ Hide Desktop Icons':'👁️ Show Desktop Icons';
+    const sh=document.getElementById('menuToggleHidden');
+    if(sh) sh.textContent=CFG.showHidden?'🫥 Hide Hidden Files':'🫥 Show Hidden Files';
+}
+function toggleShowIcons() {
+    CFG.showIcons=!CFG.showIcons;
+    document.getElementById('desktopGrid').style.visibility=CFG.showIcons?'visible':'hidden';
+    saveCFG(); updateMenuToggles(); hideCtx();
+}
+function toggleShowHidden() {
+    CFG.showHidden=!CFG.showHidden;
+    saveCFG(); loadDesktopIcons(); hideCtx();
+}
+
+function copyPath() {
+    if(!activeIcon) return;
+    const clip=nw.Clipboard.get();
+    clip.set(activeIcon.dataset.path,'text');
+    hideCtx();
+}
+
+const ARCHIVE_EXTS=new Set(['.zip','.tar','.gz','.bz2','.xz','.7z','.rar','.tar.gz','.tar.bz2','.tar.xz']);
+function isArchive(fp) {
+    const f=fp.toLowerCase();
+    return ARCHIVE_EXTS.has(path.extname(f)) || f.endsWith('.tar.gz')||f.endsWith('.tar.bz2')||f.endsWith('.tar.xz');
+}
+function extractArchive() {
+    if(!activeIcon) return;
+    const fp=activeIcon.dataset.path;
+    const dir=path.dirname(fp);
+    const f=fp.toLowerCase();
+    let cmd;
+    if(f.endsWith('.zip'))                       cmd=`unzip -o "${fp}" -d "${dir}"`;
+    else if(f.endsWith('.tar.gz')||f.endsWith('.tgz')) cmd=`tar -xzf "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.tar.bz2'))              cmd=`tar -xjf "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.tar.xz'))               cmd=`tar -xJf "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.tar'))                  cmd=`tar -xf  "${fp}" -C "${dir}"`;
+    else if(f.endsWith('.7z'))                   cmd=`7z x "${fp}" -o"${dir}"`;
+    else if(f.endsWith('.rar'))                  cmd=`unrar x "${fp}" "${dir}"`;
+    else if(f.endsWith('.gz'))                   cmd=`gunzip -k "${fp}"`;
+    else if(f.endsWith('.bz2'))                  cmd=`bunzip2 -k "${fp}"`;
+    else cmd=`xdg-open "${fp}"`;
+    document.body.classList.add('launching');
+    exec(cmd, err=>{
+        document.body.classList.remove('launching');
+        if(err) alert('Extract failed: '+err.message);
+        else loadDesktopIcons();
+    });
+    hideCtx();
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  INLINE RENAME
+// ─────────────────────────────────────────────────────────────────────
+function startInlineRename(iconEl) {
+    const ic = iconEl || activeIcon;
+    if(!ic||ic.dataset.trash) return;
+    hideCtx();
+
+    const lbl = ic.querySelector('.iconLabel');
+    if(!lbl) return;
+
+    const originalName = ic.dataset.name;
+
+    const inp = document.createElement('textarea');
+    inp.className = 'iconRenameInput';
+    inp.value = originalName;
+    inp.rows = 1;
+    inp.style.fontSize = lbl.style.fontSize || '11px';
+    inp.style.width = lbl.style.width || '100%';
+    inp.style.height = 'auto';
+
+    lbl.replaceWith(inp);
+    inp.focus();
+    inp.select();
+    inp.style.height = inp.scrollHeight+'px';
+    inp.addEventListener('input', ()=>{ inp.style.height='auto'; inp.style.height=inp.scrollHeight+'px'; });
+
+    function commit() {
+        const newName=inp.value.trim();
+        inp.replaceWith(lbl);
+        if(!newName||newName===originalName) return;
+        const oldPath=ic.dataset.path;
+        const newPath=path.join(DESKTOP, newName);
+        try {
+            fs.renameSync(oldPath, newPath);
+            loadDesktopIcons();
+        } catch(err) { alert('Rename failed: '+err.message); }
+    }
+    function cancel() { inp.replaceWith(lbl); }
+
+    inp.addEventListener('keydown', e=>{
+        if(e.key==='Enter'){ e.preventDefault(); commit(); }
+        if(e.key==='Escape'){ e.preventDefault(); cancel(); }
+        e.stopPropagation();
+    });
+    inp.addEventListener('blur', commit);
+    inp.addEventListener('click', e=>e.stopPropagation());
+    inp.addEventListener('mousedown', e=>e.stopPropagation());
+}
+
+function renameIcon() { startInlineRename(activeIcon); }
+
+// ─────────────────────────────────────────────────────────────────────
+//  CELL SIZE SLIDER
+// ─────────────────────────────────────────────────────────────────────
+function onSzSlide(v) {
+    CFG.cellSize=parseInt(v);
+    document.getElementById('szLabel').textContent=v;
+    calcGrid();
+    const icons=[...document.querySelectorAll('.desktopIcon')];
+    Object.keys(cellMap).forEach(k=>delete cellMap[k]);
+    icons.sort((a,b)=>(
+        ((parseInt(a.dataset.page)||0)*100000000 + (+a.dataset.row*10000 + +a.dataset.col))
+        -
+        ((parseInt(b.dataset.page)||0)*100000000 + (+b.dataset.row*10000 + +b.dataset.col))
+    ));
+    icons.forEach(el=>{
+        const pg=parseInt(el.dataset.page)||0;
+        snapIcon(el,{col:+el.dataset.col,row:+el.dataset.row,page:pg},pg);
+    });
+    const g=document.getElementById('gridGhost');
+    g.style.width=CFG.cellSize+'px'; g.style.height=CFG.cellSize+'px';
+    saveCFG();
+    if (typeof refreshGroupWidgets==='function') refreshGroupWidgets();
+}
+function syncUI() {
+    const sl=document.getElementById('szSlider');
+    if(sl) sl.value=CFG.cellSize;
+    document.getElementById('szLabel').textContent=CFG.cellSize;
+    const off=CFG.offsets||{};
+    ['Top','Bottom','Left','Right'].forEach(k=>{
+        const el=document.getElementById('off'+k);
+        if(el) el.value=off[k.toLowerCase()]||0;
+    });
+    updateSortUI();
+    updateMenuToggles();
+    if(!CFG.showIcons) document.getElementById('desktopGrid').style.visibility='hidden';
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  PROPERTIES
+// ─────────────────────────────────────────────────────────────────────
+let propsPath=null;
+const EMOJI_LIST=['📄','📝','📕','📦','🎬','🎵','💻','⚙️','🖼️','📂','📁',
+    '🔑','🔒','🔓','💾','💿','📀','🖥️','🖨️','📡','🔧','🔨','⚡','🌐',
+    '📊','📈','📉','🗂️','📋','📌','📎','✂️','🗑️','⭐','❤️','🚀','🎮','🧩'];
+
+function showProperties() {
+    if(!activeIcon||activeIcon.dataset.trash) return;
+    hideCtx();
+    propsPath=activeIcon.dataset.path;
+    const name=activeIcon.dataset.name;
+    let st; try{st=fs.statSync(propsPath);}catch(e){alert(e.message);return;}
+
+    document.getElementById('propsTitle').textContent=name;
+    document.getElementById('pi-name').value=name;
+    const ext=path.extname(name).toLowerCase();
+    document.getElementById('pi-type').textContent=st.isDirectory()?'Directory':(ext||'File');
+    document.getElementById('pi-size').textContent=fmtBytes(st.size);
+    document.getElementById('pi-loc').textContent=path.dirname(propsPath);
+    document.getElementById('pi-cre').textContent=st.birthtime.toLocaleString();
+    document.getElementById('pi-mod').textContent=st.mtime.toLocaleString();
+    document.getElementById('pi-acc').textContent=st.atime.toLocaleString();
+    document.getElementById('pi-hidden').checked=name.startsWith('.');
+
+    const imgRows=document.getElementById('pi-img-rows');
+    const isImg=IMG_EXTS.has(ext)&&!st.isDirectory();
+    imgRows.style.display=isImg?'':'none';
+    if(isImg) loadImageMeta(propsPath);
+
+    const m=st.mode;
+    const bits=[0o400,0o200,0o100,0o040,0o020,0o010,0o004,0o002,0o001];
+    ['p-ur','p-uw','p-ux','p-gr','p-gw','p-gx','p-or','p-ow','p-ox'].forEach((id,i)=>{
+        document.getElementById(id).checked=!!(m&bits[i]);
+    });
+    try {
+        const [o,g]=execSync(`stat -c "%U %G" "${propsPath}"`).toString().trim().split(' ');
+        document.getElementById('pm-owner').value=o||''; document.getElementById('pm-group').value=g||'';
+    } catch { document.getElementById('pm-owner').value=''; document.getElementById('pm-group').value=''; }
+
+    buildIconTab();
+
+    document.querySelectorAll('.dlgTab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+    document.querySelector('[data-tab="details"]').classList.add('active');
+    document.getElementById('tab-details').classList.add('active');
+    document.getElementById('ovProps').classList.add('show');
+}
+
+function loadImageMeta(fp) {
+    const set=(id,v)=>{ const el=document.getElementById(id); if(el) el.textContent=v||'—'; };
+    set('pi-dimensions','…'); set('pi-camera',''); set('pi-focal','');
+    set('pi-aperture',''); set('pi-shutter',''); set('pi-iso','');
+    set('pi-datetaken',''); set('pi-gps','');
+
+    exec(`exiftool -json -ImageWidth -ImageHeight -Make -Model -FocalLength -Aperture -ShutterSpeed -ISO -DateTimeOriginal -GPSLatitude -GPSLongitude "${fp}" 2>/dev/null`, (err,stdout) => {
+        if (!err && stdout.trim()) {
+            try {
+                const d=JSON.parse(stdout)[0];
+                const w=d.ImageWidth, h=d.ImageHeight;
+                if(w&&h) set('pi-dimensions',`${w} × ${h} px`);
+                const cam=[d.Make,d.Model].filter(Boolean).join(' ');
+                set('pi-camera',cam);
+                if(d.FocalLength) set('pi-focal',d.FocalLength);
+                if(d.Aperture)    set('pi-aperture','ƒ/'+d.Aperture);
+                if(d.ShutterSpeed)set('pi-shutter',d.ShutterSpeed+'s');
+                if(d.ISO)         set('pi-iso',d.ISO);
+                if(d.DateTimeOriginal) set('pi-datetaken',d.DateTimeOriginal);
+                if(d.GPSLatitude&&d.GPSLongitude) set('pi-gps',`${d.GPSLatitude}, ${d.GPSLongitude}`);
+                return;
+            } catch {}
+        }
+        exec(`identify -format "%wx%h" "${fp}" 2>/dev/null`, (e2,out2) => {
+            if(!e2&&out2.trim()) {
+                const [w,h]=(out2.trim().split('x'));
+                if(w&&h) set('pi-dimensions',`${w} × ${h} px`);
+            } else {
+                const img=new Image();
+                img.onload=()=>set('pi-dimensions',`${img.naturalWidth} × ${img.naturalHeight} px`);
+                img.src=`file://${fp}`;
+            }
+        });
+    });
+}
+
+let pendingIconChoice=null;
+
+function buildIconTab() {
+    pendingIconChoice=undefined;
+    const wrap=document.getElementById('iconPreviewWrap');
+    const saved=CFG.iconOverrides&&CFG.iconOverrides[propsPath];
+    if(saved&&saved.type==='image') {
+        wrap.innerHTML=`<img src="file://${saved.value}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">`;
+    } else {
+        wrap.textContent=saved?saved.value:emojiFor(path.basename(propsPath),false);
+    }
+    document.getElementById('iconCustomPath').value='';
+
+    const picker=document.getElementById('emojiPicker');
+    picker.innerHTML='';
+    const curEmoji=saved&&saved.type==='emoji'?saved.value:'';
+    EMOJI_LIST.forEach(em=>{
+        const btn=document.createElement('button');
+        btn.className='emojiBtn'+(em===curEmoji?' active':'');
+        btn.textContent=em;
+        btn.addEventListener('click',()=>{
+            picker.querySelectorAll('.emojiBtn').forEach(b=>b.classList.remove('active'));
+            btn.classList.add('active');
+            pendingIconChoice={type:'emoji',value:em};
+            wrap.textContent=em; wrap.innerHTML=''; wrap.textContent=em;
+            document.getElementById('iconCustomPath').value='';
+        });
+        picker.appendChild(btn);
+    });
+}
+
+function browseCustomIcon() {
+    exec(`zenity --file-selection --file-filter="Images | *.png *.jpg *.jpeg *.svg *.webp" 2>/dev/null || kdialog --getopenfilename ~ "*.png *.jpg *.jpeg *.svg" 2>/dev/null`,(err,stdout)=>{
+        const p=stdout.trim();
+        if(!p) return;
+        document.getElementById('iconCustomPath').value=p;
+        const wrap=document.getElementById('iconPreviewWrap');
+        wrap.innerHTML=`<img src="file://${p}" style="width:64px;height:64px;object-fit:cover;border-radius:6px">`;
+        pendingIconChoice={type:'image',value:p};
+        document.getElementById('emojiPicker').querySelectorAll('.emojiBtn').forEach(b=>b.classList.remove('active'));
+    });
+}
+
+function resetCustomIcon() {
+    if(!CFG.iconOverrides) CFG.iconOverrides={};
+    delete CFG.iconOverrides[propsPath];
+    pendingIconChoice=null;
+    const wrap=document.getElementById('iconPreviewWrap');
+    wrap.textContent=emojiFor(path.basename(propsPath||''),false);
+    document.getElementById('iconCustomPath').value='';
+    document.getElementById('emojiPicker').querySelectorAll('.emojiBtn').forEach(b=>b.classList.remove('active'));
+}
+
+function applyProps() {
+    if(!propsPath) return;
+    const origName=path.basename(propsPath);
+    const newName=document.getElementById('pi-name').value.trim();
+    let target=propsPath;
+
+    if(newName && newName!==origName) {
+        const np=path.join(path.dirname(propsPath), newName);
+        try{ fs.renameSync(propsPath, np); target=np; propsPath=np; }
+        catch(e){ alert('Rename failed: '+e.message); }
+    }
+
+    const wantHidden=document.getElementById('pi-hidden').checked;
+    const curName=path.basename(target);
+    const isHidden=curName.startsWith('.');
+    if(wantHidden&&!isHidden){
+        const np=path.join(path.dirname(target),'.'+curName);
+        try{fs.renameSync(target,np);target=np;}catch(e){alert(e.message);}
+    } else if(!wantHidden&&isHidden){
+        const np=path.join(path.dirname(target),curName.slice(1));
+        try{fs.renameSync(target,np);target=np;}catch(e){alert(e.message);}
+    }
+    let mode=0;
+    const bits=[0o400,0o200,0o100,0o040,0o020,0o010,0o004,0o002,0o001];
+    ['p-ur','p-uw','p-ux','p-gr','p-gw','p-gx','p-or','p-ow','p-ox'].forEach((id,i)=>{
+        if(document.getElementById(id).checked) mode|=bits[i];
+    });
+    try{fs.chmodSync(target,mode);}catch(e){console.warn('chmod:',e);}
+    const own=document.getElementById('pm-owner').value.trim();
+    const grp=document.getElementById('pm-group').value.trim();
+    if(own||grp) exec(`chown ${own}${grp?':'+grp:''} "${target}"`,err=>{if(err)console.warn('chown:',err);});
+
+    const customPath=document.getElementById('iconCustomPath').value.trim();
+    if(customPath) pendingIconChoice={type:'image',value:customPath};
+    if(!CFG.iconOverrides) CFG.iconOverrides={};
+    if(pendingIconChoice===null) {
+        delete CFG.iconOverrides[propsPath];
+    } else if(pendingIconChoice) {
+        if(target!==propsPath) delete CFG.iconOverrides[propsPath];
+        CFG.iconOverrides[target]=pendingIconChoice;
+    }
+    saveCFG(); closeOv('ovProps'); loadDesktopIcons();
+}
+
+function switchTab(tabEl) {
+    const name=tabEl.dataset.tab;
+    document.querySelectorAll('.dlgTab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.tabPanel').forEach(p=>p.classList.remove('active'));
+    tabEl.classList.add('active');
+    document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  OPEN WITH
+// ─────────────────────────────────────────────────────────────────────
+const APP_CANDIDATES=[
+    {name:'Default (xdg-open)',cmd:'xdg-open',  icon:'📂',always:true},
+    {name:'Mousepad',          cmd:'mousepad',   icon:'📝'},{name:'Gedit',cmd:'gedit',icon:'📝'},
+    {name:'Kate',              cmd:'kate',       icon:'📝'},{name:'Pluma',cmd:'pluma',icon:'📝'},
+    {name:'Leafpad',           cmd:'leafpad',    icon:'📝'},{name:'Nano (xterm)',cmd:'xterm -e nano',icon:'📝'},
+    {name:'VS Code',           cmd:'code',       icon:'💻'},{name:'Codium',cmd:'codium',icon:'💻'},
+    {name:'Sublime Text',      cmd:'subl',       icon:'💻'},{name:'Vim (xterm)',cmd:'xterm -e vim',icon:'💻'},
+    {name:'Thunar',            cmd:'thunar',     icon:'📂'},{name:'Nautilus',cmd:'nautilus',icon:'📂'},
+    {name:'Nemo',              cmd:'nemo',       icon:'📂'},{name:'Dolphin',cmd:'dolphin',icon:'📂'},
+    {name:'PCManFM',           cmd:'pcmanfm',    icon:'📂'},
+    {name:'Feh',               cmd:'feh',        icon:'🖼️'},{name:'EOG',cmd:'eog',icon:'🖼️'},
+    {name:'GIMP',              cmd:'gimp',       icon:'🖼️'},{name:'Geeqie',cmd:'geeqie',icon:'🖼️'},
+    {name:'VLC',               cmd:'vlc',        icon:'🎬'},{name:'MPV',cmd:'mpv',icon:'🎬'},
+    {name:'Totem',             cmd:'totem',      icon:'🎬'},
+    {name:'Evince',            cmd:'evince',     icon:'📕'},{name:'Okular',cmd:'okular',icon:'📕'},
+    {name:'Zathura',           cmd:'zathura',    icon:'📕'},{name:'Atril',cmd:'atril',icon:'📕'},
+    {name:'File Roller',       cmd:'file-roller',icon:'📦'},{name:'Engrampa',cmd:'engrampa',icon:'📦'},
+    {name:'Ark',               cmd:'ark',        icon:'📦'},
+    {name:'Xterm',             cmd:'xterm',      icon:'🖥️'},{name:'XFCE Terminal',cmd:'xfce4-terminal',icon:'🖥️'},
+    {name:'GNOME Terminal',    cmd:'gnome-terminal',icon:'🖥️'},{name:'Konsole',cmd:'konsole',icon:'🖥️'},
+    {name:'Alacritty',         cmd:'alacritty',  icon:'🖥️'},{name:'Kitty',cmd:'kitty',icon:'🖥️'},
+];
+let cachedApps=null;
+function getApps() {
+    if(cachedApps) return cachedApps;
+    cachedApps=APP_CANDIDATES.filter(a=>{
+        if(a.always) return true;
+        try{execSync(`which ${a.cmd.split(' ')[0]} 2>/dev/null`);return true;}catch{return false;}
+    });
+    return cachedApps;
+}
+
+let owSel=null;
+function showOpenWith() {
+    if(!activeIcon||activeIcon.dataset.trash) return; hideCtx();
+    const ext=(path.extname(activeIcon.dataset.path)||'').toLowerCase();
+    const savedCmd=CFG.openWithMap[ext]||null;
+    owSel=savedCmd;
+    const apps=getApps(), list=document.getElementById('owList');
+    list.innerHTML='';
+    apps.forEach(app=>{
+        const el=document.createElement('div');
+        el.className='owItem'+(savedCmd===app.cmd?' active':'');
+        el.innerHTML=`<span class="owIcon">${app.icon}</span><div><div class="owName">${app.name}</div><div class="owCmd">${app.cmd}</div></div>`;
+        el.addEventListener('click',()=>{
+            list.querySelectorAll('.owItem').forEach(i=>i.classList.remove('active'));
+            el.classList.add('active'); owSel=app.cmd;
+            document.getElementById('owCustom').value='';
+        });
+        list.appendChild(el);
+    });
+    document.getElementById('owCustom').value='';
+    document.getElementById('owSave').checked=!!savedCmd;
+    document.getElementById('ovOpenWith').classList.add('show');
+}
+function applyOpenWith() {
+    if(!activeIcon) return;
+    const fp=activeIcon.dataset.path, ext=(path.extname(fp)||'').toLowerCase();
+    const custom=document.getElementById('owCustom').value.trim();
+    const cmd=custom||owSel||'xdg-open';
+    if(document.getElementById('owSave').checked) { CFG.openWithMap[ext]=cmd; saveCFG(); }
+    document.body.classList.add('launching');
+    setTimeout(()=>document.body.classList.remove('launching'),2500);
+    exec(`${cmd} "${fp}"`,err=>{ document.body.classList.remove('launching'); if(err)console.error(err); });
+    closeOv('ovOpenWith');
+}
+
+// ─────────────────────────────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────────────────────────────
+function closeOv(id) { document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('.overlay').forEach(ov=>{
+    ov.addEventListener('mousedown',e=>{ if(e.target===ov) closeOv(ov.id); });
+});
+function fmtBytes(b) {
+    if(!b) return '0 B';
+    const k=1024,u=['B','KB','MB','GB','TB'];
+    const i=Math.floor(Math.log(b)/Math.log(k));
+    return (b/Math.pow(k,i)).toFixed(2)+' '+u[i];
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function escAttr(s){ return esc(String(s)).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ─────────────────────────────────────────────────────────────────────
+//  RESIZE
+// ─────────────────────────────────────────────────────────────────────
+let rTimer;
+window.addEventListener('resize',()=>{ clearTimeout(rTimer); rTimer=setTimeout(loadDesktopIcons,300); });
+
+// ─────────────────────────────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────────────────────────────
+loadCFG();
+applyAccentColor();
+applyWallpaperCSS(CFG.wallpaper);
+calcGrid();
+syncUI();
+loadDesktopIcons();
+</script>
+<style>
+/* ═══ PAGE INDICATOR ═════════════════════════════════════ */
+#pageIndicator {
+    position: fixed; right:16px; top:50%;
+    transform:translateY(-50%);
+    display:flex; flex-direction:column; gap:8px;
+    z-index:9000; pointer-events:none;
+}
+.pageDot {
+    width:7px; height:7px; border-radius:50%;
+    background:rgba(255,255,255,0.32);
+    transition:background 0.25s, transform 0.25s;
+    box-shadow:0 1px 4px rgba(0,0,0,0.5);
+}
+.pageDot.active { background:white; transform:scale(1.45); }
+#desktopGrid {
+    transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94);
+    will-change: transform;
+}
+
+/* ═══ WIDGET SIDEBAR ══════════════════════════════════════ */
+#widgetSidebar {
+    position:fixed; top:0; right:-320px; width:300px; height:100vh;
+    background:rgba(15,15,18,0.97); backdrop-filter:blur(24px);
+    border-left:1px solid rgba(255,255,255,0.12);
+    z-index:15000; display:flex; flex-direction:column;
+    transition:right 0.3s cubic-bezier(.4,0,.2,1);
+    box-shadow:-8px 0 40px rgba(0,0,0,0.6);
+}
+#widgetSidebar.open { right:0; }
+#wSidebarHead {
+    padding:18px 16px 14px; border-bottom:1px solid rgba(255,255,255,0.09);
+    display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+}
+#wSidebarHead h2 { font-size:15px; font-weight:600; color:white; }
+#wSidebarClose {
+    background:rgba(255,255,255,0.08); border:none; border-radius:50%;
+    width:26px; height:26px; color:rgba(255,255,255,0.7);
+    cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;
+}
+#wSidebarClose:hover { background:rgba(220,60,60,0.5); color:white; }
+#wSidebarBody { flex:1; overflow-y:auto; padding:14px; }
+#wSidebarBody::-webkit-scrollbar { width:4px; }
+#wSidebarBody::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.15); border-radius:2px; }
+.wSidebarSection { margin-bottom:20px; }
+.wSidebarSection h3 { font-size:10.5px; color:rgba(255,255,255,0.35); text-transform:uppercase; letter-spacing:0.1em; margin-bottom:10px; }
+.wAddCard {
+    display:flex; align-items:center; gap:12px; padding:11px 13px; border-radius:10px;
+    background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1);
+    cursor:pointer; margin-bottom:7px; transition:background 0.12s, border-color 0.12s;
+    color:rgba(255,255,255,0.85); font-size:13px;
+}
+.wAddCard:hover { background:rgba(255,255,255,0.12); border-color:rgba(var(--accent-rgb),0.5); }
+.wCardIcon { font-size:22px; }
+.wCardInfo { flex:1; }
+.wCardName { font-weight:500; }
+.wCardDesc { font-size:11px; color:rgba(255,255,255,0.35); margin-top:2px; }
+.wSettingRow {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:9px 0; border-bottom:1px solid rgba(255,255,255,0.06);
+    font-size:12.5px; color:rgba(255,255,255,0.75);
+}
+.wSettingRow:last-child { border:none; }
+.wToggle {
+    width:36px; height:20px; border-radius:10px;
+    background:rgba(255,255,255,0.15); border:none; cursor:pointer;
+    position:relative; transition:background 0.2s; flex-shrink:0;
+}
+.wToggle.on { background:var(--accent); }
+.wToggle::after {
+    content:''; position:absolute; top:2px; left:2px;
+    width:16px; height:16px; border-radius:50%; background:white;
+    transition:left 0.2s;
+}
+.wToggle.on::after { left:18px; }
+.wImportBtn {
+    width:100%; padding:9px; border-radius:8px;
+    background:rgba(var(--accent-rgb),0.15); border:1px solid rgba(var(--accent-rgb),0.4);
+    color:var(--accent); font-size:12.5px; cursor:pointer; transition:background 0.12s; margin-top:4px;
+}
+.wImportBtn:hover { background:rgba(var(--accent-rgb),0.25); }
+.wActiveItem {
+    display:flex; align-items:center; gap:9px; padding:8px 10px; border-radius:8px;
+    background:rgba(255,255,255,0.05); margin-bottom:5px;
+    font-size:12px; color:rgba(255,255,255,0.75);
+}
+.wActiveItem .wAName { flex:1; }
+.wActiveItem .wADel { background:none; border:none; color:rgba(255,255,255,0.25); cursor:pointer; font-size:13px; padding:0; }
+.wActiveItem .wADel:hover { color:#ff6060; }
+
+/* ═══ WIDGETS ═════════════════════════════════════════════ */
+.widget {
+    position:absolute;
+    background:rgba(255,255,255,0.09);
+    backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.20);
+    border-radius:16px; box-shadow:0 4px 24px rgba(0,0,0,0.38);
+    z-index:50; user-select:none;
+    resize:both; overflow:auto;
+    min-width:80px; min-height:70px;
+    cursor:default; box-sizing:border-box;
+    display:flex; flex-direction:column;
+    transition:opacity 0.3s;
+}
+.widget::-webkit-resizer { background:transparent; width:14px; height:14px; }
+.widget.faded:not(.transparent) { opacity:0.3; }
+.widget.faded:not(.transparent):hover { opacity:1; }
+.widget.transparent {
+    background:transparent !important;
+    backdrop-filter:none !important; -webkit-backdrop-filter:none !important;
+    border-color:transparent !important; box-shadow:none !important;
+}
+.widget.transparent .widgetHeader {
+    background:transparent; border-color:transparent;
+    color:transparent; pointer-events:none;
+}
+.widget.transparent:hover .widgetHeader { color:rgba(255,255,255,0.45); pointer-events:all; }
+.widget.transparent .widgetBtns { opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.widget.transparent:hover .widgetBtns { opacity:1; pointer-events:all; }
+.widget.transparent .todoAddRow { opacity:0; pointer-events:none; height:0; padding:0; overflow:hidden; transition:opacity 0.2s; }
+.widget.transparent:hover .todoAddRow { opacity:1; pointer-events:all; height:auto; padding:6px 10px; }
+.widget.transparent [id^="wthInputWrap"] { display:none !important; }
+.widget.transparent [id^="wthSetBtn"] { opacity:0; }
+.widget.transparent:hover [id^="wthSetBtn"] { opacity:1; }
+.widget.page-hidden { display:none !important; }
+.widgetHeader {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:7px 10px 5px; font-size:10.5px; font-weight:600;
+    letter-spacing:0.07em; color:rgba(255,255,255,0.45);
+    text-transform:uppercase; cursor:move; flex-shrink:0;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.widgetBtns { display:flex; gap:4px; align-items:center; }
+.wBtn {
+    background:none; border:none; color:rgba(255,255,255,0.38);
+    cursor:pointer; font-size:11px; line-height:1; padding:2px 4px;
+    border-radius:4px; transition:color 0.1s, background 0.1s; pointer-events:all;
+}
+.wBtn:hover { color:white; background:rgba(255,255,255,0.12); }
+.wBtn.wClose:hover { color:#ff6060; background:rgba(255,80,80,0.15); }
+.clockBody { flex:1; display:flex; align-items:center; justify-content:center; padding:8px; min-height:0; }
+.noteArea {
+    flex:1; background:transparent; border:none; outline:none; resize:none;
+    color:rgba(255,255,255,0.88); font-size:13px; line-height:1.6;
+    padding:8px 12px; font-family:inherit; min-height:0;
+}
+.todoBody { flex:1; display:flex; flex-direction:column; min-height:0; overflow:hidden; }
+.todoList { flex:1; overflow-y:auto; padding:4px 10px; min-height:0; }
+.todoList::-webkit-scrollbar { width:3px; }
+.todoList::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.2); border-radius:2px; }
+.todoItem {
+    display:flex; align-items:center; gap:7px;
+    padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.06);
+    font-size:12px; color:rgba(255,255,255,0.8);
+}
+.todoItem input[type=checkbox] { accent-color:var(--accent); flex-shrink:0; cursor:pointer; }
+.tiText { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tiText.done { text-decoration:line-through; color:rgba(255,255,255,0.32); }
+.todoDel { background:none;border:none;color:rgba(255,255,255,0.18);cursor:pointer;font-size:13px;padding:0;flex-shrink:0; }
+.todoDel:hover { color:rgba(255,80,80,0.85); }
+.todoAddRow { display:flex;gap:5px;padding:6px 10px;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0; }
+.todoAddInput {
+    flex:1;min-width:0;background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.12);border-radius:6px;
+    color:white;font-size:12px;padding:4px 8px;outline:none;font-family:inherit;
+}
+.todoAddInput:focus { border-color:var(--accent); }
+.todoAddBtn { background:var(--accent);border:none;border-radius:6px;color:white;font-size:14px;cursor:pointer;padding:0 9px;flex-shrink:0; }
+.customWidgetFrame { flex:1; border:none; background:transparent; min-height:0; }
+.weatherInput {
+    background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);
+    border-radius:6px;color:white;font-size:11px;padding:3px 8px;
+    outline:none;font-family:inherit;width:100%;
+}
+.weatherInput:focus { border-color:var(--accent); }
+</style>
+
+<!-- Multi-Screen Settings Dialog -->
+<div class="overlay" id="ovScreens">
+<div class="dialog" style="width:520px">
+    <div class="dlgHead"><h2>🖥️ Multi-Screen Settings</h2><button class="dlgClose" onclick="closeOv('ovScreens')">✕</button></div>
+    <div class="dlgBody">
+        <div style="font-size:12.5px;color:rgba(255,255,255,0.6);margin-bottom:14px">
+            Each monitor gets its own desktop instance. Drag icons/widgets between them by moving to screen edges.
+        </div>
+        <div id="screenList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px"></div>
+        <button class="btn ok" onclick="detectScreens()" style="margin-bottom:8px;width:100%">🔍 Detect Screens</button>
+        <div class="owSep"></div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.35);margin-top:8px">
+            To open a desktop on another screen, launch the app again with:<br>
+            <code style="background:rgba(255,255,255,0.07);padding:2px 6px;border-radius:4px;font-size:10px">
+                nw . --screen=1
+            </code><br>
+            Icons moved to screen edges will transfer to the adjacent screen instance if running.
+        </div>
+        <div class="owSep"></div>
+        <div style="font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.7);margin:10px 0 8px">This Screen</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px">
+            <div class="wSettingRow"><span>Screen index</span>
+                <input class="txtInput" id="screenIdx" type="number" min="0" max="8" value="0" style="width:50px;padding:3px 6px" onchange="saveScreenCFG()"></div>
+            <div class="wSettingRow"><span>Wallpaper sync</span>
+                <button class="wToggle" id="togWpSync" onclick="toggleWpSync()"></button></div>
+        </div>
+    </div>
+    <div class="dlgFoot"><button class="btn cancel" onclick="closeOv('ovScreens')">Close</button></div>
+</div>
+</div>
+
+<!-- Widget Sidebar HTML -->
+<div id="widgetSidebar">
+    <div id="wSidebarHead">
+        <h2>🧩 Widgets</h2>
+        <button id="wSidebarClose" onclick="closeWidgetSidebar()">✕</button>
+    </div>
+    <div id="wSidebarBody">
+        <div class="wSidebarSection">
+            <h3>Add Widget</h3>
+            <div class="wAddCard" onclick="addWidget('clock')"><span class="wCardIcon">🕐</span><div class="wCardInfo"><div class="wCardName">Analog Clock</div><div class="wCardDesc">Glass clock face</div></div></div>
+            <div class="wAddCard" onclick="addWidget('digitalclock')"><span class="wCardIcon">🔢</span><div class="wCardInfo"><div class="wCardName">Digital Clock</div><div class="wCardDesc">HH:MM:SS display</div></div></div>
+            <div class="wAddCard" onclick="addWidget('note')"><span class="wCardIcon">📝</span><div class="wCardInfo"><div class="wCardName">Sticky Note</div><div class="wCardDesc">Freeform text memo</div></div></div>
+            <div class="wAddCard" onclick="addWidget('todo')"><span class="wCardIcon">✅</span><div class="wCardInfo"><div class="wCardName">Todo List</div><div class="wCardDesc">Checklist with add/delete</div></div></div>
+            <div class="wAddCard" onclick="addWidget('calendar')"><span class="wCardIcon">📅</span><div class="wCardInfo"><div class="wCardName">Calendar</div><div class="wCardDesc">Monthly view</div></div></div>
+            <div class="wAddCard" onclick="addWidget('weather')"><span class="wCardIcon">🌤️</span><div class="wCardInfo"><div class="wCardName">Weather</div><div class="wCardDesc">Set city or auto-locate</div></div></div>
+            <div class="wAddCard" onclick="addWidget('sysmon')"><span class="wCardIcon">📊</span><div class="wCardInfo"><div class="wCardName">System Monitor</div><div class="wCardDesc">CPU &amp; RAM usage</div></div></div>
+        </div>
+        <div class="wSidebarSection">
+            <h3>Settings</h3>
+            <div class="wSettingRow"><span>Show Widgets</span><button class="wToggle" id="togShowWidgets" onclick="toggleShowWidgetsBtn()"></button></div>
+            <div class="wSettingRow"><span>Auto-fade (30%)</span><button class="wToggle" id="togAutoFade" onclick="toggleAutoFade()"></button></div>
+            <div class="wSettingRow">
+                <span>Accent Color</span>
+                <input type="color" id="accentColorPicker" value="#4a9eff"
+                    style="width:28px;height:20px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none"
+                    oninput="setAccentColor(this.value)">
+            </div>
+        </div>
+        <div class="wSidebarSection">
+            <h3>Import Custom Widget</h3>
+            <button class="wImportBtn" onclick="importCustomWidget()">📂 Import HTML Widget…</button>
+        </div>
+        <div class="wSidebarSection">
+            <h3>Active Widgets</h3>
+            <div id="wActiveList"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+'use strict';
+// ════════════════════════════════════════════════════════════════════
+//  PAGES
+// ════════════════════════════════════════════════════════════════════
+const NUM_PAGES = 2;
+let currentPage = 0;
+let gridOffset  = 0;
+
+function initPages() {
+    const ind=document.getElementById('pageIndicator');
+    ind.innerHTML='';
+    for(let i=0;i<NUM_PAGES;i++){
+        const d=document.createElement('div');
+        d.className='pageDot'+(i===0?' active':'');
+        ind.appendChild(d);
+    }
+    document.addEventListener('wheel', onWheelPage, {passive:false});
+}
+
+let snapTimer=null;
+function onWheelPage(e){
+    if(document.querySelector('.overlay.show,.widget textarea,.widget .todoList,#wSidebarBody')) {
+        if(e.target.closest('.widget textarea,.widget .todoList,#wSidebarBody')) return;
+    }
+    if(e.target.closest('#widgetSidebar')) return;
+    e.preventDefault();
+    const VH=window.innerHeight;
+    const grid=document.getElementById('desktopGrid');
+    grid.style.transition='none';
+    gridOffset=Math.max(-VH*(NUM_PAGES-1), Math.min(0, gridOffset-e.deltaY));
+    grid.style.transform=gridOffset===0?'':'translateY('+gridOffset+'px)';
+    clearTimeout(snapTimer);
+    snapTimer=setTimeout(()=>{
+        const target=Math.round(-gridOffset/VH);
+        snapToPage(Math.max(0,Math.min(NUM_PAGES-1,target)));
+    }, 120);
+}
+
+function snapToPage(p){
+    const VH=window.innerHeight;
+    const dest=-p*VH;
+    const grid=document.getElementById('desktopGrid');
+    grid.style.transition='transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+    gridOffset=dest;
+    grid.style.transform=p===0?'':'translateY('+dest+'px)';
+    if(p!==currentPage){
+        currentPage=p;
+        document.querySelectorAll('.pageDot').forEach((d,i)=>d.classList.toggle('active',i===p));
+        document.querySelectorAll('.widget').forEach(w=>{
+            const wp=parseInt(w.dataset.wpage)||0;
+            w.classList.toggle('page-hidden',wp!==p);
+        });
+    }
+}
+
+function goToPage(p){ snapToPage(Math.max(0,Math.min(NUM_PAGES-1,p))); }
+
+function moveSelectedToOtherPage(){
+    sel().forEach(ic=>{
+        const cur=parseInt(ic.dataset.page)||0;
+        const next=(cur+1)%NUM_PAGES;
+        const col=+ic.dataset.col||0;
+        const row=+ic.dataset.row||0;
+        delete cellMap[ck(col,row,cur)];
+        snapIcon(ic,{col,row,page:next},next);
+    });
+    saveCFG();
+}
+
+function applyPageVisibility(){
+    document.querySelectorAll('.widget').forEach(w=>{
+        const wp=parseInt(w.dataset.wpage)||0;
+        w.classList.toggle('page-hidden',wp!==currentPage);
+    });
+}
+
+function applyPageYOffsets(){
+    document.querySelectorAll('.desktopIcon').forEach(ic=>{
+        const pg=clampPage(parseInt(ic.dataset.page)||0);
+        const p=cellPx(+ic.dataset.col||0,+ic.dataset.row||0);
+        ic.style.left=p.x+'px';
+        ic.style.top=(p.y+pg*window.innerHeight)+'px';
+        ic.dataset.page=String(pg);
+    });
+}
+
+// ════════════════════════════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════════════
+(function setupNWShortcuts(){
+    try {
+        const nwGui=require('nw.gui');
+        const km=nwGui.App.manifest.name;
+        const canUseClipboardShortcut=()=>{
+            const ae=document.activeElement;
+            if(!ae) return true;
+            const t=(ae.tagName||'').toUpperCase();
+            return !(t==='INPUT'||t==='TEXTAREA'||ae.isContentEditable);
+        };
+        [
+            {key:'Ctrl+C', fn:()=>{ if(canUseClipboardShortcut()) copyIcons(); }},
+            {key:'Ctrl+X', fn:()=>{ if(canUseClipboardShortcut()) cutIcons(); }},
+            {key:'Ctrl+V', fn:()=>{ if(canUseClipboardShortcut()) pasteIcons(); }},
+        ].forEach(s=>{
+            const shortcut=new nwGui.Shortcut({key:s.key,active:s.fn});
+            nwGui.App.registerGlobalHotkey(shortcut);
+        });
+    } catch(e){
+        document.addEventListener('keydown',e=>{
+            if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+            if(document.querySelector('.overlay.show')) return;
+            const key=(e.key||'').toLowerCase();
+            if(e.ctrlKey&&key==='c'){copyIcons();e.preventDefault();}
+            if(e.ctrlKey&&key==='x'){cutIcons();e.preventDefault();}
+            if(e.ctrlKey&&key==='v'){pasteIcons();e.preventDefault();}
+        });
+    }
+})();
+
+// ════════════════════════════════════════════════════════════════════
+//  WIDGET SYSTEM
+// ════════════════════════════════════════════════════════════════════
+if(!CFG.widgets) CFG.widgets={};
+if(CFG.showWidgets===undefined) CFG.showWidgets=true;
+
+const clockTimers={};
+const dclockTimers={};
+const sysTimers={};
+const resizeTimers={};
+
+function openWidgetSidebar(){
+    hideCtx();
+    // Sync accent color picker
+    const picker=document.getElementById('accentColorPicker');
+    if(picker && CFG.accentColor) picker.value=CFG.accentColor;
+    refreshActiveWidgetList();
+    refreshSidebarToggles();
+    document.getElementById('widgetSidebar').classList.add('open');
+}
+function closeWidgetSidebar(){ document.getElementById('widgetSidebar').classList.remove('open'); }
+function refreshSidebarToggles(){
+    const tw=document.getElementById('togShowWidgets');
+    const tf=document.getElementById('togAutoFade');
+    if(tw) tw.classList.toggle('on',CFG.showWidgets!==false);
+    if(tf) tf.classList.toggle('on',!!CFG.autoFadeWidgets);
+}
+function toggleShowWidgetsBtn(){
+    CFG.showWidgets=!CFG.showWidgets; saveCFG();
+    if(!CFG.showWidgets){ document.querySelectorAll('.widget').forEach(w=>w.remove()); clearAllWidgetTimers(); }
+    else loadWidgets();
+    refreshSidebarToggles();
+}
+function toggleAutoFade(){
+    CFG.autoFadeWidgets=!CFG.autoFadeWidgets; saveCFG();
+    document.querySelectorAll('.widget').forEach(w=>w.classList.toggle('faded',!!CFG.autoFadeWidgets));
+    refreshSidebarToggles();
+}
+function clearAllWidgetTimers(){
+    Object.keys(clockTimers).forEach(id=>{clearInterval(clockTimers[id]);delete clockTimers[id];});
+    Object.keys(dclockTimers).forEach(id=>{clearInterval(dclockTimers[id]);delete dclockTimers[id];});
+    Object.keys(sysTimers).forEach(id=>{clearInterval(sysTimers[id]);delete sysTimers[id];});
+}
+
+function refreshActiveWidgetList(){
+    const list=document.getElementById('wActiveList'); if(!list) return;
+    list.innerHTML='';
+    const labels={clock:'🕐',digitalclock:'🔢',note:'📝',todo:'✅',calendar:'📅',weather:'🌤️',sysmon:'📊',group:'🗃️',custom:'🧩'};
+    const wids=Object.values(CFG.widgets||{});
+    if(!wids.length){ list.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.25);padding:4px 0">No active widgets</div>'; return; }
+    wids.forEach(wdata=>{
+        const div=document.createElement('div'); div.className='wActiveItem';
+        const name=wdata.customName||wdata.type;
+        const pg=(wdata.wpage||0)?` (p${(wdata.wpage||0)+1})`:'';
+        div.innerHTML=`<span>${labels[wdata.type]||'🧩'}</span>
+            <span class="wAName">${name}${pg}</span>
+            ${wdata.type==='custom'?`<span id="wsadel_cust_${wdata.id}"></span>`:''}
+            <span id="wsadel_${wdata.id}"></span>`;
+        if(wdata.type==='custom'){
+            const custDel=document.createElement('button');
+            custDel.className='wADel'; custDel.title='Remove file too';
+            custDel.style.color='rgba(255,100,100,0.5)'; custDel.textContent='🗑';
+            custDel.addEventListener('click',()=>removeCustomWidget(wdata.id));
+            const custSpan=div.querySelector('#wsadel_cust_'+wdata.id);
+            if(custSpan) custSpan.replaceWith(custDel);
+        }
+        const delBtn=document.createElement('button');
+        delBtn.className='wADel'; delBtn.textContent='×';
+        delBtn.addEventListener('click',()=>deleteWidget(wdata.id));
+        const delSpan=div.querySelector('#wsadel_'+wdata.id);
+        if(delSpan) delSpan.replaceWith(delBtn);
+        list.appendChild(div);
+    });
+}
+
+// Custom widget import / remove
+const CUSTOM_WIDGET_DIR=path.join(nw.App.dataPath,'custom_widgets');
+if(!fs.existsSync(CUSTOM_WIDGET_DIR)) fs.mkdirSync(CUSTOM_WIDGET_DIR,{recursive:true});
+
+function importCustomWidget(){
+    exec(`zenity --file-selection --file-filter="HTML | *.html *.htm" 2>/dev/null || kdialog --getopenfilename ~ "*.html *.htm" 2>/dev/null`,(err,stdout)=>{
+        const src=stdout.trim(); if(!src) return;
+        const name=path.basename(src);
+        const dest=path.join(CUSTOM_WIDGET_DIR,name);
+        try{fs.copyFileSync(src,dest);}catch(e){alert('Import failed: '+e.message);return;}
+        addWidget('custom',dest,name.replace(/\.html?$/i,''));
+        refreshActiveWidgetList();
+    });
+}
+function removeCustomWidget(id){
+    const wdata=CFG.widgets[id]; if(!wdata) return;
+    if(!confirm('Remove widget and delete HTML file?')) return;
+    deleteWidget(id);
+    if(wdata.customSrc){ try{fs.unlinkSync(wdata.customSrc);}catch{} }
+    refreshActiveWidgetList();
+}
+
+// ── Add / Render ─────────────────────────────────────────────────────
+function addWidget(type,customSrc,customName){
+    const id='w_'+Date.now();
+    const pos=findWidgetFreeZone(2,2);
+    const {x,y}=cellPx(pos.col,pos.row);
+    const VH=window.innerHeight;
+    const defaultSizes={clock:{w:160,h:160},digitalclock:{w:200,h:80},note:{w:200,h:180},
+        todo:{w:200,h:200},calendar:{w:220,h:200},weather:{w:180,h:200},sysmon:{w:200,h:120},
+        group:{w:200,h:160},custom:{w:220,h:180}};
+    const ds=defaultSizes[type]||{w:200,h:160};
+    const wdata={
+        id,type,
+        wx:x, wy:y+currentPage*VH,
+        wpx:ds.w, hpx:ds.h,
+        wpage:currentPage,
+        data:{},transparent:false,
+        customSrc:customSrc||null,
+        customName:customName||null,
+    };
+    CFG.widgets[id]=wdata; saveCFG();
+    renderWidget(wdata);
+    closeWidgetSidebar();
+    refreshActiveWidgetList();
+}
+
+function findWidgetFreeZone(cols,rows){
+    for(let r=0;r<=Math.max(0,ROWS-rows);r++)
+        for(let c=0;c<=Math.max(0,COLS-cols);c++){
+            let ok=true;
+            outer:for(let dr=0;dr<rows;dr++) for(let dc=0;dc<cols;dc++){
+                const occ=cellMap[ck(c+dc,r+dr,clampPage(typeof currentPage==='number'?currentPage:0))];
+                if(occ&&!occ._widgetId){ok=false;break outer;}
+            }
+            if(ok) return {col:c,row:r};
+        }
+    return {col:0,row:0};
+}
+
+function renderWidget(wdata){
+    const {id,type,wpx,hpx,wpage,transparent,customSrc,customName}=wdata;
+    const old=document.getElementById(id);
+    if(old){
+        if(clockTimers[id]){clearInterval(clockTimers[id]);delete clockTimers[id];}
+        if(dclockTimers[id]){clearInterval(dclockTimers[id]);delete dclockTimers[id];}
+        if(sysTimers[id]){clearInterval(sysTimers[id]);delete sysTimers[id];}
+        old.remove();
+    }
+    if(!CFG.showWidgets) return;
+
+    const w=wpx||180, h=hpx||160;
+    const x=wdata.wx??50;
+    const y=wdata.wy??50;
+
+    const el=document.createElement('div');
+    el.id=id; el._widgetId=id;
+    el.className='widget'+(transparent?' transparent':'')+(CFG.autoFadeWidgets?' faded':'');
+    el.dataset.wpage=String(wpage||0);
+    el.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;`;
+    if((wpage||0)!==currentPage) el.classList.add('page-hidden');
+
+    const LABELS={clock:'🕐 Clock',digitalclock:'🔢 Digital',note:'📝 Note',todo:'✅ Todo',
+        calendar:'📅 Calendar',weather:'🌤️ Weather',sysmon:'📊 System',
+        group:'🗃️ '+(wdata.data&&wdata.data.title||'Group'),
+        custom:'🧩 '+(customName||'Widget')};
+
+    el.innerHTML=`<div class="widgetHeader">
+        <span>${LABELS[type]||type}</span>
+        <div class="widgetBtns">
+            <button class="wBtn" title="Transparency" id="wbtn_t_${id}">◐</button>
+            <button class="wBtn" title="Page ${(wpage||0)===0?'2→':'1←'}" id="wbtn_p_${id}">⇅</button>
+            <button class="wBtn wClose" title="Close" id="wbtn_x_${id}">✕</button>
+        </div>
+    </div>
+    ${buildWidgetBody(wdata,w,h)}`;
+
+    el.querySelector('#wbtn_t_'+id).addEventListener('click',ev=>{ev.stopPropagation();toggleWidgetTransparency(id);});
+    el.querySelector('#wbtn_p_'+id).addEventListener('click',ev=>{ev.stopPropagation();moveWidgetPage(id);});
+    const closeBtn=el.querySelector('#wbtn_x_'+id);
+    const closeNow=ev=>{
+        ev.preventDefault();
+        ev.stopPropagation();
+        if(!CFG.widgets[id]) return;
+        deleteWidget(id);
+    };
+    closeBtn.addEventListener('click',closeNow);
+    closeBtn.addEventListener('mousedown',closeNow);
+
+    el.addEventListener('mousedown',ev=>{
+        if(ev.target.closest('.wBtn,.todoAddRow,.noteArea,.todoList,.clockBody,iframe,.weatherInput')){ev.stopPropagation();return;}
+        if(ev.target.closest('.widgetHeader')) startWidgetDrag(ev,el,wdata);
+        ev.stopPropagation();
+    });
+
+    el.addEventListener('mouseup',()=>{
+        clearTimeout(resizeTimers[id]);
+        resizeTimers[id]=setTimeout(()=>{
+            const nw2=el.offsetWidth, nh2=el.offsetHeight;
+            if(Math.abs(nw2-(wdata.wpx||0))>3||Math.abs(nh2-(wdata.hpx||0))>3){
+                wdata.wpx=nw2; wdata.hpx=nh2;
+                CFG.widgets[id]=wdata; saveCFG();
+                if(type==='digitalclock') sizeDClock(id);
+                if(type==='clock') startClock(id);
+            }
+        },300);
+    });
+
+    document.getElementById('desktopGrid').appendChild(el);
+    initWidgetBehavior(el,wdata);
+    if(type==='group') initGroupWidget(el,wdata);
+}
+
+function buildWidgetBody(wdata,tw,th){
+    const {id,type,data,customSrc}=wdata;
+    const bh=Math.max(40,th-36);
+
+    if(type==='clock'){
+        const sz=Math.max(40,Math.min(tw,bh)-16);
+        return `<div class="clockBody" style="height:${bh}px"><canvas id="clk_${id}" width="${sz}" height="${sz}"></canvas></div>`;
+    }
+    if(type==='digitalclock'){
+        return `<div id="dcbody_${id}" style="flex:1;display:flex;align-items:center;justify-content:center;padding:8px">
+            <div id="dclock_${id}" style="font-weight:200;color:white;font-family:monospace;letter-spacing:0.05em;text-shadow:0 0 20px rgba(var(--accent-rgb),0.8);font-size:${Math.max(14,Math.round(tw*0.18))}px">00:00:00</div>
+        </div>`;
+    }
+    if(type==='note'){
+        const txt=((data&&data.text)||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return `<textarea class="noteArea" id="note_${id}" placeholder="Type a note…" oninput="saveWidgetNote('${id}',this.value)">${txt}</textarea>`;
+    }
+    if(type==='todo'){
+        return `<div class="todoBody">
+            <div class="todoList" id="tl_${id}"></div>
+            <div class="todoAddRow">
+                <input class="todoAddInput" id="ti_${id}" type="text" placeholder="Add item…">
+                <button class="todoAddBtn" id="tadd_${id}">+</button>
+            </div>
+        </div>`;
+    }
+    if(type==='calendar'){
+        return `<div id="wcal_${id}" style="flex:1;padding:6px 10px;overflow:auto;font-size:11px;color:white"></div>`;
+    }
+    if(type==='weather'){
+        const city=(data&&data.city)||'';
+        return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;gap:5px;color:white;position:relative">
+            <div id="wthIcon_${id}" style="font-size:40px">🌤️</div>
+            <div id="wthTemp_${id}" style="font-size:28px;font-weight:200">--°</div>
+            <div id="wthDesc_${id}" style="font-size:11px;color:rgba(255,255,255,0.5)">Loading…</div>
+            <div id="wthCity_${id}" style="font-size:10px;color:rgba(255,255,255,0.35)"></div>
+            <button id="wthSetBtn_${id}" style="position:absolute;top:4px;right:4px;background:rgba(255,255,255,0.08);border:none;border-radius:6px;color:rgba(255,255,255,0.5);font-size:11px;cursor:pointer;padding:2px 6px" onclick="toggleWeatherInput('${id}')">⚙</button>
+            <div id="wthInputWrap_${id}" style="display:none;width:100%;padding:0 8px;margin-top:4px">
+                <input class="weatherInput" id="wthInput_${id}" value="${city}" placeholder="City (blank=auto-detect)"
+                    onkeydown="if(event.key==='Enter'){setWeatherCity('${id}',this.value);toggleWeatherInput('${id}');event.stopPropagation();}">
+            </div>
+        </div>`;
+    }
+    if(type==='sysmon'){
+        return `<div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;padding:10px 14px">
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px"><span>CPU</span><span id="scpu_${id}">–%</span></div>
+                <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div id="scpuBar_${id}" style="height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#7b5ea7);border-radius:3px;transition:width 0.6s"></div></div>
+            </div>
+            <div>
+                <div style="display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,0.5);margin-bottom:4px"><span>RAM</span><span id="sram_${id}">–%</span></div>
+                <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden"><div id="sramBar_${id}" style="height:100%;width:0%;background:linear-gradient(90deg,#27ae60,#2ecc71);border-radius:3px;transition:width 0.6s"></div></div>
+            </div>
+        </div>`;
+    }
+    if(type==='group'){ return buildGroupBody(wdata); }
+    if(type==='custom'&&customSrc)
+        return `<iframe class="customWidgetFrame" src="file://${customSrc}" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>`;
+    return '<div style="padding:12px;color:rgba(255,255,255,0.3);font-size:12px">Unknown type</div>';
+}
+
+function initWidgetBehavior(el,wdata){
+    const {id,type}=wdata;
+    if(type==='clock') startClock(id);
+    if(type==='digitalclock'){ sizeDClock(id); startDigitalClock(id); }
+    if(type==='todo'){
+        renderTodoList(id);
+        const addBtn=el.querySelector('#tadd_'+id);
+        if(addBtn) addBtn.addEventListener('click',()=>addTodoItem(id));
+        const inp=el.querySelector('#ti_'+id);
+        if(inp) inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){addTodoItem(id);e.stopPropagation();e.preventDefault();}});
+    }
+    if(type==='calendar') renderCalendar(id);
+    if(type==='weather') fetchWeather(id);
+    if(type==='sysmon') startSysMon(id);
+}
+
+// ── Digital Clock ─────────────────────────────────────────────────────
+const dclockResizeObs={};
+function sizeDClock(id){
+    const el=document.getElementById('dclock_'+id); if(!el) return;
+    const body=el.parentElement; if(!body) return;
+    const fw=Math.max(12,Math.round((body.offsetWidth||180)*0.20));
+    el.style.fontSize=fw+'px';
+}
+function startDigitalClock(id){
+    clearInterval(dclockTimers[id]);
+    const body=document.getElementById('dcbody_'+id);
+    if(body&&!dclockResizeObs[id]){
+        const ro=new ResizeObserver(()=>sizeDClock(id));
+        ro.observe(body);
+        dclockResizeObs[id]=ro;
+    }
+    sizeDClock(id);
+    function tick(){
+        const el=document.getElementById('dclock_'+id);
+        if(!el){clearInterval(dclockTimers[id]);if(dclockResizeObs[id]){dclockResizeObs[id].disconnect();delete dclockResizeObs[id];}return;}
+        const n=new Date();
+        el.textContent=[n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    }
+    dclockTimers[id]=setInterval(tick,1000); tick();
+}
+
+// ── Analog Clock ──────────────────────────────────────────────────────
+const clockResizeObs={};
+function startClock(id){
+    clearInterval(clockTimers[id]);
+    resizeClockCanvas(id);
+    const c=document.getElementById('clk_'+id);
+    if(c&&!clockResizeObs[id]){
+        const ro=new ResizeObserver(()=>{ resizeClockCanvas(id); drawClock(id); });
+        ro.observe(c.parentElement||c);
+        clockResizeObs[id]=ro;
+    }
+    clockTimers[id]=setInterval(()=>drawClock(id),1000); drawClock(id);
+}
+function resizeClockCanvas(id){
+    const c=document.getElementById('clk_'+id); if(!c) return;
+    const b=c.parentElement;
+    const sz=Math.max(40,Math.min(b.offsetWidth||100,b.offsetHeight||100)-16);
+    if(c.width!==sz||c.height!==sz){ c.width=sz; c.height=sz; }
+}
+function drawClock(id){
+    const c=document.getElementById('clk_'+id);
+    if(!c){clearInterval(clockTimers[id]);if(clockResizeObs[id]){clockResizeObs[id].disconnect();delete clockResizeObs[id];}return;}
+    resizeClockCanvas(id);
+    const ctx=c.getContext('2d'),W=c.width,H=c.height,R=Math.min(W,H)/2-3,cx=W/2,cy=H/2;
+    // Get accent color from CSS variable for the seconds hand
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim() || '#4a9eff';
+    const now=new Date(),hr=now.getHours()%12,mn=now.getMinutes(),sc=now.getSeconds();
+    ctx.clearRect(0,0,W,H);
+    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.fillStyle='rgba(255,255,255,0.06)';ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,0.22)';ctx.lineWidth=1.5;ctx.stroke();
+    for(let i=0;i<12;i++){
+        const a=i*Math.PI/6,r1=R-(i%3?7:11),r2=R-2;
+        ctx.beginPath();ctx.moveTo(cx+Math.sin(a)*r1,cy-Math.cos(a)*r1);
+        ctx.lineTo(cx+Math.sin(a)*r2,cy-Math.cos(a)*r2);
+        ctx.strokeStyle=i%3?'rgba(255,255,255,0.3)':'rgba(255,255,255,0.7)';
+        ctx.lineWidth=i%3?1:2;ctx.stroke();
+    }
+    const hand=(a,l,lw,col)=>{
+        ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.sin(a)*l,cy-Math.cos(a)*l);
+        ctx.strokeStyle=col;ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();
+    };
+    hand((hr+mn/60)*Math.PI/6,R*.54,3,'rgba(255,255,255,.92)');
+    hand((mn+sc/60)*Math.PI/30,R*.76,2,'rgba(255,255,255,.82)');
+    hand(sc*Math.PI/30,R*.84,1.2,accentColor);
+    ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fillStyle='white';ctx.fill();
+}
+
+// ── Note ──────────────────────────────────────────────────────────────
+function saveWidgetNote(id,text){
+    if(!CFG.widgets[id]) return;
+    CFG.widgets[id].data=CFG.widgets[id].data||{};
+    CFG.widgets[id].data.text=text; saveCFG();
+}
+
+// ── Todo ──────────────────────────────────────────────────────────────
+function renderTodoList(id){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    const items=(wdata.data&&wdata.data.items)||[];
+    const list=document.getElementById('tl_'+id);if(!list) return;
+    list.innerHTML='';
+    items.forEach((item,i)=>{
+        const div=document.createElement('div');div.className='todoItem';
+        div.innerHTML=`<input type="checkbox" ${item.done?'checked':''}><span class="tiText${item.done?' done':''}">${(item.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</span><button class="todoDel">×</button>`;
+        div.querySelector('input').addEventListener('change',ev=>{items[i].done=ev.target.checked;saveCFG();renderTodoList(id);});
+        div.querySelector('.todoDel').addEventListener('click',()=>{items.splice(i,1);saveCFG();renderTodoList(id);});
+        list.appendChild(div);
+    });
+}
+function addTodoItem(id){
+    const inp=document.getElementById('ti_'+id);if(!inp) return;
+    const text=inp.value.trim();if(!text) return;
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    wdata.data=wdata.data||{};wdata.data.items=wdata.data.items||[];
+    wdata.data.items.push({text,done:false});
+    inp.value='';saveCFG();renderTodoList(id);
+}
+
+// ── Calendar ──────────────────────────────────────────────────────────
+function renderCalendar(id){
+    const el=document.getElementById('wcal_'+id);if(!el) return;
+    const now=new Date(),y=now.getFullYear(),m=now.getMonth();
+    const first=new Date(y,m,1).getDay(),days=new Date(y,m+1,0).getDate();
+    const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    let html=`<div style="text-align:center;font-size:12px;font-weight:600;color:rgba(255,255,255,0.7);margin-bottom:6px">${months[m]} ${y}</div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center">
+    ${['Su','Mo','Tu','We','Th','Fr','Sa'].map(d=>`<div style="color:rgba(255,255,255,0.35)">${d}</div>`).join('')}
+    ${Array(first).fill('<div></div>').join('')}
+    ${Array.from({length:days},(_,i)=>{const d=i+1,t=d===now.getDate();return `<div style="padding:2px;border-radius:50%;${t?'background:var(--accent);color:white':'color:rgba(255,255,255,0.75)'}">${d}</div>`;}).join('')}
+    </div>`;
+    el.innerHTML=html;
+}
+
+// ── Weather ───────────────────────────────────────────────────────────
+function fetchWeather(id){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    const city=(wdata.data&&wdata.data.city)||'';
+    const descEl=document.getElementById('wthDesc_'+id);
+    if(descEl) descEl.textContent='Loading…';
+
+    const setWeather=(lat,lon,cityName)=>{
+        if(cityName){const cel=document.getElementById('wthCity_'+id);if(cel) cel.textContent=cityName;}
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true`)
+            .then(r=>r.json()).then(d=>{
+                const cw=d.current_weather,code=cw.weathercode,temp=Math.round(cw.temperature);
+                const icons={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',61:'🌧️',71:'❄️',80:'🌦️',95:'⛈️'};
+                const descs={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Drizzle',61:'Rain',71:'Snow',80:'Showers',95:'Thunderstorm'};
+                const icon=icons[code]||icons[Math.floor(code/10)*10]||'🌡️';
+                const desc=descs[code]||descs[Math.floor(code/10)*10]||'';
+                const iE=document.getElementById('wthIcon_'+id);if(iE) iE.textContent=icon;
+                const tE=document.getElementById('wthTemp_'+id);if(tE) tE.textContent=temp+'°C';
+                const dE=document.getElementById('wthDesc_'+id);if(dE) dE.textContent=desc;
+            }).catch(()=>{if(descEl) descEl.textContent='No internet';});
+    };
+
+    if(city){
+        fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1`)
+            .then(r=>r.json()).then(d=>{
+                if(d.results&&d.results[0]){
+                    const r=d.results[0];
+                    setWeather(r.latitude,r.longitude,r.name+', '+(r.country||''));
+                } else {if(descEl) descEl.textContent='City not found';}
+            }).catch(()=>fetchWeatherByIP(id));
+    } else {
+        fetchWeatherByIP(id);
+    }
+}
+function fetchWeatherByIP(id){
+    const descEl=document.getElementById('wthDesc_'+id);
+    fetch('https://ipapi.co/json/').then(r=>r.json()).then(geo=>{
+        const cityEl=document.getElementById('wthCity_'+id);
+        if(cityEl) cityEl.textContent=geo.city||'';
+        const inp=document.getElementById('wthInput_'+id);
+        if(inp&&!inp.value) inp.value=geo.city||'';
+        return fetch(`https://api.open-meteo.com/v1/forecast?latitude=${geo.latitude}&longitude=${geo.longitude}&current_weather=true`)
+            .then(r=>r.json()).then(d=>{
+                const cw=d.current_weather,code=cw.weathercode,temp=Math.round(cw.temperature);
+                const icons={0:'☀️',1:'🌤️',2:'⛅',3:'☁️',45:'🌫️',51:'🌦️',61:'🌧️',71:'❄️',80:'🌦️',95:'⛈️'};
+                const descs={0:'Clear',1:'Mostly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',51:'Drizzle',61:'Rain',71:'Snow',80:'Showers',95:'Thunderstorm'};
+                const icon=icons[code]||'🌡️',desc=descs[code]||'';
+                const iE=document.getElementById('wthIcon_'+id);if(iE) iE.textContent=icon;
+                const tE=document.getElementById('wthTemp_'+id);if(tE) tE.textContent=temp+'°C';
+                const dE=document.getElementById('wthDesc_'+id);if(dE) dE.textContent=desc;
+            });
+    }).catch(()=>{if(descEl) descEl.textContent='No internet';});
+}
+function toggleWeatherInput(id){
+    const wrap=document.getElementById('wthInputWrap_'+id); if(!wrap) return;
+    wrap.style.display=wrap.style.display==='none'?'block':'none';
+}
+function setWeatherCity(id,city){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    wdata.data=wdata.data||{};wdata.data.city=city.trim();
+    CFG.widgets[id]=wdata;saveCFG();
+    fetchWeather(id);
+}
+
+// ── System Monitor ────────────────────────────────────────────────────
+function startSysMon(id){
+    clearInterval(sysTimers[id]);
+    function update(){
+        const cpuEl=document.getElementById('scpu_'+id);
+        if(!cpuEl){clearInterval(sysTimers[id]);return;}
+        try{
+            const s1=fs.readFileSync('/proc/stat','utf8').split('\n')[0].split(/\s+/).slice(1).map(Number);
+            setTimeout(()=>{
+                try{
+                    const s2=fs.readFileSync('/proc/stat','utf8').split('\n')[0].split(/\s+/).slice(1).map(Number);
+                    const idle1=s1[3],tot1=s1.reduce((a,b)=>a+b,0);
+                    const idle2=s2[3],tot2=s2.reduce((a,b)=>a+b,0);
+                    const cpu=Math.round(100*(1-(idle2-idle1)/(tot2-tot1)));
+                    const el=document.getElementById('scpu_'+id);if(el)el.textContent=cpu+'%';
+                    const bar=document.getElementById('scpuBar_'+id);if(bar)bar.style.width=cpu+'%';
+                }catch{}
+            },250);
+        }catch{}
+        try{
+            const mem=fs.readFileSync('/proc/meminfo','utf8');
+            const tot=parseInt(mem.match(/MemTotal:\s+(\d+)/)[1]);
+            const avail=parseInt(mem.match(/MemAvailable:\s+(\d+)/)[1]);
+            const pct=Math.round(100*(tot-avail)/tot);
+            const el=document.getElementById('sram_'+id);if(el)el.textContent=pct+'%';
+            const bar=document.getElementById('sramBar_'+id);if(bar)bar.style.width=pct+'%';
+        }catch{}
+    }
+    sysTimers[id]=setInterval(update,2000); update();
+}
+
+// ── Group Widget ──────────────────────────────────────────────────────
+function createGroupWidget(){
+    hideCtx();
+    const icons=sel();if(icons.length<2) return;
+    const title=prompt('Group name:','My Group')||'Group';
+    const id='w_'+Date.now();
+    const paths=icons.map(ic=>ic.dataset.path);
+    const pos=findWidgetFreeZone(2,2);
+    const {x,y}=cellPx(pos.col,pos.row);
+    const cs=CFG.cellSize, cols=Math.max(2,Math.ceil(Math.sqrt(icons.length)));
+    const wdata={
+        id,type:'group',
+        wx:x, wy:y+currentPage*window.innerHeight,
+        wpx:cols*(cs+12)+24, hpx:Math.ceil(icons.length/cols)*(cs+28)+60,
+        wpage:currentPage,
+        data:{title,paths,color:'rgba(255,255,255,0.09)'},transparent:false,
+    };
+    icons.forEach(ic=>{
+        delete cellMap[ck(+ic.dataset.col,+ic.dataset.row,parseInt(ic.dataset.page)||0)];
+        ic.remove();
+    });
+    CFG.widgets[id]=wdata;saveCFG();
+    renderWidget(wdata);
+    refreshActiveWidgetList();
+}
+
+function groupColorToHex(color){
+    const m=(color||'').match(/rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+    if(!m) return '#ffffff';
+    const toHex=n=>Math.max(0,Math.min(255,parseInt(n)||0)).toString(16).padStart(2,'0');
+    return `#${toHex(m[1])}${toHex(m[2])}${toHex(m[3])}`;
+}
+function groupColorFromHex(hex){
+    const h=(hex||'').replace('#','');
+    if(!/^[0-9a-fA-F]{6}$/.test(h)) return 'rgba(255,255,255,0.18)';
+    const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},0.22)`;
+}
+
+function buildGroupItemVisual(fp,name){
+    const iconSize=Math.max(18,Math.round(CFG.cellSize*0.50));
+    const override=CFG.iconOverrides&&CFG.iconOverrides[fp];
+    let isDir=false;
+    try{ isDir=fs.statSync(fp).isDirectory(); }catch{}
+    if(override&&override.type==='image'){
+        return { html:`<img src="file://${override.value}" style="width:${iconSize}px;height:${iconSize}px;object-fit:cover;border-radius:6px">`, needsThumb:false };
+    }
+    if(override&&override.type==='emoji'){
+        return { html:`<span style="font-size:${Math.round(iconSize*0.72)}px;line-height:1">${override.value}</span>`, needsThumb:false };
+    }
+    const ext=path.extname(name).toLowerCase();
+    if(!isDir && IMG_EXTS.has(ext)){
+        const tp=thumbPath(fp);
+        if(fs.existsSync(tp)){
+            return { html:`<img src="file://${tp}?v=${Date.now()}" style="width:${iconSize}px;height:${iconSize}px;object-fit:cover;border-radius:6px">`, needsThumb:false };
+        }
+        return { html:`<span style="font-size:${Math.round(iconSize*0.72)}px;line-height:1">${emojiFor(name,false)}</span>`, needsThumb:true };
+    }
+    return { html:`<span style="font-size:${Math.round(iconSize*0.72)}px;line-height:1">${emojiFor(name,isDir)}</span>`, needsThumb:false };
+}
+
+function buildGroupBody(wdata){
+    const {id,data}=wdata;
+    const paths=(data&&data.paths)||[];
+    const color=(data&&data.color)||'rgba(255,255,255,0.09)';
+    const cellW=Math.max(56,CFG.cellSize);
+    const labelSz=Math.max(9,Math.round(CFG.cellSize*0.122));
+    let html=`<div id="gwbody_${id}" style="flex:1;display:flex;flex-wrap:wrap;gap:6px;padding:8px;align-content:flex-start;overflow:auto">`;
+    paths.forEach(fp=>{
+        const name=path.basename(fp||'');
+        const vis=buildGroupItemVisual(fp,name);
+        html+=`<button class="groupItem" data-gpath="${escAttr(fp)}" title="${escAttr(fp)}"
+            style="display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;padding:4px;border-radius:8px;width:${cellW}px;border:none;background:transparent;color:inherit;transition:background 0.12s">
+            <span class="groupItemVisual" data-thumb-src="${vis.needsThumb?escAttr(fp):''}"
+                style="width:${Math.max(18,Math.round(CFG.cellSize*0.50))}px;height:${Math.max(18,Math.round(CFG.cellSize*0.50))}px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:6px">
+                ${vis.html}
+            </span>
+            <span style="font-size:${labelSz}px;color:rgba(255,255,255,0.82);text-align:center;max-width:${cellW-4}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(name)}</span>
+        </button>`;
+    });
+    html+=`</div>
+    <div style="padding:2px 8px 6px;display:flex;gap:8px;align-items:center;flex-shrink:0;justify-content:space-between">
+        <button class="wBtn" id="gbtn_ret_${id}" style="font-size:10px;padding:2px 6px">↩ Ungroup</button>
+        <div id="gwsettings_${id}" style="display:none;align-items:center;gap:6px;background:rgba(255,255,255,0.08);padding:4px 6px;border-radius:7px">
+            <span style="font-size:10px;color:rgba(255,255,255,0.65)">Color</span>
+            <input type="color" value="${groupColorToHex(color)}" id="gcol_${id}"
+                style="width:20px;height:20px;border:none;border-radius:4px;cursor:pointer;padding:0;background:none" title="Color">
+        </div>
+    </div>`;
+    return html;
+}
+
+function initGroupWidget(el,wdata){
+    const {id}=wdata;
+    const retBtn=el.querySelector('#gbtn_ret_'+id);
+    if(retBtn) retBtn.addEventListener('click',()=>returnGroupIcons(id));
+    el.querySelectorAll('.groupItem').forEach(item=>{
+        item.addEventListener('click',()=>openFile(item.dataset.gpath));
+        item.addEventListener('mouseenter',()=>{item.style.background='rgba(255,255,255,0.14)';});
+        item.addEventListener('mouseleave',()=>{item.style.background='transparent';});
+    });
+    const colPicker=el.querySelector('#gcol_'+id);
+    if(colPicker) colPicker.addEventListener('input',ev=>setGroupColor(id,groupColorFromHex(ev.target.value)));
+    const btns=el.querySelector('.widgetBtns');
+    if(btns&&!el.querySelector('#gbtn_set_'+id)){
+        const btn=document.createElement('button');
+        btn.id='gbtn_set_'+id;
+        btn.className='wBtn';
+        btn.title='Settings';
+        btn.textContent='⚙';
+        btn.addEventListener('click',ev=>{ev.stopPropagation();toggleGroupSettings(id);});
+        btns.insertBefore(btn, btns.firstChild);
+    }
+    el.querySelectorAll('.groupItemVisual[data-thumb-src]').forEach(wrap=>{
+        const fp=wrap.dataset.thumbSrc;
+        if(!fp) return;
+        getThumbnail(fp,tp=>{
+            if(!document.body.contains(wrap)) return;
+            const sz=Math.max(18,Math.round(CFG.cellSize*0.50));
+            wrap.innerHTML=`<img src="file://${tp}?v=${Date.now()}" style="width:${sz}px;height:${sz}px;object-fit:cover;border-radius:6px">`;
+            wrap.dataset.thumbSrc='';
+        });
+    });
+    const color=(wdata.data&&wdata.data.color)||'rgba(255,255,255,0.09)';
+    el.style.background=color;
+}
+function toggleGroupSettings(id){
+    const s=document.getElementById('gwsettings_'+id);
+    if(s) s.style.display=s.style.display==='none'||!s.style.display?'flex':'none';
+}
+function renameGroup(id,title){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    wdata.data=wdata.data||{};wdata.data.title=title;
+    CFG.widgets[id]=wdata;saveCFG();
+    const el=document.getElementById(id);
+    if(el){const span=el.querySelector('.widgetHeader>span');if(span) span.textContent='🗃️ '+title;}
+}
+
+function returnGroupIcons(id){
+    const wdata=CFG.widgets[id];if(!wdata||!wdata.data) return;
+    const pg=clampPage(parseInt(wdata.wpage)||0);
+    (wdata.data.paths||[]).forEach(fp=>{
+        let st;try{st=fs.statSync(fp);}catch{return;}
+        const file=fp.split('/').pop();
+        const iconEl=buildIcon(file,fp,st);
+        const pref=nextFree(null,pg);
+        snapIcon(iconEl,{col:pref.col,row:pref.row,page:pg},pg);
+        document.getElementById('desktopGrid').appendChild(iconEl);
+    });
+    deleteWidget(id);
+}
+function setGroupColor(id,color){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    wdata.data.color=color;CFG.widgets[id]=wdata;saveCFG();
+    const el=document.getElementById(id);
+    if(el) el.style.background=color;
+}
+
+function refreshGroupWidgets(){
+    if(!CFG.widgets||!CFG.showWidgets) return;
+    Object.values(CFG.widgets).forEach(wdata=>{
+        if(wdata.type!=='group') return;
+        if(document.getElementById(wdata.id)) renderWidget(wdata);
+    });
+}
+
+// ── Widget drag ───────────────────────────────────────────────────────
+let wDrag=null;
+function startWidgetDrag(e,el,wdata){
+    if(e.button!==0) return;
+    e.stopPropagation();e.preventDefault();
+    const rect=el.getBoundingClientRect();
+    wDrag={el,wdata,offX:e.clientX-rect.left,offY:e.clientY-rect.top};
+    el.style.zIndex=5100;el.style.transition='none';el.style.resize='none';
+}
+document.addEventListener('mousemove',ev=>{
+    if(!wDrag) return;
+    const gx=ev.clientX-wDrag.offX;
+    const gy=ev.clientY-wDrag.offY-gridOffset;
+    wDrag.el.style.left=gx+'px';
+    wDrag.el.style.top=gy+'px';
+});
+document.addEventListener('mouseup',ev=>{
+    if(!wDrag) return;
+    const {el,wdata}=wDrag;wDrag=null;
+    el.style.zIndex='';el.style.transition='';el.style.resize='both';
+    wdata.wx=parseFloat(el.style.left);
+    wdata.wy=parseFloat(el.style.top);
+    wdata.wpx=el.offsetWidth;wdata.hpx=el.offsetHeight;
+    CFG.widgets[wdata.id]=wdata;saveCFG();
+});
+
+// ── Widget controls ───────────────────────────────────────────────────
+function deleteWidget(id){
+    if(clockTimers[id]){clearInterval(clockTimers[id]);delete clockTimers[id];}
+    if(dclockTimers[id]){clearInterval(dclockTimers[id]);delete dclockTimers[id];}
+    if(sysTimers[id]){clearInterval(sysTimers[id]);delete sysTimers[id];}
+    if(clockResizeObs[id]){clockResizeObs[id].disconnect();delete clockResizeObs[id];}
+    if(dclockResizeObs[id]){dclockResizeObs[id].disconnect();delete dclockResizeObs[id];}
+    const el=document.getElementById(id);if(el) el.remove();
+    if(CFG.widgets) delete CFG.widgets[id];
+    saveCFG();
+    refreshActiveWidgetList();
+}
+
+function toggleWidgetTransparency(id){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    wdata.transparent=!wdata.transparent;
+    CFG.widgets[id]=wdata;saveCFG();
+    const el=document.getElementById(id);
+    if(el) el.classList.toggle('transparent',!!wdata.transparent);
+}
+
+function moveWidgetPage(id){
+    const wdata=CFG.widgets[id];if(!wdata) return;
+    const VH=window.innerHeight;
+    const op=wdata.wpage||0,np=(op+1)%NUM_PAGES;
+    wdata.wy=(wdata.wy||0)+(np-op)*VH;
+    wdata.wpage=np;
+    CFG.widgets[id]=wdata;saveCFG();
+    const el=document.getElementById(id);
+    if(el){
+        el.style.top=wdata.wy+'px';
+        el.dataset.wpage=String(np);
+        el.classList.toggle('page-hidden',np!==currentPage);
+    }
+    goToPage(np);
+    refreshActiveWidgetList();
+}
+
+function loadWidgets(){
+    document.querySelectorAll('.widget').forEach(w=>w.remove());
+    clearAllWidgetTimers();
+    if(!CFG.widgets||!CFG.showWidgets) return;
+    // Prune stale/corrupt widget entries before rendering
+    Object.keys(CFG.widgets).forEach(k=>{
+        const w=CFG.widgets[k];
+        if(!w||!w.id||!w.type){ delete CFG.widgets[k]; }
+    });
+    Object.values(CFG.widgets).forEach(wdata=>renderWidget(wdata));
+}
+
+function toggleShowWidgets(){
+    CFG.showWidgets=!CFG.showWidgets;saveCFG();
+    if(!CFG.showWidgets){document.querySelectorAll('.widget').forEach(w=>w.remove());clearAllWidgetTimers();}
+    else loadWidgets();
+}
+
+// ══════════════════════════════════════════════════════════════════
+//  MULTI-SCREEN SETTINGS
+// ══════════════════════════════════════════════════════════════════
+function showMultiScreenSettings(){
+    hideCtx();
+    detectScreens();
+    document.getElementById('ovScreens').classList.add('show');
+}
+
+function detectScreens(){
+    const list=document.getElementById('screenList');
+    if(!list) return;
+    list.innerHTML='';
+    try{
+        if(typeof nw!=='undefined'&&nw.Screen){
+            const displays=nw.Screen.screens||[];
+            displays.forEach((s,i)=>{
+                const div=document.createElement('div');
+                div.style.cssText='background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:rgba(255,255,255,0.8)';
+                div.innerHTML=`<div><b>Screen ${i+1}</b>&nbsp;&nbsp;<span style="color:rgba(255,255,255,0.4)">${s.bounds.width}×${s.bounds.height} @ ${s.bounds.x},${s.bounds.y}</span></div>
+                    <button class="btn ok" style="padding:4px 10px;font-size:11px" onclick="openScreenInstance(${i})">Open Desktop</button>`;
+                list.appendChild(div);
+            });
+            if(!displays.length){
+                list.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.35)">Only 1 screen detected (or nw.Screen not available)</div>';
+            }
+        } else {
+            list.innerHTML=`<div style="font-size:12px;color:rgba(255,255,255,0.5)">Screen ${window.screenX},${window.screenY} — ${window.screen.width}×${window.screen.height}</div>`;
+        }
+    }catch(e){
+        list.innerHTML='<div style="font-size:12px;color:rgba(255,255,255,0.35)">Could not enumerate screens</div>';
+    }
+}
+
+function openScreenInstance(screenIdx){
+    try{
+        const screens=(nw.Screen&&nw.Screen.screens)||[];
+        const s=screens[screenIdx];
+        const opts={
+            width:s?s.bounds.width:window.screen.width,
+            height:s?s.bounds.height:window.screen.height,
+            x:s?s.bounds.x:0,
+            y:s?s.bounds.y:0,
+            frame:false, transparent:true, show:true,
+        };
+        nw.Window.open(location.href+'?screen='+screenIdx, opts);
+    }catch(e){ alert('Could not open screen instance: '+e.message); }
+}
+
+function saveScreenCFG(){
+    CFG.screenIndex=parseInt(document.getElementById('screenIdx').value)||0;
+    saveCFG();
+}
+function toggleWpSync(){
+    CFG.syncWallpaper=!CFG.syncWallpaper; saveCFG();
+    const t=document.getElementById('togWpSync');
+    if(t) t.classList.toggle('on',!!CFG.syncWallpaper);
+}
+
+initPages();
+setTimeout(()=>{
+    applyPageYOffsets();
+    applyPageVisibility();
+    document.querySelectorAll('.widget').forEach(w=>w.remove());
+    clearAllWidgetTimers();
+    if(CFG.widgets&&CFG.showWidgets){
+        Object.values(CFG.widgets).forEach(wdata=>renderWidget(wdata));
+    }
+    refreshSidebarToggles();
+},0);
+</script>
+</body>
+</html>

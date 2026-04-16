@@ -1,0 +1,24 @@
+{
+    "name": "linux-app-launcher",
+    "version": "1.0.0",
+    "main": "index.html",
+    "scripts": {
+        "start": "node index.js",
+        "start-nw": "nw .",
+        "build-nw": "nwbuild --platform win --arch x64 --outDir dist/src --glob=false src "
+    },
+    "window": {
+        "title": "Application Launcher",
+        "width": 900,
+        "height": 700,
+        "min_width": 600,
+        "min_height": 400,
+        "icon": "icon.png",
+        "frame": true,
+        "resizable": true
+    },
+    "chromium-args": "--enable-transparent-visuals --disable-gpu",
+    "dependencies": {
+        "nw": "^0.105.0"
+    }
+}

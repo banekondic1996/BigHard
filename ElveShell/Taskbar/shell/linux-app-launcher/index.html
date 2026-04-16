@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linux Application Launcher</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #1a1a1a;
+            height: 100vh;
+            overflow: hidden;
+            color: white;
+        }
+
+        body.fullscreen {
+            background: rgba(26, 26, 26, 0.98);
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        body.fullscreen .container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100000;
+        }
+
+        body.fullscreen .sidebar {
+            width: 300px;
+        }
+
+        .sidebar {
+            width: 220px;
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .search-overlay {
+            position: absolute;
+            left: 15px;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(30, 30, 30, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 5px 15px;
+            display: none;
+            z-index: 1000;
+        }
+
+        .search-overlay.show {
+            display: block;
+        }
+
+        .search-overlay input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            padding: 8px 5px;
+        }
+
+        .search-overlay input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .category-list {
+            padding: 5px 0;
+            flex: 1;
+            transition: opacity 0.2s;
+        }
+
+        .category-list.hidden {
+            opacity: 0;
+            pointer-events: none;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .sidebar-footer {
+            padding: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-icon {
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .settings-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-icon svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+
+        .category-item {
+            padding: 12px 20px;
+            margin: 4px 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+        }
+
+        .category-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .category-item.active {
+            background: rgba(255, 255, 255, 0.15);
+            font-weight: 600;
+            color: white;
+        }
+
+        .category-count {
+            margin-left: auto;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 5px;
+            overflow-y: auto;
+            background: #1a1a1a;
+        }
+
+        .apps-grid {
+            display: grid;
+            gap: 5px;
+            padding: 5px 0;
+        }
+
+        .apps-grid.size-small {
+            grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        }
+
+        .apps-grid.size-medium {
+            grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        }
+
+        .apps-grid.size-large {
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+        }
+
+        .app-card {
+            text-align: center;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 12px;
+            position: relative;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100px;
+            overflow: visible;
+        }
+
+        .app-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-3px);
+            z-index: 10;
+        }
+
+        .app-icon {
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .app-icon img {
+            object-fit: contain;
+            transition: transform 0.2s;
+        }
+
+        .app-card:hover .app-icon img {
+            transform: scale(1.1);
+        }
+
+        .size-small .app-icon,
+        .size-small .app-icon img {
+            width: 32px;
+            height: 32px;
+        }
+
+        .size-medium .app-icon,
+        .size-medium .app-icon img {
+            width: 48px;
+            height: 48px;
+        }
+
+        .size-large .app-icon,
+        .size-large .app-icon img {
+            width: 64px;
+            height: 64px;
+        }
+
+        .app-icon-fallback {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-weight: bold;
+            transition: transform 0.2s;
+        }
+
+        .app-card:hover .app-icon-fallback {
+            transform: scale(1.1);
+        }
+
+        .size-small .app-icon-fallback {
+            width: 32px;
+            height: 32px;
+            font-size: 18px;
+        }
+
+        .size-medium .app-icon-fallback {
+            width: 48px;
+            height: 48px;
+            font-size: 24px;
+        }
+
+        .size-large .app-icon-fallback {
+            width: 64px;
+            height: 64px;
+            font-size: 32px;
+        }
+
+        .app-name {
+            font-weight: 500;
+            color: white;
+            font-size: 12px;
+            line-height: 1.2;
+            word-wrap: break-word;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            max-width: 100%;
+        }
+
+        .app-card:hover .app-name {
+            overflow: visible;
+            display: block;
+            position: absolute;
+            background: rgba(30, 30, 30, 0.95);
+            padding: 5px 10px;
+            border-radius: 6px;
+            z-index: 100;
+            white-space: normal;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            min-width: max-content;
+            max-width: 200px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .app-tooltip {
+            position: fixed;
+            background: rgba(40, 40, 40, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #ddd;
+            max-width: 250px;
+            z-index: 10000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .app-tooltip.show {
+            opacity: 1;
+        }
+
+        .loading {
+            color: #aaa;
+            text-align: center;
+            padding: 50px;
+            font-size: 18px;
+        }
+
+        .no-apps {
+            color: #aaa;
+            text-align: center;
+            padding: 50px;
+            font-size: 16px;
+        }
+
+        .context-menu {
+            position: fixed;
+            background: rgba(40, 40, 40, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 5px 0;
+            z-index: 10001;
+            display: none;
+            min-width: 150px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+        }
+
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item.pinned {
+            color: #ffcc00;
+        }
+
+        .settings-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+
+        .settings-modal.show {
+            display: flex;
+        }
+
+        .settings-content {
+            background: #2a2a2a;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .settings-header {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .settings-group {
+            margin-bottom: 25px;
+        }
+
+        .settings-label {
+            display: block;
+            margin-bottom: 12px;
+            color: #ddd;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            min-width: 40px;
+            text-align: right;
+            color: #ddd;
+            font-size: 14px;
+        }
+
+        .settings-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+        }
+
+        .settings-checkbox input {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .settings-checkbox label {
+            color: #ddd;
+            cursor: pointer;
+            flex: 1;
+        }
+
+        .settings-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.15s;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #1a1a1a;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="search-overlay" id="searchOverlay">
+                    <input type="text" id="searchInput" placeholder="Search applications...">
+                </div>
+            </div>
+            
+            <div class="category-list" id="categoryList"></div>
+            
+            <div class="sidebar-footer">
+                <div class="settings-icon" id="settingsBtn">
+                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94L14.4 2.81c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+                    </svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div id="appsContainer">
+                <div class="loading">Loading applications...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="contextPin">Pin to List</div>
+    </div>
+
+    <div class="settings-modal" id="settingsModal">
+        <div class="settings-content">
+            <div class="settings-header">Settings</div>
+            
+            <div class="settings-group">
+                <label class="settings-label">Icon Size</label>
+                <div class="slider-container">
+                    <span>Small</span>
+                    <input type="range" class="slider" id="iconSizeSlider" min="32" max="64" step="16" value="48">
+                    <span class="slider-value" id="iconSizeValue">48px</span>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label">Features</label>
+                <div class="settings-checkbox">
+                    <input type="checkbox" id="showMostUsed" checked>
+                    <label for="showMostUsed">Show "Most Used" category</label>
+                </div>
+                <div class="settings-checkbox" style="margin-top: 8px;">
+                    <input type="checkbox" id="fullscreenMode">
+                    <label for="fullscreenMode">Open menu in fullscreen</label>
+                </div>
+            </div>
+
+            <div class="settings-group">
+                <label class="settings-label">Add Custom Application</label>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <input type="text" id="customAppName" placeholder="Application Name" style="padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; color: white; font-size: 14px;">
+                    <input type="file" id="customAppExec" accept=".sh,.desktop,*" style="padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; color: white; font-size: 14px;">
+                    <input type="file" id="customAppIcon" accept="image/*" style="padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 5px; color: white; font-size: 14px;">
+                    <button class="btn btn-secondary" id="addCustomApp">Add Application</button>
+                </div>
+            </div>
+
+            <div class="settings-buttons">
+                <button class="btn btn-primary" id="saveSettings">Save</button>
+                <button class="btn btn-secondary" id="closeSettings">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-tooltip" id="tooltip"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

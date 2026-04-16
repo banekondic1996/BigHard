@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Launcher</title>
+    <script src="https://unpkg.com/@popperjs/core@2"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --menu-bg: rgba(18, 18, 20, 0.35);
+            --menu-sidebar-bg: rgba(18, 18, 20, 0.35);
+            --menu-main-bg: rgba(18, 18, 20, 0.35);
+            --menu-header-bg: rgba(18, 18, 20, 0.35);
+            --menu-border: rgba(255, 255, 255, 0.12);
+            --menu-card: rgba(255, 255, 255, 0.03);
+            --menu-card-hover: rgba(255, 255, 255, 0.1);
+            --menu-accent: rgba(176, 176, 176, 0.78);
+            --menu-accent-soft: rgba(176, 176, 176, 0.22);
+            --menu-accent-border: rgba(176, 176, 176, 0.45);
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: transparent;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            color: white;
+        }
+
+        .container {
+            display: flex;
+            height: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--menu-border);
+            background: var(--menu-bg);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
+        }
+
+        .sidebar {
+            width: 180px;
+            background: var(--menu-sidebar-bg);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--menu-border);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-header {
+            padding: 16px 12px 12px;
+            border-bottom: 1px solid var(--menu-border);
+            position: sticky;
+            top: 0;
+            z-index: 3;
+            background: var(--menu-header-bg);
+            backdrop-filter: blur(24px);
+        }
+
+        .search-box {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--menu-border);
+            border-radius: 8px;
+            color: white;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            padding: 8px 10px;
+            transition: all 0.2s;
+        }
+
+        .search-box:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--menu-accent-border);
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .category-list {
+            padding: 8px 0;
+            flex: 1;
+        }
+
+        .category-item {
+            padding: 10px 16px;
+            margin: 2px 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            font-size: 13px;
+            position: relative;
+        }
+
+        .category-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+        }
+
+        .category-item.active {
+            background: var(--menu-accent-soft);
+            color: white;
+            font-weight: 500;
+        }
+
+        .category-item.pinned {
+            border: 1px solid rgba(255, 200, 0, 0.3);
+            background: rgba(255, 200, 0, 0.05);
+        }
+
+        .category-item.pinned:hover {
+            background: rgba(255, 200, 0, 0.1);
+        }
+
+        .category-item.pinned.active {
+            background: rgba(255, 200, 0, 0.2);
+            border-color: rgba(255, 200, 0, 0.5);
+        }
+
+        .category-count {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .pin-indicator {
+            color: rgba(255, 200, 0, 0.8);
+            font-size: 10px;
+            margin-right: 4px;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+            background: var(--menu-main-bg);
+        }
+
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(85px, 1fr));
+            gap: 8px;
+            padding: 4px 0;
+        }
+
+        .app-card {
+            text-align: center;
+            cursor: pointer;
+            padding: 12px 8px;
+            border-radius: 10px;
+            position: relative;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: var(--menu-card);
+            border: 1px solid transparent;
+        }
+
+        .app-card:hover {
+            background: var(--menu-card-hover);
+            transform: translateY(-2px);
+            border-color: var(--menu-border);
+        }
+
+        .app-card.pinned {
+            border-color: rgba(255, 200, 0, 0.3);
+        }
+
+        .app-card.pinned::before {
+            content: '📌';
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            font-size: 10px;
+            opacity: 0.7;
+        }
+
+        .app-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .app-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            transition: transform 0.2s;
+        }
+
+        .app-card:hover .app-icon img {
+            transform: scale(1.15);
+        }
+
+        .app-icon-fallback {
+            width: 48px;
+            height: 48px;
+            background: var(--menu-accent-soft);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+            font-size: 20px;
+            transition: transform 0.2s;
+        }
+
+        .app-card:hover .app-icon-fallback {
+            transform: scale(1.15);
+            background: var(--menu-accent);
+        }
+
+        .app-name {
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 11px;
+            line-height: 1.3;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            max-width: 100%;
+        }
+
+        .loading {
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 14px;
+        }
+
+        .no-apps {
+            color: rgba(255, 255, 255, 0.4);
+            text-align: center;
+            padding: 60px 20px;
+            font-size: 13px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .context-menu {
+            position: fixed;
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 8px;
+            padding: 4px 0;
+            z-index: 10001;
+            display: none;
+            min-width: 160px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+        }
+
+        .context-menu.show {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 8px 16px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item.pinned {
+            color: rgba(255, 200, 0, 0.9);
+        }
+
+        /* Hover submenu */
+        .category-submenu {
+            position: fixed;
+            background: var(--menu-bg);
+            border: 1px solid var(--menu-border);
+            border-radius: 8px;
+            padding: 12px;
+            z-index: 10002;
+            display: none;
+            min-width: 380px;
+            max-height: 450px;
+            overflow-y: auto;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(20px);
+        }
+
+        .category-submenu.show {
+            display: block;
+        }
+
+        .submenu-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <input type="text" class="search-box" id="searchInput" placeholder="Search apps...">
+            </div>
+            
+            <div class="category-list" id="categoryList"></div>
+        </div>
+        
+        <div class="main-content">
+            <div id="appsContainer">
+                <div class="loading">Loading applications...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" id="contextLaunch">Launch</div>
+        <div class="context-menu-item" id="contextPin">📌 Pin to Taskbar</div>
+        <div class="context-menu-item" id="contextPinMenu">⭐ Pin to Menu</div>
+    </div>
+
+    <div class="category-submenu" id="categorySubmenu">
+        <div class="submenu-grid" id="submenuGrid"></div>
+    </div>
+
+    <script>
+        const fs = require('fs');
+        const path = require('path');
+        const { exec } = require('child_process');
+        const TASKBAR_THEME_STORAGE_KEY = 'elveTaskbarTheme';
+
+        function normalizeHexColor(color, fallback) {
+            if (typeof color !== 'string') return fallback;
+            const trimmed = color.trim();
+            if (/^#[0-9a-f]{6}$/i.test(trimmed)) return trimmed.toLowerCase();
+            if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+                return '#' + trimmed.slice(1).split('').map((part) => part + part).join('').toLowerCase();
+            }
+            return fallback;
+        }
+
+        function clamp(value, min, max) {
+            return Math.min(Math.max(value, min), max);
+        }
+
+        function hexToRgba(hex, alpha) {
+            const normalized = normalizeHexColor(hex, '#000000');
+            const safeAlpha = clamp(Number(alpha), 0, 1);
+            const r = parseInt(normalized.slice(1, 3), 16);
+            const g = parseInt(normalized.slice(3, 5), 16);
+            const b = parseInt(normalized.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+        }
+
+        function applyElveTheme(theme = {}) {
+            const surface = normalizeHexColor(theme.surfaceColor, '#050505');
+            const accent = normalizeHexColor(theme.accentColor, '#b0b0b0');
+            const surfaceAlpha = clamp(Number(theme.surfaceAlpha ?? 0.35), 0, 0.99);
+            document.documentElement.style.setProperty('--menu-bg', hexToRgba(surface, surfaceAlpha));
+            document.documentElement.style.setProperty('--menu-sidebar-bg', hexToRgba(surface, surfaceAlpha));
+            document.documentElement.style.setProperty('--menu-main-bg', hexToRgba(surface, surfaceAlpha));
+            document.documentElement.style.setProperty('--menu-header-bg', hexToRgba(surface, surfaceAlpha));
+            document.documentElement.style.setProperty('--menu-border', hexToRgba(accent, 0.18));
+            document.documentElement.style.setProperty('--menu-card', hexToRgba(surface, Math.min(surfaceAlpha + 0.06, 0.99)));
+            document.documentElement.style.setProperty('--menu-card-hover', hexToRgba(accent, 0.12));
+            document.documentElement.style.setProperty('--menu-accent', hexToRgba(accent, 0.34));
+            document.documentElement.style.setProperty('--menu-accent-soft', hexToRgba(accent, 0.22));
+            document.documentElement.style.setProperty('--menu-accent-border', hexToRgba(accent, 0.45));
+        }
+
+        function loadTaskbarTheme() {
+            try {
+                return JSON.parse(localStorage.getItem(TASKBAR_THEME_STORAGE_KEY) || '{}');
+            } catch (error) {
+                return {};
+            }
+        }
+
+        window.applyElveTheme = applyElveTheme;
+        applyElveTheme(loadTaskbarTheme());
+        window.addEventListener('storage', (event) => {
+            if (event.key === TASKBAR_THEME_STORAGE_KEY) {
+                applyElveTheme(loadTaskbarTheme());
+            }
+        });
+
+        // Load pinned apps from parent or localStorage
+        let pinnedAppIds = [];
+        try {
+            const stored = localStorage.getItem('pinnedMenuApps');
+            if (stored) pinnedAppIds = JSON.parse(stored);
+        } catch (e) {}
+
+        // Application cache for fast category switching
+        let allApps = [];
+        let appsByCategory = {};
+        let filteredApps = [];
+        let currentCategory = 'all';
+        let searchQuery = '';
+        let contextMenuApp = null;
+        let hoverTimeout = null;
+        let currentSubmenu = null;
+
+        const categoryMap = {
+            'AudioVideo': 'Audio & Video',
+            'Audio': 'Audio',
+            'Video': 'Video',
+            'Development': 'Development',
+            'Education': 'Education',
+            'Game': 'Games',
+            'Graphics': 'Graphics',
+            'Network': 'Internet',
+            'Office': 'Office',
+            'Science': 'Science',
+            'Settings': 'Settings',
+            'System': 'System',
+            'Utility': 'Utilities'
+        };
+
+        // Pre-render all categories in memory for instant switching
+        let categoryRenderedElements = {};
+
+        // Scan desktop files and build cache
+        function scanDesktopFiles() {
+            console.log('[AppMenu] Scanning desktop files...');
+            const startTime = Date.now();
+            
+            const dirs = [
+                '/usr/share/applications',
+                '/usr/local/share/applications',
+                path.join(process.env.HOME, '.local/share/applications')
+            ];
+
+            dirs.forEach(dir => {
+                if (!fs.existsSync(dir)) return;
+                
+                try {
+                    const files = fs.readdirSync(dir);
+                    files.forEach(file => {
+                        if (!file.endsWith('.desktop')) return;
+                        
+                        const app = parseDesktopFile(path.join(dir, file));
+                        if (app && app.name && app.exec && !app.noDisplay) {
+                            allApps.push(app);
+                            
+                            // Add to category cache
+                            if (app.categories && app.categories.length > 0) {
+                                app.categories.forEach(cat => {
+                                    if (!appsByCategory[cat]) {
+                                        appsByCategory[cat] = [];
+                                    }
+                                    appsByCategory[cat].push(app);
+                                });
+                            } else {
+                                if (!appsByCategory['Other']) {
+                                    appsByCategory['Other'] = [];
+                                }
+                                appsByCategory['Other'].push(app);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('[AppMenu] Error reading directory:', dir, e);
+                }
+            });
+
+            allApps.sort((a, b) => a.name.localeCompare(b.name));
+            
+            // Sort apps in each category
+            Object.keys(appsByCategory).forEach(cat => {
+                appsByCategory[cat].sort((a, b) => a.name.localeCompare(b.name));
+            });
+            
+            console.log(`[AppMenu] Loaded ${allApps.length} apps in ${Date.now() - startTime}ms`);
+            
+            // PRE-RENDER all category grids
+            preRenderAllCategories();
+            
+            renderCategories();
+            filterAndRender();
+        }
+
+        function preRenderAllCategories() {
+            console.log('[AppMenu] Pre-rendering all categories...');
+            const startTime = Date.now();
+            
+            // Render 'all' category
+            categoryRenderedElements['all'] = createAppsGrid(allApps);
+            
+            // Render 'pinned' category
+            const pinnedApps = allApps.filter(app => app.isPinned);
+            if (pinnedApps.length > 0) {
+                categoryRenderedElements['pinned'] = createAppsGrid(pinnedApps);
+            }
+            
+            // Render each category
+            Object.keys(appsByCategory).forEach(cat => {
+                if (appsByCategory[cat].length > 0) {
+                    categoryRenderedElements[cat] = createAppsGrid(appsByCategory[cat]);
+                }
+            });
+            
+            console.log(`[AppMenu] Pre-rendered ${Object.keys(categoryRenderedElements).length} categories in ${Date.now() - startTime}ms`);
+        }
+
+        function createAppsGrid(apps) {
+            const grid = document.createElement('div');
+            grid.className = 'apps-grid';
+            
+            apps.forEach(app => {
+                grid.appendChild(createAppCard(app));
+            });
+            
+            return grid;
+        }
+
+        function parseDesktopFile(filePath) {
+            try {
+                const content = fs.readFileSync(filePath, 'utf8');
+                const app = { 
+                    id: path.basename(filePath, '.desktop'),
+                    filePath: filePath,
+                    name: '',
+                    exec: '',
+                    icon: '',
+                    categories: [],
+                    noDisplay: false,
+                    terminal: false,
+                    isPinned: false
+                };
+
+                let inEntry = false;
+                
+                content.split('\n').forEach(line => {
+                    line = line.trim();
+                    
+                    if (line === '[Desktop Entry]') {
+                        inEntry = true;
+                        return;
+                    }
+                    
+                    if (line.startsWith('[') && inEntry) {
+                        inEntry = false;
+                        return;
+                    }
+                    
+                    if (!inEntry) return;
+                    
+                    if (line.startsWith('Name=') && !line.startsWith('Name[')) {
+                        app.name = line.slice(5);
+                    } else if (line.startsWith('Exec=')) {
+                        app.exec = line.slice(5);
+                    } else if (line.startsWith('Icon=')) {
+                        app.icon = line.slice(5);
+                    } else if (line.startsWith('Categories=')) {
+                        app.categories = line.slice(11).split(';').filter(Boolean);
+                    } else if (line.startsWith('NoDisplay=')) {
+                        app.noDisplay = line.slice(10).toLowerCase() === 'true';
+                    } else if (line.startsWith('Terminal=')) {
+                        app.terminal = line.slice(9).toLowerCase() === 'true';
+                    }
+                });
+
+                // Find icon path
+                if (app.icon) {
+                    app.iconPath = findIconPath(app.icon);
+                }
+
+                // Check if pinned
+                app.isPinned = pinnedAppIds.includes(app.id);
+
+                return app;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function findIconPath(iconName) {
+            if (!iconName) return null;
+            if (iconName.startsWith('/') && fs.existsSync(iconName)) return iconName;
+            
+            const base = iconName.replace(/\.(png|svg|xpm)$/, '');
+            const sizes = ['48x48', '64x64', '128x128', 'scalable', '32x32', '256x256'];
+            const exts = ['.png', '.svg', '.xpm'];
+            const themes = [
+                '/usr/share/icons/hicolor',
+                '/usr/share/icons/breeze',
+                '/usr/share/icons/breeze-dark',
+                '/usr/share/icons/oxygen',
+                '/usr/share/icons/Papirus',
+                '/usr/share/icons/Papirus-Dark',
+                '/usr/share/icons/gnome',
+                '/usr/share/icons/Adwaita',
+                '/usr/share/pixmaps',
+                path.join(process.env.HOME, '.local/share/icons'),
+                path.join(process.env.HOME, '.icons')
+            ];
+
+            for (const ext of exts) {
+                const p = '/usr/share/pixmaps/' + base + ext;
+                if (fs.existsSync(p)) return p;
+            }
+
+            for (const theme of themes) {
+                if (!fs.existsSync(theme)) continue;
+
+                for (const ext of exts) {
+                    const p = path.join(theme, base + ext);
+                    if (fs.existsSync(p)) return p;
+                }
+
+                for (const size of sizes) {
+                    for (const cat of ['apps', 'applications', 'mimetypes', 'categories']) {
+                        for (const ext of exts) {
+                            const p = path.join(theme, size, cat, base + ext);
+                            if (fs.existsSync(p)) return p;
+                        }
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoryList');
+            container.innerHTML = '';
+
+            // Pinned apps category
+            const pinnedApps = allApps.filter(app => app.isPinned);
+            if (pinnedApps.length > 0) {
+                const pinnedItem = createCategoryItem('⭐ Pinned', 'pinned', pinnedApps.length, true);
+                container.appendChild(pinnedItem);
+            }
+
+            // All category
+            const allItem = createCategoryItem('All Apps', 'all', allApps.length);
+            container.appendChild(allItem);
+
+            // Main categories
+            const mainCategories = [
+                'Development', 'Graphics', 'Internet', 'Office', 
+                'AudioVideo', 'Audio', 'Video', 'Game', 'Utility', 
+                'System', 'Settings', 'Education', 'Science'
+            ];
+
+            mainCategories.forEach(cat => {
+                const apps = appsByCategory[cat];
+                if (apps && apps.length > 0) {
+                    const displayName = categoryMap[cat] || cat;
+                    const item = createCategoryItem(displayName, cat, apps.length);
+                    container.appendChild(item);
+                }
+            });
+
+            if (appsByCategory['Other'] && appsByCategory['Other'].length > 0) {
+                const item = createCategoryItem('Other', 'Other', appsByCategory['Other'].length);
+                container.appendChild(item);
+            }
+        }
+
+        function createCategoryItem(name, category, count, isPinned = false) {
+            const item = document.createElement('div');
+            item.className = 'category-item' + (category === currentCategory ? ' active' : '') + (isPinned ? ' pinned' : '');
+            item.dataset.category = category;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = name;
+            
+            const countSpan = document.createElement('span');
+            countSpan.className = 'category-count';
+            countSpan.textContent = count;
+            
+            item.appendChild(nameSpan);
+            item.appendChild(countSpan);
+            
+            // Hover switches category immediately
+            item.onmouseenter = () => selectCategory(category);
+            item.onclick = () => selectCategory(category);
+            
+            return item;
+        }
+
+        function selectCategory(category) {
+            currentCategory = category;
+            searchQuery = '';
+            document.getElementById('searchInput').value = '';
+            
+            document.querySelectorAll('.category-item').forEach(item => {
+                item.classList.toggle('active', item.dataset.category === category);
+            });
+            
+            hideSubmenu();
+            filterAndRender();
+        }
+
+        function showCategorySubmenu(category, element) {
+            const submenu = document.getElementById('categorySubmenu');
+            const grid = document.getElementById('submenuGrid');
+            
+            let apps = [];
+            if (category === 'all') {
+                apps = allApps.slice(0, 20); // Limit to 20
+            } else if (category === 'pinned') {
+                apps = allApps.filter(app => app.isPinned);
+            } else {
+                apps = (appsByCategory[category] || []).slice(0, 20);
+            }
+            
+            if (apps.length === 0) return;
+            
+            grid.innerHTML = '';
+            apps.forEach(app => {
+                grid.appendChild(createAppCard(app, true));
+            });
+            
+            submenu.classList.add('show');
+            currentSubmenu = submenu;
+            
+            // Position with Popper.js
+            if (window.Popper) {
+                window.Popper.createPopper(element, submenu, {
+                    placement: 'right-start',
+                    modifiers: [
+                        {
+                            name: 'offset',
+                            options: {
+                                offset: [0, 8],
+                            },
+                        },
+                    ],
+                });
+            }
+            
+            // Hide on mouse leave
+            submenu.onmouseenter = () => clearTimeout(hoverTimeout);
+            submenu.onmouseleave = () => {
+                hoverTimeout = setTimeout(hideSubmenu, 300);
+            };
+        }
+
+        function hideSubmenu() {
+            const submenu = document.getElementById('categorySubmenu');
+            submenu.classList.remove('show');
+            currentSubmenu = null;
+        }
+
+        function filterAndRender() {
+            const startTime = Date.now();
+            
+            if (currentCategory === 'all') {
+                filteredApps = [...allApps];
+            } else if (currentCategory === 'pinned') {
+                filteredApps = allApps.filter(app => app.isPinned);
+            } else {
+                filteredApps = appsByCategory[currentCategory] ? [...appsByCategory[currentCategory]] : [];
+            }
+
+            if (searchQuery) {
+                const query = searchQuery.toLowerCase();
+                filteredApps = allApps.filter(app => 
+                    app.name.toLowerCase().includes(query) ||
+                    (app.exec && app.exec.toLowerCase().includes(query)) ||
+                    (app.id && app.id.toLowerCase().includes(query))
+                );
+            }
+
+            console.log(`[AppMenu] Filtered to ${filteredApps.length} apps in ${Date.now() - startTime}ms`);
+            renderApps();
+        }
+
+        function renderApps() {
+            const container = document.getElementById('appsContainer');
+            
+            // Use pre-rendered grid if available and no search
+            if (!searchQuery && categoryRenderedElements[currentCategory]) {
+                console.log('[AppMenu] Using pre-rendered grid for', currentCategory);
+                container.innerHTML = '';
+                container.appendChild(categoryRenderedElements[currentCategory].cloneNode(true));
+                return;
+            }
+            
+            // Fallback for search results
+            if (filteredApps.length === 0) {
+                container.innerHTML = '<div class="no-apps">No applications found</div>';
+                return;
+            }
+
+            const grid = document.createElement('div');
+            grid.className = 'apps-grid';
+
+            filteredApps.forEach(app => {
+                grid.appendChild(createAppCard(app));
+            });
+
+            container.innerHTML = '';
+            container.appendChild(grid);
+        }
+
+        function createAppCard(app, isSubmenu = false) {
+            const card = document.createElement('div');
+            card.className = 'app-card' + (app.isPinned && !isSubmenu ? ' pinned' : '');
+            card.dataset.appId = app.id;
+            card.dataset.isSubmenu = isSubmenu ? '1' : '0';
+            
+            const iconDiv = document.createElement('div');
+            iconDiv.className = 'app-icon';
+            
+            if (app.iconPath && fs.existsSync(app.iconPath)) {
+                const img = document.createElement('img');
+                img.src = 'file://' + app.iconPath;
+                img.onerror = () => {
+                    iconDiv.innerHTML = '';
+                    const fallback = document.createElement('div');
+                    fallback.className = 'app-icon-fallback';
+                    fallback.textContent = app.name.charAt(0).toUpperCase();
+                    iconDiv.appendChild(fallback);
+                };
+                iconDiv.appendChild(img);
+            } else {
+                const fallback = document.createElement('div');
+                fallback.className = 'app-icon-fallback';
+                fallback.textContent = app.name.charAt(0).toUpperCase();
+                iconDiv.appendChild(fallback);
+            }
+
+            const name = document.createElement('div');
+            name.className = 'app-name';
+            name.textContent = app.name;
+
+            card.appendChild(iconDiv);
+            card.appendChild(name);
+            
+            return card;
+        }
+
+        function getAppById(appId) {
+            return allApps.find(app => app.id === appId) || null;
+        }
+
+        function postToHost(payload) {
+            const targets = [];
+            if (window.parent && window.parent !== window) targets.push(window.parent);
+            if (window.top && window.top !== window) targets.push(window.top);
+            for (const target of targets) {
+                try {
+                    target.postMessage(payload, '*');
+                    return true;
+                } catch (e) {}
+            }
+            return false;
+        }
+
+        function launchApp(app) {
+            console.log('[AppMenu] Launching:', app.name, '→', app.exec);
+
+            const dispatched = postToHost({
+                action: 'launchApp',
+                app: {
+                    name: app.name,
+                    exec: app.exec,
+                    desktopFile: app.id,
+                    appId: app.id,
+                    terminal: !!app.terminal
+                }
+            });
+
+            if (!dispatched) {
+                let command = `gtk-launch "${String(app.id || '').replace(/"/g, '\\"')}"`;
+                exec(command, (gtkErr) => {
+                    if (!gtkErr) return;
+                    command = (app.exec || '').replace(/%[fFuUdDnNickvm]/g, '').trim();
+                    if (!command) return;
+                    exec(command, (err, stdout, stderr) => {
+                        if (err) {
+                            console.error('[AppMenu] Launch error:', err.message);
+                            console.error('[AppMenu] stderr:', stderr);
+                        }
+                    });
+                });
+            }
+
+            postToHost({ action: 'closeAppMenu' });
+        }
+
+        function showContextMenu(e, app) {
+            contextMenuApp = app;
+            const menu = document.getElementById('contextMenu');
+            
+            // Update pin status
+            const pinMenuItem = document.getElementById('contextPinMenu');
+            if (app.isPinned) {
+                pinMenuItem.textContent = '⭐ Unpin from Menu';
+                pinMenuItem.classList.add('pinned');
+            } else {
+                pinMenuItem.textContent = '⭐ Pin to Menu';
+                pinMenuItem.classList.remove('pinned');
+            }
+            
+            menu.style.left = e.clientX + 'px';
+            menu.style.top = e.clientY + 'px';
+            menu.classList.add('show');
+            
+            setTimeout(() => {
+                document.addEventListener('click', closeContextMenu);
+            }, 100);
+        }
+
+        function closeContextMenu() {
+            document.getElementById('contextMenu').classList.remove('show');
+            document.removeEventListener('click', closeContextMenu);
+        }
+
+        document.getElementById('contextLaunch').onclick = () => {
+            if (contextMenuApp) launchApp(contextMenuApp);
+        };
+
+        document.getElementById('contextPin').onclick = () => {
+            if (contextMenuApp) {
+                postToHost({
+                    action: 'pinApp',
+                    app: {
+                        name: contextMenuApp.name,
+                        exec: contextMenuApp.exec,
+                        icon: contextMenuApp.iconPath || contextMenuApp.icon,
+                        desktopFile: contextMenuApp.id
+                    }
+                });
+            }
+        };
+
+        document.getElementById('contextPinMenu').onclick = () => {
+            if (!contextMenuApp) return;
+            
+            if (contextMenuApp.isPinned) {
+                // Unpin
+                pinnedAppIds = pinnedAppIds.filter(id => id !== contextMenuApp.id);
+                contextMenuApp.isPinned = false;
+            } else {
+                // Pin
+                pinnedAppIds.push(contextMenuApp.id);
+                contextMenuApp.isPinned = true;
+            }
+            
+            // Save
+            localStorage.setItem('pinnedMenuApps', JSON.stringify(pinnedAppIds));
+            
+            // Refresh
+            renderCategories();
+            filterAndRender();
+        };
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            searchQuery = e.target.value;
+            
+            // Switch to "All Apps" when searching
+            if (searchQuery && currentCategory !== 'all') {
+                selectCategory('all');
+            } else {
+                filterAndRender();
+            }
+        });
+
+        // Delegated handlers so cloned pre-rendered cards remain interactive
+        document.getElementById('appsContainer').addEventListener('click', (e) => {
+            const card = e.target.closest('.app-card');
+            if (!card) return;
+            const app = getAppById(card.dataset.appId);
+            if (!app) return;
+            if (card.dataset.isSubmenu === '1') hideSubmenu();
+            launchApp(app);
+        });
+
+        document.getElementById('appsContainer').addEventListener('contextmenu', (e) => {
+            const card = e.target.closest('.app-card');
+            if (!card) return;
+            const app = getAppById(card.dataset.appId);
+            if (!app) return;
+            e.preventDefault();
+            showContextMenu(e, app);
+        });
+
+        // Close submenu when clicking main area
+        document.getElementById('appsContainer').addEventListener('click', hideSubmenu);
+
+        // Initialize
+        scanDesktopFiles();
+
+        console.log('[AppMenu] Initialized with Popper.js');
+    </script>
+
+</body>
+</html>

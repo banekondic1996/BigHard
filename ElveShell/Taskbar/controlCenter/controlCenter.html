@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="transparent" content="true">
+  <title>Control Center</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: rgba(18, 18, 20, 0.35);
+      --card: rgba(255,255,255,0.07);
+      --card-hover: rgba(255,255,255,0.12);
+      --card-active: rgba(176,176,176,0.24);
+      --border: rgba(255,255,255,0.09);
+      --text: rgba(255,255,255,0.9);
+      --text-dim: rgba(255,255,255,0.45);
+      --accent: #b0b0b0;
+      --accent2: #d6d6d6;
+      --green: #5fff8a;
+      --red: #ff6b6b;
+      --yellow: #ffd06b;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      color: var(--text);
+      user-select: none;
+      overflow: hidden;
+    }
+
+    #cc-root {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      border-radius: 16px;
+      backdrop-filter: blur(32px) saturate(180%);
+      -webkit-backdrop-filter: blur(32px) saturate(180%);
+      border: 1px solid var(--border);
+      box-shadow: 0 16px 48px rgba(0,0,0,0.65);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Drag region */
+    #cc-titlebar {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      -webkit-app-region: drag;
+      flex-shrink: 0;
+    }
+    #cc-title { font-size: 12px; font-weight: 600; color: var(--text-dim); letter-spacing: 0.06em; text-transform: uppercase; }
+    #cc-close {
+      -webkit-app-region: no-drag;
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      background: rgba(255,80,80,0.35);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 9px; color: transparent;
+      transition: background 0.15s, color 0.15s;
+    }
+    #cc-close:hover { background: #ff5050; color: white; }
+
+    /* Main scroll area */
+    #cc-body {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 0 12px 12px;
+    }
+    #cc-body::-webkit-scrollbar { width: 3px; }
+    #cc-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+    /* ─── Toggle Grid ─── */
+    .toggle-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .toggle-btn {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 12px 10px 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+      border: 1px solid transparent;
+    }
+    .toggle-btn:hover { background: var(--card-hover); }
+    .toggle-btn.on { background: var(--card-active); border-color: var(--border); }
+
+    .toggle-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .toggle-btn.on .toggle-icon { background: var(--card-hover); }
+    .toggle-icon svg { opacity: 0.8; }
+    .toggle-btn.on .toggle-icon svg { opacity: 1; }
+
+    .toggle-label { font-size: 10px; color: var(--text-dim); font-weight: 500; }
+    .toggle-btn.on .toggle-label { color: rgba(255,255,255,0.8); }
+
+    .status-dot {
+      position: absolute;
+      top: 8px; right: 8px;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+    .status-dot.green  { background: var(--green); box-shadow: 0 0 4px var(--green); }
+    .status-dot.yellow { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
+    .status-dot.red    { background: var(--red); box-shadow: 0 0 4px var(--red); }
+
+    /* ─── Sliders ─── */
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+    }
+    .slider-row svg { opacity: 0.6; flex-shrink: 0; }
+    .slider-row svg.clickable { cursor: pointer; transition: opacity 0.12s; }
+    .slider-row svg.clickable:hover { opacity: 1; }
+
+    .slider-wrap { flex: 1; position: relative; height: 20px; display: flex; align-items: center; }
+    .slider-track-fill {
+      position: absolute;
+      left: 0; top: 50%;
+      transform: translateY(-50%);
+      height: 4px;
+      background: var(--accent);
+      border-radius: 2px;
+      pointer-events: none;
+      transition: width 0.05s;
+    }
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+      z-index: 1;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    }
+    .slider-val { font-size: 11px; color: var(--text-dim); width: 26px; text-align: right; flex-shrink: 0; }
+
+    /* ─── WiFi Panel ─── */
+    #wifi-panel {
+      background: var(--card);
+      border-radius: 12px;
+      padding: 10px;
+      margin-bottom: 8px;
+      display: none;
+    }
+    #wifi-panel.open { display: block; }
+
+    .wifi-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .wifi-header-label { font-size: 11px; font-weight: 600; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+    #wifi-scan-btn {
+      font-size: 10.5px;
+      color: var(--accent);
+      cursor: pointer;
+      padding: 3px 8px;
+      border-radius: 5px;
+      background: rgba(176,176,176,0.12);
+      transition: background 0.12s;
+    }
+    #wifi-scan-btn:hover { background: rgba(176,176,176,0.22); }
+
+    #wifi-list { display: flex; flex-direction: column; gap: 4px; max-height: 160px; overflow-y: auto; }
+    #wifi-list::-webkit-scrollbar { width: 3px; }
+    #wifi-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 2px; }
+
+    .wifi-net {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .wifi-net:hover { background: rgba(255,255,255,0.07); }
+    .wifi-net.connected { background: rgba(95,255,138,0.08); }
+
+    .wifi-name { flex: 1; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wifi-signal { font-size: 10px; color: var(--text-dim); flex-shrink: 0; }
+    .wifi-lock { font-size: 11px; color: var(--text-dim); flex-shrink: 0; }
+    .wifi-conn-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; box-shadow: 0 0 4px var(--green); }
+
+    /* Password prompt */
+    #wifi-pw-row {
+      display: none;
+      gap: 6px;
+      margin-top: 8px;
+      align-items: center;
+    }
+    #wifi-pw-row.show { display: flex; }
+    #wifi-pw-row input {
+      flex: 1;
+      padding: 7px 10px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 7px;
+      color: white;
+      font-size: 12px;
+      font-family: inherit;
+      outline: none;
+    }
+    #wifi-pw-row input:focus { border-color: var(--accent2); }
+    #wifi-pw-row input::placeholder { color: var(--text-dim); }
+    #wifi-pw-connect {
+      padding: 7px 10px;
+      background: rgba(176,176,176,0.35);
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 11.5px;
+      font-family: inherit;
+      color: white;
+      border: none;
+      transition: background 0.12s;
+    }
+    #wifi-pw-connect:hover { background: rgba(176,176,176,0.55); }
+
+    #wifi-status { font-size: 10.5px; color: var(--text-dim); margin-top: 5px; min-height: 14px; }
+
+    /* ─── Power Row ─── */
+    .power-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .power-action {
+      background: var(--card);
+      border-radius: 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 10px 4px 8px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .power-action:hover { background: var(--card-hover); }
+    .power-action.danger:hover { background: rgba(255,80,80,0.2); }
+    .power-action svg { opacity: 0.75; }
+    .power-action:hover svg { opacity: 1; }
+    .power-action span { font-size: 9px; color: var(--text-dim); }
+    .power-action:hover span { color: var(--text); }
+
+    /* Loading spinner */
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid rgba(255,255,255,0.2);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .section-gap { height: 8px; }
+  </style>
+</head>
+<body>
+<div id="cc-root">
+  <div id="cc-titlebar">
+    <span id="cc-title">Control Center</span>
+    <div id="cc-close" onclick="closeCC()">✕</div>
+  </div>
+
+  <div id="cc-body">
+    <!-- Toggle Grid -->
+    <div class="toggle-grid">
+      <!-- WiFi -->
+      <div class="toggle-btn" id="btn-wifi" onclick="toggleWifi()">
+        <div class="status-dot" id="dot-wifi"></div>
+        <div class="toggle-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
+            <path d="M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01"/>
+          </svg>
+        </div>
+        <span class="toggle-label">Wi-Fi</span>
+      </div>
+
+      <!-- Bluetooth -->
+      <div class="toggle-btn" id="btn-bt" onclick="toggleBluetooth()">
+        <div class="status-dot" id="dot-bt"></div>
+        <div class="toggle-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
+            <polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/>
+          </svg>
+        </div>
+        <span class="toggle-label">Bluetooth</span>
+      </div>
+
+      <!-- Airplane -->
+      <div class="toggle-btn" id="btn-airplane" onclick="toggleAirplane()">
+        <div class="status-dot" id="dot-airplane"></div>
+        <div class="toggle-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
+            <path d="M17.8 19.2L16 11l3.5-3.5C21 6 21 4 19.5 2.5S18 2 16.5 3.5L13 7 4.8 5.2a1 1 0 00-.9.3l-1 1c-.3.4-.3.9.1 1.2L9 12l-4 4-1.5-.5c-.3-.1-.6 0-.8.2l-.5.5c-.3.3-.2.7.1.9l3.7 1.8 1.8 3.7c.2.3.6.4.9.1l.5-.5c.2-.2.3-.5.2-.8L9 20l4-4 4.9 5.1c.3.4.8.4 1.2.1l1-1c.2-.3.3-.7.2-1z"/>
+          </svg>
+        </div>
+        <span class="toggle-label">Airplane</span>
+      </div>
+
+      <!-- Dark Mode -->
+      <div class="toggle-btn on" id="btn-dark" onclick="toggleDarkMode()">
+        <div class="toggle-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </div>
+        <span class="toggle-label">Dark Mode</span>
+      </div>
+
+      <!-- Night Light -->
+      <div class="toggle-btn" id="btn-night" onclick="toggleNightLight()">
+        <div class="toggle-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="1" x2="12" y2="3"/>
+            <line x1="12" y1="21" x2="12" y2="23"/>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          </svg>
+        </div>
+        <span class="toggle-label">Night Light</span>
+      </div>
+
+      <!-- Do Not Disturb -->
+      <div class="toggle-btn" id="btn-dnd" onclick="toggleDND()">
+        <div class="toggle-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.85)" stroke-width="2" stroke-linecap="round">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+            <line x1="1" y1="1" x2="23" y2="23"/>
+          </svg>
+        </div>
+        <span class="toggle-label">DND</span>
+      </div>
+    </div>
+
+    <!-- WiFi Networks Panel -->
+    <div id="wifi-panel">
+      <div class="wifi-header">
+        <span class="wifi-header-label">Networks</span>
+        <div id="wifi-scan-btn" onclick="scanWifi()">Scan</div>
+      </div>
+      <div id="wifi-list">
+        <div style="font-size:11.5px;color:var(--text-dim);text-align:center;padding:12px 0">Click Scan to find networks</div>
+      </div>
+      <div id="wifi-pw-row">
+        <input type="password" id="wifi-pw-input" placeholder="Password…">
+        <button id="wifi-pw-connect" onclick="connectWithPw()">Join</button>
+      </div>
+      <div id="wifi-status"></div>
+    </div>
+
+    <!-- Brightness Slider -->
+    <div class="slider-row">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="5"/>
+        <line x1="12" y1="1" x2="12" y2="3"/>
+        <line x1="12" y1="21" x2="12" y2="23"/>
+        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+        <line x1="1" y1="12" x2="3" y2="12"/>
+        <line x1="21" y1="12" x2="23" y2="12"/>
+        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+      </svg>
+      <div class="slider-wrap">
+        <div class="slider-track-fill" id="brightness-fill" style="width:75%"></div>
+        <input type="range" min="1" max="100" value="75" id="brightness-slider"
+          oninput="onBrightness(this.value)">
+      </div>
+      <span class="slider-val" id="brightness-val">75</span>
+    </div>
+
+    <!-- Volume Slider -->
+    <div class="slider-row">
+      <svg id="vol-icon" class="clickable" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.65)" stroke-width="2" stroke-linecap="round"
+        onclick="toggleMute()">
+        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>
+      </svg>
+      <div class="slider-wrap">
+        <div class="slider-track-fill" id="volume-fill" style="width:50%"></div>
+        <input type="range" min="0" max="100" value="50" id="volume-slider"
+          oninput="onVolume(this.value)">
+      </div>
+      <span class="slider-val" id="volume-val">50</span>
+    </div>
+
+    <div class="section-gap"></div>
+
+    <!-- Power Row -->
+    <div class="power-row">
+      <div class="power-action" onclick="powerAction('lock')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="11" width="18" height="11" rx="2"/>
+          <path d="M7 11V7a5 5 0 0110 0v4"/>
+        </svg>
+        <span>Lock</span>
+      </div>
+      <div class="power-action" onclick="powerAction('logout')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round">
+          <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+        </svg>
+        <span>Logout</span>
+      </div>
+      <div class="power-action" onclick="powerAction('sleep')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round">
+          <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+        </svg>
+        <span>Sleep</span>
+      </div>
+      <div class="power-action" onclick="powerAction('restart')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-linecap="round">
+          <polyline points="1 4 1 10 7 10"/>
+          <path d="M3.51 15a9 9 0 1 0 .49-4"/>
+        </svg>
+        <span>Restart</span>
+      </div>
+      <div class="power-action danger" onclick="powerAction('shutdown')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ff7070" stroke-width="2" stroke-linecap="round">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/>
+        </svg>
+        <span style="color:#ff7070">Shut Down</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  'use strict';
+  const { exec } = require('child_process');
+  const TASKBAR_THEME_STORAGE_KEY = 'elveTaskbarTheme';
+
+  function normalizeHexColor(color, fallback) {
+    if (typeof color !== 'string') return fallback;
+    const trimmed = color.trim();
+    if (/^#[0-9a-f]{6}$/i.test(trimmed)) return trimmed.toLowerCase();
+    if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+      return '#' + trimmed.slice(1).split('').map((part) => part + part).join('').toLowerCase();
+    }
+    return fallback;
+  }
+
+  function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+  }
+
+  function hexToRgba(hex, alpha) {
+    const normalized = normalizeHexColor(hex, '#000000');
+    const safeAlpha = clamp(Number(alpha), 0, 1);
+    const r = parseInt(normalized.slice(1, 3), 16);
+    const g = parseInt(normalized.slice(3, 5), 16);
+    const b = parseInt(normalized.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
+  }
+
+  function applyElveTheme(theme = {}) {
+    const surface = normalizeHexColor(theme.surfaceColor, '#050505');
+    const accent = normalizeHexColor(theme.accentColor, '#b0b0b0');
+    const surfaceAlpha = clamp(Number(theme.surfaceAlpha ?? 0.35), 0, 0.99);
+    document.documentElement.style.setProperty('--bg', hexToRgba(surface, surfaceAlpha));
+    document.documentElement.style.setProperty('--card', hexToRgba(accent, 0.14));
+    document.documentElement.style.setProperty('--card-hover', hexToRgba(accent, 0.22));
+    document.documentElement.style.setProperty('--card-active', hexToRgba(accent, 0.26));
+    document.documentElement.style.setProperty('--border', hexToRgba(accent, 0.14));
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent2', hexToRgba(accent, 0.66));
+  }
+
+  function loadTaskbarTheme() {
+    try {
+      return JSON.parse(localStorage.getItem(TASKBAR_THEME_STORAGE_KEY) || '{}');
+    } catch (error) {
+      return {};
+    }
+  }
+
+  window.applyElveTheme = applyElveTheme;
+  applyElveTheme(loadTaskbarTheme());
+  window.addEventListener('storage', (event) => {
+    if (event.key === TASKBAR_THEME_STORAGE_KEY) {
+      applyElveTheme(loadTaskbarTheme());
+    }
+  });
+  const fs = require('fs');
+  const os = require('os');
+
+  // ─── Close ───────────────────────────────────────────────────
+  function closeCC() {
+    window.close();
+  }
+
+  // ─── Toggle state ────────────────────────────────────────────
+  const state = {
+    wifi: false, bt: false, airplane: false,
+    dark: true, night: false, dnd: false,
+    muted: false, volume: 50, brightness: 75,
+    nightLightPid: null
+  };
+
+  function setToggle(id, on) {
+    const btn = document.getElementById('btn-' + id);
+    if (on) btn.classList.add('on');
+    else     btn.classList.remove('on');
+  }
+
+  function setDot(id, color) {
+    const dot = document.getElementById('dot-' + id);
+    dot.className = 'status-dot' + (color ? ' ' + color : '');
+  }
+
+  // ─── WiFi ────────────────────────────────────────────────────
+  let wifiEnabled = false;
+  let pendingSSID = '';
+  let wifiInterface = '';
+
+  // Detect WiFi interface on startup
+  function detectWifiInterface() {
+    exec('nmcli device status | grep wifi | awk \'{print $1}\'', (err, stdout) => {
+      if (!err && stdout.trim()) {
+        wifiInterface = stdout.trim().split('\n')[0]; // Get first wifi interface
+        console.log('[CC] WiFi interface detected:', wifiInterface);
+        checkWifiStatus();
+      } else {
+        // Fallback: try common interface names
+        exec('ls /sys/class/net/ | grep -E "^(wlan|wlp)"', (e2, out2) => {
+          if (!e2 && out2.trim()) {
+            wifiInterface = out2.trim().split('\n')[0];
+            console.log('[CC] WiFi interface fallback:', wifiInterface);
+            checkWifiStatus();
+          }
+        });
+      }
+    });
+  }
+
+  function checkWifiStatus() {
+    exec('nmcli radio wifi', (err, stdout) => {
+      if (!err) {
+        wifiEnabled = stdout.trim() === 'enabled';
+        setToggle('wifi', wifiEnabled);
+        setDot('wifi', wifiEnabled ? 'yellow' : '');
+        
+        if (wifiEnabled) {
+          // Check if connected
+          exec('nmcli -t -f ACTIVE,SSID dev wifi | grep "^yes:"', (e2, out2) => {
+            if (!e2 && out2.trim()) {
+              setDot('wifi', 'green');
+            }
+          });
+        }
+      }
+    });
+  }
+
+  function toggleWifi() {
+    if (!wifiEnabled) {
+      enableWifi();
+    } else {
+      disableWifi();
+    }
+  }
+
+  function enableWifi() {
+    exec('nmcli radio wifi on', (err) => {
+      if (!err) {
+        wifiEnabled = true;
+        setToggle('wifi', true);
+        setDot('wifi', 'yellow');
+        document.getElementById('wifi-panel').classList.add('open');
+        setTimeout(scanWifi, 500);
+      }
+    });
+  }
+
+  function disableWifi() {
+    exec('nmcli radio wifi off', (err) => {
+      if (!err) {
+        wifiEnabled = false;
+        setToggle('wifi', false);
+        setDot('wifi', '');
+        document.getElementById('wifi-panel').classList.remove('open');
+      }
+    });
+  }
+
+  function scanWifi() {
+    const list = document.getElementById('wifi-list');
+    const btn  = document.getElementById('wifi-scan-btn');
+    list.innerHTML = '<div style="display:flex;align-items:center;gap:8px;justify-content:center;padding:12px 0;color:var(--text-dim);font-size:11.5px"><span class="spinner"></span> Scanning…</div>';
+    btn.textContent = 'Scanning…';
+
+    // Rescan with nmcli
+    exec('nmcli device wifi rescan', () => {
+      setTimeout(() => {
+        exec('nmcli -f SSID,SIGNAL,SECURITY device wifi list', (err, stdout) => {
+          btn.textContent = 'Scan';
+          if (err) {
+            list.innerHTML = '<div style="font-size:11.5px;color:var(--text-dim);padding:8px">Could not scan. Enable Wi-Fi.</div>';
+            return;
+          }
+
+          // Get currently connected SSID
+          exec('nmcli -t -f ACTIVE,SSID dev wifi | grep "^yes:"', (e2, connOut) => {
+            const connectedSSID = (!e2 && connOut) ? connOut.replace('yes:', '').trim() : '';
+            renderWifiList(stdout, connectedSSID);
+          });
+        });
+      }, 1500);
+    });
+  }
+
+  function renderWifiList(raw, connectedSSID) {
+    const list = document.getElementById('wifi-list');
+    const lines = raw.split('\n').slice(1); // Skip header
+    const nets = [];
+
+    lines.forEach(line => {
+      const match = line.match(/^(.+?)\s+(\d+)\s+(.*)$/);
+      if (match) {
+        const ssid = match[1].trim();
+        const signal = parseInt(match[2]);
+        const security = match[3].trim();
+        const secured = security !== '--' && security.length > 0;
+        
+        if (ssid && ssid !== '--') {
+          nets.push({ ssid, signal, secured });
+        }
+      }
+    });
+
+    // Deduplicate and sort
+    const seen = new Set();
+    const unique = nets.filter(n => { 
+      if (seen.has(n.ssid)) return false; 
+      seen.add(n.ssid); 
+      return true; 
+    });
+    unique.sort((a, b) => b.signal - a.signal);
+
+    if (!unique.length) {
+      list.innerHTML = '<div style="font-size:11.5px;color:var(--text-dim);text-align:center;padding:12px 0">No networks found</div>';
+      return;
+    }
+
+    list.innerHTML = '';
+    unique.forEach(net => {
+      const isConn = net.ssid === connectedSSID;
+      const row = document.createElement('div');
+      row.className = 'wifi-net' + (isConn ? ' connected' : '');
+
+      const nameEl = document.createElement('span');
+      nameEl.className = 'wifi-name';
+      nameEl.textContent = net.ssid;
+
+      const sigEl = document.createElement('span');
+      sigEl.className = 'wifi-signal';
+      sigEl.textContent = net.signal + '%';
+
+      const lockEl = document.createElement('span');
+      lockEl.className = 'wifi-lock';
+      lockEl.textContent = net.secured ? '🔒' : '';
+
+      if (isConn) {
+        const dot = document.createElement('div');
+        dot.className = 'wifi-conn-dot';
+        row.append(dot, nameEl, sigEl, lockEl);
+        setDot('wifi', 'green');
+      } else {
+        row.append(nameEl, sigEl, lockEl);
+      }
+
+      row.onclick = () => {
+        if (isConn) return;
+        pendingSSID = net.ssid;
+        if (net.secured) {
+          document.getElementById('wifi-pw-row').classList.add('show');
+          document.getElementById('wifi-pw-input').value = '';
+          document.getElementById('wifi-pw-input').focus();
+          document.getElementById('wifi-status').textContent = 'Enter password for "' + net.ssid + '"';
+        } else {
+          connectWifi(net.ssid, '');
+        }
+      };
+      list.appendChild(row);
+    });
+  }
+
+  function connectWithPw() {
+    const pw = document.getElementById('wifi-pw-input').value;
+    if (!pw) return;
+    document.getElementById('wifi-pw-row').classList.remove('show');
+    connectWifi(pendingSSID, pw);
+  }
+
+  document.getElementById('wifi-pw-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') connectWithPw();
+  });
+
+  function connectWifi(ssid, password) {
+    const status = document.getElementById('wifi-status');
+    status.innerHTML = '<span class="spinner"></span> Connecting to "' + ssid + '"…';
+    setDot('wifi', 'yellow');
+
+    const cmd = password 
+      ? `nmcli device wifi connect "${ssid}" password "${password}"`
+      : `nmcli device wifi connect "${ssid}"`;
+
+    exec(cmd, (err, stdout, stderr) => {
+      if (err || stderr.toLowerCase().includes('error')) {
+        status.textContent = '✕ Failed to connect to "' + ssid + '"';
+        setDot('wifi', 'red');
+        console.error('[CC] WiFi connect error:', err || stderr);
+      } else {
+        status.textContent = '✓ Connected to "' + ssid + '"';
+        setDot('wifi', 'green');
+        setTimeout(scanWifi, 1500);
+      }
+    });
+  }
+
+  // ─── Bluetooth ───────────────────────────────────────────────
+  function checkBluetoothStatus() {
+    exec('bluetoothctl show | grep "Powered: yes"', (err, stdout) => {
+      state.bt = !err && stdout.trim().length > 0;
+      setToggle('bt', state.bt);
+      setDot('bt', state.bt ? 'green' : '');
+    });
+  }
+
+  function toggleBluetooth() {
+    const cmd = state.bt ? 'bluetoothctl power off' : 'bluetoothctl power on';
+    setDot('bt', 'yellow');
+    
+    exec(cmd, (err) => {
+      if (!err) {
+        state.bt = !state.bt;
+        setToggle('bt', state.bt);
+        setDot('bt', state.bt ? 'green' : '');
+      } else {
+        setDot('bt', 'red');
+      }
+    });
+  }
+
+  // ─── Airplane ────────────────────────────────────────────────
+  function toggleAirplane() {
+    state.airplane = !state.airplane;
+    setToggle('airplane', state.airplane);
+    setDot('airplane', state.airplane ? 'yellow' : '');
+    
+    if (state.airplane) {
+      exec('nmcli radio all off', () => {
+        setDot('airplane', 'red');
+      });
+    } else {
+      exec('nmcli radio all on', () => {
+        setDot('airplane', '');
+        setTimeout(detectWifiInterface, 500);
+      });
+    }
+  }
+
+  // ─── Dark Mode ───────────────────────────────────────────────
+  function toggleDarkMode() {
+    state.dark = !state.dark;
+    setToggle('dark', state.dark);
+    // GTK theme switching (if using GNOME/GTK)
+    const theme = state.dark ? 'Adwaita-dark' : 'Adwaita';
+    exec(`gsettings set org.gnome.desktop.interface gtk-theme "${theme}"`, () => {});
+  }
+
+  // ─── Night Light ─────────────────────────────────────────────
+  function toggleNightLight() {
+    state.night = !state.night;
+    setToggle('night', state.night);
+    
+    if (state.night) {
+      // Start redshift or wlsunset
+      exec('which wlsunset', (err) => {
+        if (!err) {
+          // Wayland - use wlsunset
+          exec('wlsunset -T 4500 > /dev/null 2>&1 & echo $!', (e2, pid) => {
+            if (!e2) {
+              state.nightLightPid = parseInt(pid.trim());
+              console.log('[CC] Night light started (wlsunset):', state.nightLightPid);
+            }
+          });
+        } else {
+          // X11 - use redshift
+          exec('redshift -O 4500 > /dev/null 2>&1 & echo $!', (e3, pid) => {
+            if (!e3) {
+              state.nightLightPid = parseInt(pid.trim());
+              console.log('[CC] Night light started (redshift):', state.nightLightPid);
+            }
+          });
+        }
+      });
+    } else {
+      // Stop night light
+      if (state.nightLightPid) {
+        exec(`kill ${state.nightLightPid}`, () => {
+          console.log('[CC] Night light stopped');
+        });
+      }
+      // Reset color temperature
+      exec('which wlsunset', (err) => {
+        if (!err) {
+          exec('killall wlsunset');
+        } else {
+          exec('redshift -x');
+        }
+      });
+      state.nightLightPid = null;
+    }
+  }
+
+  // ─── DND ─────────────────────────────────────────────────────
+  function toggleDND() {
+    state.dnd = !state.dnd;
+    setToggle('dnd', state.dnd);
+    // Mute notifications using mako, dunst, or similar
+    if (state.dnd) {
+      exec('makoctl set-mode dnd || dunstctl set-paused true', () => {
+        console.log('[CC] DND enabled');
+      });
+    } else {
+      exec('makoctl set-mode default || dunstctl set-paused false', () => {
+        console.log('[CC] DND disabled');
+      });
+    }
+  }
+
+  // ─── Brightness ──────────────────────────────────────────────
+  let brightnessDevice = '';
+  
+  function detectBrightnessDevice() {
+    // Find backlight device
+    exec('ls /sys/class/backlight/', (err, stdout) => {
+      if (!err && stdout.trim()) {
+        brightnessDevice = stdout.trim().split('\n')[0];
+        console.log('[CC] Brightness device:', brightnessDevice);
+        updateBrightnessFromSystem();
+      } else {
+        console.warn('[CC] No backlight device found');
+      }
+    });
+  }
+
+  function updateBrightnessFromSystem() {
+    if (!brightnessDevice) return;
+    
+    exec(`cat /sys/class/backlight/${brightnessDevice}/brightness`, (err, current) => {
+      if (err) return;
+      exec(`cat /sys/class/backlight/${brightnessDevice}/max_brightness`, (e2, max) => {
+        if (e2) return;
+        const percent = Math.round((parseInt(current) / parseInt(max)) * 100);
+        state.brightness = percent;
+        document.getElementById('brightness-slider').value = percent;
+        document.getElementById('brightness-val').textContent = percent;
+        updateSliderFill('brightness-slider', 'brightness-fill', percent);
+      });
+    });
+  }
+
+  function onBrightness(val) {
+    document.getElementById('brightness-val').textContent = val;
+    updateSliderFill('brightness-slider', 'brightness-fill', val);
+    
+    if (brightnessDevice) {
+      // Direct sysfs write (requires appropriate permissions or using brightnessctl)
+      exec(`brightnessctl set ${val}%`, (err) => {
+        if (err) {
+          // Fallback: try light
+          exec(`light -S ${val}`, (e2) => {
+            if (e2) console.error('[CC] Brightness control failed');
+          });
+        }
+      });
+    }
+  }
+
+  // ─── Volume ──────────────────────────────────────────────────
+  function updateVolumeFromSystem() {
+    exec('pactl get-sink-volume @DEFAULT_SINK@', (err, stdout) => {
+      if (!err) {
+        const match = stdout.match(/(\d+)%/);
+        if (match) {
+          state.volume = parseInt(match[1]);
+          document.getElementById('volume-slider').value = state.volume;
+          document.getElementById('volume-val').textContent = state.volume;
+          updateSliderFill('volume-slider', 'volume-fill', state.volume);
+          updateVolIcon(state.volume);
+        }
+      }
+    });
+    
+    // Check mute status
+    exec('pactl get-sink-mute @DEFAULT_SINK@', (err, stdout) => {
+      if (!err) {
+        state.muted = stdout.trim().includes('yes');
+        updateVolIcon(state.muted ? 0 : state.volume);
+      }
+    });
+  }
+
+  function onVolume(val) {
+    state.volume = parseInt(val);
+    document.getElementById('volume-val').textContent = val;
+    updateSliderFill('volume-slider', 'volume-fill', val);
+    updateVolIcon(val);
+    exec(`pactl set-sink-volume @DEFAULT_SINK@ ${val}%`);
+  }
+
+  function toggleMute() {
+    state.muted = !state.muted;
+    exec(`pactl set-sink-mute @DEFAULT_SINK@ ${state.muted ? '1' : '0'}`, () => {
+      updateVolIcon(state.muted ? 0 : state.volume);
+    });
+  }
+
+  function updateVolIcon(val) {
+    const icon = document.getElementById('vol-icon');
+    const v = parseInt(val);
+    if (v === 0 || state.muted) {
+      icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`;
+    } else if (v < 40) {
+      icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 010 7.07"/>`;
+    } else {
+      icon.innerHTML = `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+        <path d="M15.54 8.46a5 5 0 010 7.07M19.07 4.93a10 10 0 010 14.14"/>`;
+    }
+  }
+
+  function updateSliderFill(sliderId, fillId, val) {
+    const slider = document.getElementById(sliderId);
+    const fill   = document.getElementById(fillId);
+    const pct    = (val / slider.max) * 100;
+    fill.style.width = pct + '%';
+  }
+
+  // ─── Power Actions ───────────────────────────────────────────
+  function powerAction(action) {
+    switch (action) {
+      case 'lock':
+        exec('loginctl lock-session', (err) => {
+          if (err) exec('swaylock || i3lock || gnome-screensaver-command -l');
+        });
+        break;
+      case 'logout':
+        exec('loginctl terminate-user $USER');
+        break;
+      case 'sleep':
+        exec('systemctl suspend');
+        break;
+      case 'restart':
+        exec('systemctl reboot');
+        break;
+      case 'shutdown':
+        exec('systemctl poweroff');
+        break;
+    }
+    closeCC();
+  }
+
+  // ─── Initialize ──────────────────────────────────────────────
+  window.addEventListener('DOMContentLoaded', () => {
+    detectWifiInterface();
+    checkBluetoothStatus();
+    detectBrightnessDevice();
+    updateVolumeFromSystem();
+    
+    // Periodic updates
+    setInterval(() => {
+      if (wifiEnabled && !document.getElementById('wifi-panel').classList.contains('open')) {
+        checkWifiStatus();
+      }
+      updateVolumeFromSystem();
+    }, 3000);
+  });
+
+  console.log('[Control Center] Initialized');
+</script>
+</body>
+</html>

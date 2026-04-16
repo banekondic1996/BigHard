@@ -1,0 +1,1 @@
+cmd_Release/nw_input_region.node := ln -f "Release/obj.target/nw_input_region.node" "Release/nw_input_region.node" 2>/dev/null || (rm -rf "Release/nw_input_region.node" && cp -af "Release/obj.target/nw_input_region.node" "Release/nw_input_region.node")

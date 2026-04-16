@@ -1,0 +1,637 @@
+<!DOCTYPE html><html><head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edgy</title>
+  <style>
+    body
+    {
+      margin: 0px; padding:0px;
+      user-select: none; overflow: hidden;
+      display: flex; background: rgba(255, 255, 255, 0);
+    }
+    .webViewTab
+    {
+      background: #ffffffde;
+      border-radius: 10px;
+      height: 100%;
+      min-width: 350px !important;
+      width: calc(100% - 110px);
+      position: absolute;
+      right: 62px;
+      transition: width 0.5s;
+      contain: content;
+    }
+    .tabBar
+    {
+      background: rgba(255, 255, 255, 0.192);
+      border-radius: 14px;
+      height: 100%;
+      width: 52px;
+      margin-left: 10px;
+      position: absolute;
+      right: 5px;
+    }
+    .tabBar img
+    {  
+      margin-top: 4px;
+      width:22px;
+      height: auto;
+    }
+    .tabBar button
+    {
+      height:42px;
+      width:42px;
+      margin-top:7px;
+      margin-left:5px;
+      border-radius: 8px;
+      border: none;
+    }
+    .webview
+    {
+      border-radius: 10px;
+      position: absolute;
+      contain: content;
+    }
+    .webviewSearch
+    {
+      border-radius: 10px;
+      position: absolute;
+      contain: content;
+    }
+    .hoverBar
+    {
+      display: inline-block;
+      position: fixed;
+      background: #4a4a4a26;
+      border-radius: 4px;
+      height: 50px;
+      width: 20px;
+      margin-left: 0px;
+      right: 0px;
+      top: 75%;
+      z-index: 1200;
+    }
+    .viewCancellerBar
+    {
+     width: 100%;
+     z-index: 9999;
+     position: absolute;
+    }
+    .xInputs 
+    {
+      margin: 0px;
+      padding: 0px;
+      right: 2%;
+      z-index: 9000;
+      position: absolute;
+      display: none;
+      background: rgb(0 0 0 / 86%);
+      flex-direction: column;
+      border-radius: 12px;
+      contain: content;
+    }
+    .inputAddButtonId
+    {
+      display: flex;
+      padding: 10px;
+      flex-direction: row;
+    }
+    .inputAddButtonId input[type=button]
+    {
+      width: 42px;
+      height: 23px;
+      margin: 2px;
+      border-radius: 24px;
+      /* font-size: larger; */
+      border: none;
+      margin-top: 12px;
+      color: #292929;
+    }
+    .inputAddButtonId input[type=button]:hover
+    {
+      opacity: 80%;
+    }
+    .inputAddButtonId input[type=button]:active
+    {
+      opacity: 50%;
+    }
+    .inputAddButtonId input[type=text]
+    {
+      border-radius: 8px;
+      height: 30px;
+      width: 200px;
+      margin-right: 3px;
+      margin-left: 7px;
+      margin-top: 8px;
+      border: none;
+    }
+    #inputSearchImageId
+    {
+      opacity: 20%;
+      border-radius: 8px;
+      height: 30px;
+      width: 339px;
+      margin-top: -12px;
+      margin-right: 3px;
+      margin-left: 7px;
+      border: none;
+      transition: opacity 0.3s;
+    }
+    #inputSearchImageId:hover
+    {
+      opacity: 100%;
+    }
+    .inputAddButtonId input[type=image]
+    {
+      width: auto;
+      margin: auto;
+      border-radius: 8px;
+    }
+    input[type=color]
+    {
+      border: none;
+      background: transparent;
+    }
+    .settingsRow
+    {
+      margin-top:10px
+    }
+    .activeButton
+    {
+     filter: brightness(65%) contrast(1.1);
+    }
+    #pinBarId{
+      background: white;
+    }
+    #tabButtonsContainerId
+    {
+      margin: auto;
+      padding: auto;
+      display: flex;
+      flex-direction: column;
+      flex-wrap: nowrap;
+      height: 100%; 
+      contain: content;
+    }
+    #lastButtonsTabBarId
+    {
+      margin: auto;
+      margin-bottom: 10%;
+      height: 50px;
+      transition: height 0.3s;
+    }
+    #lastButtonsTabBarId button img
+    {
+      opacity: 0;
+    }
+    #lastButtonsTabBarId:hover
+    {
+      height: 150px;
+      transition: height 0.3s;
+    }
+    #lastButtonsTabBarId:hover button img
+    {
+      opacity: 1;
+    }
+    #contentContainerId
+    {
+     position: absolute;
+    width: 40%;
+    height: 80%;
+    display: flex;
+    top: 10%;
+    right: 0px;
+      /* background: white; */
+    }
+    #tabButtonsId
+    {
+      overflow-x: hidden;
+    }
+    #tabButtonsContainerId button:hover
+    {
+      opacity: 85%;
+    }
+    #tabButtonsContainerId button:active
+    {
+      opacity: 70%;
+    }
+    #contextMenuId
+    {
+      display:none;
+      position: absolute;
+      background: white;
+      z-index: 9000;
+      padding: 4px;
+      flex-wrap: nowrap;
+      flex-direction: column;
+      border-radius: 8px;
+      box-shadow: 0px 0px 11px 0px #00000033;
+    }
+    #contextMenuId div
+    {
+      padding: 4px;
+      border-radius: 8px;
+    } 
+    #contextMenuId div:hover
+    {
+      background: rgb(199, 199, 199);
+    } 
+    .webViewTab .webView
+    {
+      width: 100%;
+    }
+    ::-webkit-scrollbar 
+    {
+     background: rgba(255, 255, 255, 0);
+     width: 0px;
+    }
+    .activeView
+    {
+      display: inline-block;
+    }
+    #leftHandle{
+      background: #00000001;
+      position: absolute; 
+      left: 33px; 
+      top: 0; 
+      width: 10px; 
+      height: 100%; 
+      z-index: 9999;
+      cursor: ew-resize;
+    }
+  </style>
+</head>
+<body>
+  <div id="contentContainerId">
+    <div class="xInputs" id="changeIconContainerId" style="display: none; top: 5%;">
+      <div class="inputAddButtonId">
+        <input id="faviconId1" type="image" src="default.png" onerror="this.src='default.png';" alt="" style="width: 48px;height:48px;">
+        <input id="inputURLId1" placeholder="Input the URL address of image" type="text" name="" oninput="faviconS1.src=this.value">
+        <input type="button" style="background:rgb(157, 255, 157)" value="add" onclick="selectedItem.firstChild.src=faviconS1.src;">
+        <input type="button" style="background:rgb(255, 164, 164)" value="close" onclick="changeIconContainers.style.display='none';inputURLs1.value=''">
+      </div>
+      <div class="inputAddButtonId"> 
+        <input id="inputSearchImageId" placeholder="Search by name" type="text" name="" oninput="document.getElementById('webView-searchImage').src=`https://images.google.com/search?tbm=isch&amp;q=`+this.value+`+icon`;" style="">
+      </div>
+      <div><webview class="webViewSearch" id="webView-searchImage" src="https://www.google.com/?sa=X&amp;ved=0ahUKEwjV3pCl-oSFAxVH_rsIHSo9BjAQOwgC" style="display: block;height: 62vh;"></webview></div>
+    </div>
+  <div class="xInputs" id="addContainerId" style="display: none; top: 40%;">
+    <div class="inputAddButtonId">
+      <input id="faviconId2" type="image" src="default.png" onerror="this.src='default.png';" alt="" style="width: 48px;height:48px;">
+      <input id="inputURLId2" placeholder="Input the URL address of website" type="text" name="" oninput="faviconS2.src=this.value+'/favicon.ico'">
+      <input type="button" style="background:rgb(157, 255, 157)" value="add" onclick="addButton(inputURLs2.value,faviconS2.src);">
+      <input type="button" style="background:rgb(255, 164, 164)" value="close" onclick="addContainers.style.display='none';inputURLs2.value=''">
+    </div>
+  </div>
+  <div class="xInputs" id="settingsContainerId" style="display: none;top: 35%;left: 25%;width: 200px;color: white;font: -webkit-control;flex-direction: row;justify-content: center;">
+    <div class="inputAddButtonId" style="flex-direction: column;padding: 14px;margin-inline: 5px;">
+     <div class="settingsRow" style="align-self: auto;font: -webkit-control;margin-bottom: 15px;font-size: medium;">Settings:</div> 
+     <div class="settingsRow" style="align-self: flex-end;"><span>Bar color: <input type="color" name="" id="barColorId" oninput="tabBars.style.background=this.value+'55';"> </span></div>
+     <div class="settingsRow" style="align-self: flex-end;"><span>Buttons color: <input type="color" name="" id="buttonsColorId" oninput="changeButtonsColor(this.value)"> </span></div>
+     <div class="settingsRow" style="align-self: flex-end;"><span>Hover bar color: <input type="color" name="" id="HoverBarColorId" oninput="hoverBars.style.background=this.value+'55';hoverBars.style.display='flex';hoverBars.style.marginTop='75vh';" onchange="hoverBars.style.display='none';hoverBars.style.marginTop='0px'"> </span></div>
+     <div class="settingsRow" style="margin-top: 15px;align-self: center;"><span>Bar transparency: </span></div>
+     <div class="settingsRow" style="align-self: center;"><span><input type="range" min="0" max="0.99" step="0.01" name="" id="barTransparencyId" oninput="var color=tabBars.style.background;var colorSliced=color.slice(0, color.lastIndexOf(','));tabBars.style.background=colorSliced+','+this.value+')'"> </span></div>
+     <input type="button" style="width:82px;background:rgb(255, 255, 255);margin-top: 20px;
+     align-self: center;" value="close" onclick="this.parentElement.parentElement.style.display='none';">
+    </div>
+  </div>
+ <div id="contextMenuId" style="display: none; left: 280px; top: 129px;">
+  <div onclick="changeIcon()">Change icon</div>
+  <div onclick="var txt='webView-'+selectedItemNumber;document.getElementById(txt).remove();console.log(txt);selectedItem.remove();contextMenus.style.display='none';changeIconContainers.style.display='none'">Remove item</div>
+ </div>
+ <div id="barContainerID">
+  <div class="viewCancellerBar" style="height: 100%;width: 20px;left: 0px;background: #00000001;" onmouseover="hideUI();"></div>
+  <div class="viewCancellerBar" style="height: 8px;top: 0px;" onmouseover="hideUI();"></div>
+  <div class="viewCancellerBar" style="height: 8px;bottom: 0px;" onmouseover="hideUI();"></div>
+  <div class="webViewTab" id="webViewTabId" style="display: flex;" onmouseover="insideWebViewTab=true">
+    <!-- <webview class="webView" id="foo" src="https://windows.msn.com/windows/newsbar" style="background: rgba(249, 74, 74, 0.307);"></webview> -->
+    <webview webpreferences="allowRunningInsecureContent, javascript=yes" class="webView" id="webView-1" src="https://windows.msn.com/windows/newsbar" style="display: inline;"></webview>
+    <webview class="webView" id="webView-2" src="https://chatgpt.com/auth/login" style="display: none;"></webview>
+    <webview class="webView" id="webView-3" src="https://copilot.microsoft.com/" style="display: none;"></webview>
+    <!-- <div id="pinBarId">This is pin bar</div> -->
+  </div>
+  <div class="tabBar" id="tabBarId" style="display: inline-block; background: rgba(0, 0, 0, 0.32);">
+    <div id="tabButtonsContainerId">
+   <div id="tabButtonsId">
+   <button class="btn activeButton" oncontextmenu="displayContext(event,this,1)" onclick="displayView(1,this);" draggable="false" style="background: rgb(255, 255, 255);"><img src="https://windows.msn.com/favicon.ico" alt="" draggable="false"></button>
+   <button class="btn" oncontextmenu="displayContext(event,this,2)" onclick="displayView(2,this);" style="background: rgb(255, 255, 255);" draggable="false"><img src="https://chat.openai.com/favicon.ico" alt="" draggable="false"></button>
+   <button class="btn" oncontextmenu="displayContext(event,this,3)" onclick="displayView(3,this);" draggable="false" style="background: rgb(255, 255, 255);"><img src="https://copilot.microsoft.com/favicon.ico" alt="" draggable="false"></button></div>
+    <div>
+      <button onclick="showAddField(event)" style="background: rgb(255, 255, 255);"><img style="" src="add.png" alt=""></button>
+    </div>
+    <div id="lastButtonsTabBarId">
+      <button onclick="updateApp();" title="Save current configuration" style="background: rgb(255, 255, 255);"><img src="settingsUpdate.png" alt=""></button>
+      <button onclick="settings();" title="Change Settings" style="background: rgb(255, 255, 255);"><img src="settings.png" alt=""></button>
+      <!-- <button onclick="extensions();" title="Extensions" style="background: rgba(255, 255, 255, 0.385);"><img src="extensions.png" alt=""></button> -->
+      <button id="pinButtonId" onclick="pinButton();" title="Pin" style="background: rgb(255, 255, 255); filter: brightness(100%);"><img src="pin.png" alt=""></button>
+    </div> 
+  </div>
+</div>
+<div id="leftHandle"></div>
+</div>
+  <div class="hoverBar" id="hoverBarId" onmouseover="showUI()" style="display: none; margin-top: 0px;"></div>
+  <script>
+    //--------------------------------------Declare variables START --------------------------------------//
+    console.log("checkpoint 1");
+    var win = nw.Window.get();
+    console.log(window.screen.width);
+    win.maximize();
+    let keyActive=0;
+    let UI=0;
+    let UISizeH=420;
+    let UISizeV=window.outerHeight;
+    let selectedItem, selectedItemNumber;
+    let screenWidth=window.screen.width;
+    let screenHeight=window.outerHeight;
+    let screenVPos=window.screenY;
+    let screenHPos=window.screenH;
+    let activeView=document.getElementById('webview-1');
+    let insideWebViewTab=false;
+    let pinButtons=document.getElementById('pinButtonId');
+    let contextMenus=document.getElementById('contextMenuId');
+    let containers=document.getElementById('contentContainerId');
+    let hoverBars=document.getElementById('hoverBarId');
+    let webViewTabs=document.getElementById('webViewTabId');
+    let tabBars=document.getElementById('tabBarId');
+    let tabButtonss=document.getElementById('tabButtonsId');
+    let faviconS1=document.getElementById('faviconId1');
+    let faviconS2=document.getElementById('faviconId2');
+    let optionsForAdds=document.getElementById('optionsForAddId');
+    let inputURLs1=document.getElementById('inputURLId1');
+    let inputURLs2=document.getElementById('inputURLId2');
+    let addContainers=document.getElementById('addContainerId');
+    let changeIconContainers=document.getElementById('changeIconContainerId');
+    let show='false';
+    var onTop=false, activeBtn=false;
+    //--------------------------------------Declare variables END --------------------------------------//
+
+    //------------------------------Display WebView on button click START -------------------------//
+    function displayView(viewNumber,element){ 
+      for (const child of webViewTabs.children) { child.style.display = "none";}
+      if(element.classList.contains("activeButton")){
+       webViewTabs.style.display = "none";
+       element.classList.remove("activeButton");
+      }
+      else{
+        webViewTabs.style.display = "flex";
+        let barButtons=document.getElementsByClassName('activeButton');
+        if(barButtons.length>0){ barButtons[0].classList.remove("activeButton")};
+        element.classList.add("activeButton");
+        webViewTabs.children[viewNumber-1].style.display='flex';
+      }
+    }
+  //------------------------------Display WebView on button click END -------------------------//
+  
+  //--------------------------------------Hide/Show UI START --------------------------------------//
+    console.log("checkpoint 2");
+
+    function hideUI(){
+      if(onTop==false)
+      {
+        if(keyActive==0)
+        {
+          UI=0;
+          webViewTabs.style.display="none";
+          tabBars.style.display='none'; 
+          addContainers.style.display='none';
+          changeIconContainers.style.display='none'; 
+          win.resizeTo(100,50);
+          win.moveTo(screenWidth-130,screenHeight-60);
+          hoverBars.style.display='inline-block';
+        }
+    }
+    }
+
+    console.log("checkpoint 3");
+    
+    function showUI()
+    {
+      UI=1;
+      win.resizeTo(UISizeH,UISizeV);
+      win.moveTo(screenWidth-UISizeH,screenVPos);
+      //needs fixing to enable resize webViewTabs.style.width=webViewWidth+'350px' 
+      webViewTabs.style.display="flex"; //webViewTabs.style.width='350px'; 
+      tabBars.style.display='inline-block';
+      hoverBars.style.display='none';
+    }
+  //-----------------------------------------Hide/Show UI END -----------------------------------------//
+  //--------------------------------------Button functions START --------------------------------------//
+    function addButton(URL,icon)
+    {
+      let count=document.getElementsByClassName('webView').length+1;
+      tabButtonss.innerHTML=tabButtonss.innerHTML+`<button class="btn" oncontextmenu="displayContext(event,this,`+count+`)" onclick="displayView(`+count+`,this);"><img src="`+icon+`" alt=""></button>`
+      webViewTabs.innerHTML=webViewTabs.innerHTML+`<webview class="webView" id="webView-`+count+`" src="`+URL+`" style="display: none;"></webview>`
+      let theView="webView-"+count;
+      document.getElementById(theView).addEventListener('newwindow', (e) => 
+      {
+        const url = e.targetUrl;
+        console.log(e.targetUrl);
+        nw.Shell.openExternal(e.targetUrl)
+      });
+    }
+
+    function changeButtonsColor(color)
+    {
+      var button = document.querySelectorAll('#tabButtonsContainerId button');
+      button.forEach(element => { element.style.background=color;});
+    }
+
+    console.log("checkpoint 4");
+    
+    function pinButton()
+    {
+      if(!onTop){ onTop=true; pinButtons.style.filter= "brightness(70%)";}
+      else if(onTop){ onTop=false; pinButtons.style.filter= "brightness(100%)"}
+    } 
+  
+    // Show panel for adding new button
+    function showAddField(ev) 
+    {
+    console.log(addContainers.style.display.value);
+    if(!addContainers.checkVisibility()) { addContainers.style.display="flex";}
+    }
+    //--------------------------------------Button functions END --------------------------------------//
+
+    //----------------------------------------UI functions START ---------------------------------------//
+
+    console.log("checkpoint 5");
+
+    // Set timeout to capture real size of window, because it doesn't start at full size immediately
+
+    setTimeout(() => 
+    {
+      screenHeight = window.outerHeight;
+      UISizeV = window.outerHeight;
+      screenVPos = window.screenY
+      win.unmaximize();
+      hideUI();
+      console.log(screenHeight+"after unmaximize 2");
+    }, 400);
+
+    // Hide context menu on app click
+    document.addEventListener('click', function() {contextMenus.style.display='none'});
+
+    //Event listner if cursor is inside app, not necessary is an old event listener
+    document.addEventListener('mouseenter', function() {keyActive=0;console.log("is in");});
+   
+    //Display context menu on cursor position function
+    function displayContext(ev,el,num)
+    {
+      selectedItem=el;
+      selectedItemNumber=num;
+      contextMenus.style.display='flex';
+      contextMenus.style.left=ev.clientX-120+"px";
+      contextMenus.style.top=ev.clientY-10+"px";
+    }
+
+    console.log("checkpoint 6");
+    
+    //Update app function
+    const fs = require ('fs');
+    async function updateApp() 
+      {
+        //Backup index.html file first
+        fs.copyFile('./edgy/index.html', 'index_backup.html', (err) => 
+        {
+          if (err) {console.error('Error copying file:', err);} 
+          else {console.log('File copied successfully!');}
+        });
+        //Save inner HTML to create new index.html
+        let htmlText="<!DOCTYPE html><html>"+document.body.parentElement.innerHTML+"</html>";
+        //Timeout before writing, it needs time to do it
+        setTimeout(() => 
+        {
+        fs.writeFileSync('./edgy/index.html',htmlText) //change for distribution
+        console.log(text);
+        alert("Update complete. Restart the app to see changes");
+        }, 400);
+      }
+      //----------------------------------------UI functions END ---------------------------------------//
+
+      //-------------------------------------WebView functions END --------------------------------------//
+    
+      
+    const webview = document.getElementById('webView-1');
+    //If webview triest to open external link in new window
+    webview.addEventListener('newwindow', (e) => 
+    {
+      const url = e.targetUrl;
+      console.log(e.targetUrl);
+      nw.Shell.openExternal(e.targetUrl)
+      // update a variable used for webview src prop
+    });
+
+    //Event listener to inject Javascript code into webview when searching for changing/searching for new icon for pinned button
+    //When you click on any image in Google search it takes the image and applies it to the button
+
+     //-------------------------------------WebView image search for button icon changer  START --------------------------------------//
+    const webviewSearch = document.getElementById('webView-searchImage')
+    webviewSearch.addEventListener('contentload', (e) => 
+    {
+      console.log(e);
+      webviewSearch.executeScript({ code: `document.addEventListener('click', (e) => {
+      //const url = e.targetUrl;
+      console.log(e.srcElement.currentSrc);
+      window.open(e.srcElement.currentSrc);
+      console.log("clicked");
+      //nw.Shell.openExternal(e.targetUrl)
+      // update a variable used for webview src prop
+    })` });
+    });
+   //Don't remember what is this, but I guess open external links for image search (not needed)
+    webviewSearch.addEventListener('newwindow', (e) => 
+    {
+      const url = e.targetUrl;
+      console.log(e.targetUrl);
+      inputURLs1=e.targetUrl;
+      faviconS1.src=e.targetUrl;
+    });
+    function changeIcon(){
+      changeIconContainers.style.display='flex';
+      contextMenus.style.display='none';
+      addContainers.style.display='none';
+    }
+    //-------------------------------------WebView image search for button icon changer  END--------------------------------------//
+    function settings() { document.getElementById('settingsContainerId').style.display='flex'; }
+      
+    console.log("checkpoint 7");  
+
+    //-------------------------Used to resize app if not used in fullscreen mode START-------------------------
+    // win.on('resize', (e) => {
+    //   if(e>420){
+    //   /* UISizeV=win.height; */
+    //   UISizeH=win.width;
+    //   //screenVPos=screenVPosOld+(oldHeight-win.height);
+    //   webViewWidth=e-60;
+    //   webViewTabs.style.width=webViewWidth+"px";
+    //   console.log(e);
+    //   }
+    // });
+    //-------------------------Used to resize app if not used in fullscreen mode END-------------------------
+
+    win.setAlwaysOnTop(true); 
+    
+    //-------------------------Add app to tray and add context menu to it START-------------------------
+    win.setShowInTaskbar(false); 
+    var tray = new nw.Tray({ title: 'Edgy', icon: 'edgylogo.png' });
+    var menu = new nw.Menu();
+    menu.append(new nw.MenuItem({ type: 'normal', label: 'Reload' ,click: function() {win.reload();},}));
+    menu.append(new nw.MenuItem({ type: 'normal', label: 'Close' ,click: function() {win.close();},}));
+    tray.menu = menu;
+    //-------------------------Add app to tray and add context menu to it END-------------------------
+
+    //------------------------------Adding global shortcuts START--------------------------------------
+    var option = 
+    {
+      key : "Ctrl+Space",  
+      active : function() {console.log("Global desktop keyboard shortcut: " + this.key + " active.");},
+      failed : function(msg) {console.log(msg);} 
+    };
+    var shortcut = new nw.Shortcut(option);
+    nw.App.registerGlobalHotKey(shortcut); 
+    shortcut.on('active', function() 
+    {
+      if(UI==0) { keyActive=1;showUI(); }
+      else if(UI==1) { keyActive=0;hideUI(); }
+    });
+     //------------------------------Adding global shortcuts END-------------------------------------- 
+    console.log("checkpoint 8");
+     //------------------------------Make div resizable programatically START-------------------------
+    const resizableDiv = containers; // The whole div that holds the app
+    const leftHandle = document.getElementById('leftHandle'); // Custom element that will be held to resize
+    let isResizing = false; 
+    let initialX, initialWidth, initialLeft;
+    leftHandle.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        initialX = e.clientX;
+        initialWidth = resizableDiv.offsetWidth;
+        initialLeft = resizableDiv.offsetLeft;
+        document.addEventListener('mousemove', resize); 
+        document.addEventListener('mouseup', stopResize);
+    });
+    function resize(e) { 
+        if (!isResizing) return;
+        const deltaX = e.clientX - initialX;
+        resizableDiv.style.width = (initialWidth - deltaX) + 'px';
+        resizableDiv.style.left = (initialLeft + deltaX) + 'px';
+    }
+    function stopResize() {
+        isResizing = false;
+        document.removeEventListener('mousemove', resize);
+        document.removeEventListener('mouseup', stopResize);
+    }
+     //------------------------------Make div resizable programatically END-------------------------
+  </script>
+  <!------------------ Plugin and function to make buttons sortable START------------------------>
+  <script src="./Sortable.js"></script> 
+  <script>
+    example1 = document.getElementById('items'),
+    new Sortable(tabButtonss, {
+    animation: 200,
+    ghostClass: 'blue-background-class'
+  });
+  </script>
+    <!------------------ Plugin and function to make buttons sortable END ------------------------>
+ 
+ </div></body></html>

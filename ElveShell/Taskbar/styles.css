@@ -1,0 +1,544 @@
+   *{
+            /* pointer-events: none; */
+            /* background:none; */
+            background: transparent;
+        }
+        :root {
+        --accent-color: rgba(176,176,176,0.60);
+        --accent-color-solid: #b0b0b0;
+        --taskbar-surface: rgba(5, 5, 5, 0.35);
+        --taskbar-surface-strong: rgba(5, 5, 5, 0.58);
+        }
+        html
+        {
+            width: 0;
+            height: 0;
+            overflow: visible;
+            background: transparent !important;
+        }
+        body 
+        {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: none;
+            padding: 1px;
+            display: flex;
+            place-content: center;
+            flex-direction: row;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            inset: 0;
+        }
+        #barID 
+        {
+            max-height: 100px;
+            min-height: 22px;
+            display: flex;
+            width: 96%;
+            height: 32px;
+            background: var(--taskbar-surface);
+            /* background-color: #ffffffba; */
+            position: absolute;
+            /* cursor: ns-resize; */
+            align-items: center;
+            border-radius: 18px;
+            padding-inline: 1%;
+            /* margin-inline: 1%; */
+            user-select: none;
+            backdrop-filter: blur(2px);
+            margin: auto;
+            bottom: 75px;
+            margin-right:1px;
+           /*  left: 0px; */
+        }   
+        #iconTask
+        {
+            height:auto;
+            width:22px;
+            margin-left: 6px;
+        }
+       .taskbutton{
+            margin-inline-end: 5px;
+            height: 50%;
+            aspect-ratio: 1/1;
+            background: #00000021;
+            border-radius: 100%;
+            padding: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .taskbutton:hover
+        {
+            background: #00000037;
+        }  
+        #barResizeID
+        {
+            background: rgba(0, 0, 0, 0.01);
+            display: flex;
+            width: 96%;
+            height: 40px;
+            position: absolute;
+            /* cursor: ns-resize; */
+            align-items: center;
+            bottom: 75px;
+            border-radius: 18px;
+            overflow: hidden;
+            padding-inline: 1%;
+            /* margin-inline: 1%; */
+            cursor:n-resize;
+            margin:0px;
+        }
+        #barClockID
+        {
+            display: flex;
+            height: 40%;
+            border-radius: 24px;
+            padding: 4px;
+            padding-inline: 10px;
+            font-size: 14px;
+        /*    font-size: 12px;
+            font-family: system-ui; */
+            align-items: center;
+        }
+        .contextMenu
+        {
+            display: none;
+            position: absolute;
+            /* width: 134px; */
+            /* height: 271px; */
+            background-color: rgb(228, 228, 228);
+            opacity: 0.8;
+            border: none;
+            border-radius: 10px;
+            overflow: hidden;
+            z-index: 222;
+            /* text-align: center; */
+            left: 116px;
+            top: 50px;
+        }
+        .contextMenu tr td
+        {
+            border-radius: 10px;
+            /* text-align: center; */
+            text-wrap: nowrap;
+            padding: 8px;
+        }
+        .contextMenu tr td:hover
+        {
+            background:rgb(124, 124, 124);
+            text-align: center;
+        }
+        .icons
+        {
+            display: flex;
+            background: #fffefe;
+            padding: 6px;
+        }
+        .contextMenu tr th img:hover
+        {
+            border-radius: 100%;
+            background:rgb(236, 236, 236);
+        }
+        .contextMenu tr th img
+        {
+            padding:5px;
+        }
+        .hide
+        {
+            display: none!important;
+            opacity: 0;
+            transition: cubic-bezier(0.4, 0, 1, 1) 0.3s;
+        }
+        .unHideSlowly{
+            transition: ease-in 5s;
+        }
+        #searchOverlayID{
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background: #0000008f;
+            position: absolute;
+            backdrop-filter: blur(1px);
+            text-align: center;
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+        }
+        #searchOverlayID input{
+            border-radius: 55px;
+            width: 100%;
+            height: 35px;
+            background: rgb(255 255 255);
+            border-style: none;
+            outline: none;
+            padding-inline: 15px;
+            box-shadow: 0px 0px 8px 2px #cbcbcb99;
+        }
+        #searchBarID{
+            margin: auto;
+            width: 30%;
+            height: auto;
+            top: 20%;
+            left: auto;
+            position: absolute;
+        }
+        .darkMode{
+            filter:invert();
+        }
+        .darkModeText{
+            color:white;
+        }
+        /* Settings panel START */
+        .xInputs {
+            margin: 0px;
+            padding: 0px;
+            left: 6%;
+            z-index: 9000;
+            position: absolute;
+            display: none;
+            background: rgb(0 0 0 / 86%);
+            flex-direction: column;
+            border-radius: 12px;
+            contain: content;
+        }
+        .inputAddButtonId{
+            display: flex;
+            padding: 10px;
+            flex-direction: row;
+        }
+        .inputAddButtonId input[type=button]{
+            width: 42px;
+            height: 23px;
+            margin: 2px;
+            border-radius: 24px;
+            /* font-size: larger; */
+            border: none;
+            margin-top: 12px;
+            color: #292929;
+        }
+        .inputAddButtonId input[type=button]:hover{
+            opacity: 80%;
+        }
+        .inputAddButtonId input[type=button]:active{
+            opacity: 50%;
+        }
+        .settingsRow{
+            margin-top:10px
+        }
+        .appThumb{
+            top: -200px;
+            display: flex;
+            position: absolute;
+            background: rgba(41, 41, 41, 0.33);
+            height:200px;
+            width: auto;
+            min-width: 290px;
+            border-radius: 14px;
+            opacity: 1;
+            padding:5px;
+/*             left:100px;
+            bottom:100px; */
+        }
+        .appThumb img{
+            margin: auto;
+            height: 50px;
+            width: 50px;
+            background: rgba(255, 255, 255, 0.599);
+            z-index: 9999;
+            border-radius: 11px;
+        }
+        .appThumb img:hover{
+            background: rgba(128, 128, 128, 0.707);
+            /* scale:1.3; */
+        }
+        #trayIconsID{
+            display: flex;
+            height: 40%;
+            width: auto;
+            margin-right: 5px;
+            border-radius: 24px;
+            padding: 4px;
+            padding-inline: 10px;
+            font-size: 14px;
+            align-items: center;
+        }
+        .appTrayContainer{
+            display: flex;
+            width: 100%;
+            height: 10%;
+            background: var(--taskbar-surface-strong);
+            border-radius: 0px 0px 10px 10px;
+            margin-top: 37px;
+        }
+        .appTray{
+            background: var(--taskbar-surface);
+            width: 90%;
+            height: 70%;
+            border-radius: 10px;
+            margin:auto;
+        }
+        #appMenuContainerID{
+            background: rgb(0 0 0 / 64%);
+            width: 472px;
+            height: 420px;
+            border-radius: 14px;
+            position: absolute;
+            top: 361px;
+            left: 421px;
+            contain: content;
+            display: flex;
+            flex-direction: column;
+            cursor: auto;
+            user-select: none;
+            border: 4px solid #96969680;
+        }
+        #appMenuID{
+            display: flex;
+            height: 100%;
+            width: 100%;
+            flex-wrap: wrap;
+            position: relative;
+            flex-direction: row;
+            /* align-content: center; */
+            gap: 14px;
+            overflow: hidden;
+            justify-content: flex-start;
+            padding: 13px;
+        }
+        .appMenuIconContainer{
+            contain: content;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 2px;
+            height: 82px;
+            width: 62px;
+            padding: 5px;
+            text-align: center;
+            text-shadow: 1px 1px 6px #606060ab;
+            user-select: none;
+        }
+        .appMenuIconContainer:hover{
+            background: #5b5b5b;
+            border-radius: 14px;
+            /* contain: inline-size; */
+            /* height: auto; */
+        }
+        #appMenuShortcutsID{
+            height: 100%;
+            width: 100%;
+            height: 44px;
+            /* background: #a9a9a97a; */
+            position: relative;
+            display: flex;
+            color: white;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 6px;
+            padding: 6px;
+        }
+        #appMenuShortcutsID div{
+            opacity: 0.2;
+        }
+        #appMenuShortcutsID div:hover{
+            opacity: 0.4;
+        }
+        .appMenuIcon{
+            width: 48px;
+            height: 48px;
+        }
+        #appMenuPages{
+            color: white;
+            height: 100%;
+            width: 100%;
+            height: 32px;
+            /* background: #a9a9a97a; */
+            position: relative;
+            display: flex;
+            align-content: center;
+            align-items: center;
+            justify-content: center;
+        }
+        .active{
+            opacity: 1 !important;
+        }
+        .colorBackground{
+            background: var(--taskbar-surface);
+        }
+        .colorDarker{
+         background: var(--taskbar-surface-strong);   
+        }
+        .color{
+            background:var(--accent-color);
+        }
+            .sliderContainer{
+            text-align: center;
+        }
+        .slider {
+        -webkit-appearance: none;
+        width: 100%;
+        height: 20px;
+        background: #d3d3d3;
+        outline: none;
+        -webkit-transition: .2s;
+        transition: opacity .2s;
+        margin: 10px;
+        border-radius: 10px;
+        }
+        .slider:hover {
+        opacity: 1;
+        }
+         .sliderTrack{
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: rgb(248 125 166 / 44%);;
+        cursor: pointer;
+        position: absolute;
+        border-radius: 10px;
+        margin: 13px;
+        z-index: 0;
+        pointer-events: none;
+        min-width: 10px;
+         }
+        .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: #ff80db00;
+        cursor: pointer;
+        border-radius: 100%;
+        z-index:999;
+        }
+    
+        .slider::-moz-range-thumb {
+        width: 15px;
+        height: 15px;
+        background: #ff80db;
+        cursor: pointer;
+        z-index:999;
+        }
+        .hide{
+            display: none !important;
+        }
+        #windowContainerID{
+            position: absolute;
+            width: 647px;
+            height: 552px;
+            margin: 0px;
+        }
+        .windowContent{
+            display: flex;
+            width: 100%;
+            height: 100%;
+            background: #c6c6c663;
+            border-radius: 14px;
+            /* backdrop-filter: blur(11px); */
+            box-shadow: 0px 0px 20px 6px #00000038;
+            z-index: 999;
+            flex-direction: row;
+            /* padding: 7px; */
+            justify-content: flex-start;
+            min-width: 472px;
+            margin: 10px;
+            position: absolute;
+        }
+        /* .WindowBar{
+            background-color: #f0f0f099;
+            height: 32px;
+            width: 100%;
+        }
+        .WindowContentInside{
+            width: 100%;
+            height: 100%;
+            background:white;
+        } */
+        .buttonsHolder{
+            right: 0px;
+            top: 5px;
+            position: absolute;
+            background: #27272745;
+            width: 81px;
+            height: 13px;
+            margin-inline-end: 5px;
+            border-radius: 18px;
+            padding: 5px;
+            padding-top: 4px;
+        }
+        .windowMainButtons{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .windowTabTitleButton{
+            display: flex;
+            width: auto;
+            flex-wrap: nowrap;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            -webkit-text-stroke-color: #dadada;
+            max-width: 170px;
+        }
+        .windowTabTitleText{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            margin: auto;
+            position: absolute;
+        }
+        .windowButton{
+            margin-inline-end: 5px;
+            width: 4px;
+            height: 4px;
+            aspect-ratio: 1/1;
+            border-radius: 100%;
+            padding: 5px;
+            display: block;
+            align-items: center;
+            justify-content: center;
+            /* position: absolute;*/
+        }
+        .windowButton:hover{
+            scale:1.2;
+        }
+        #detailsID{
+            width: auto;
+        }
+        #resizersBoxID{
+            position: absolute;
+            display: flex;
+            width: calc(100% + 20px);
+            height: calc(100% + 26px);
+        }
+        .resizer-horizontal{
+            position: absolute;
+            width: 30px;
+            height: calc(100% - 80px);
+            right: 0px;
+            top: 40px;
+        }
+        .resizer-vertical{
+            position: absolute;
+            width: calc(100% - 100px);
+            height: 30px;
+            left: 50px;
+            transition: cursor 2s;
+        }
+        .resizer-corner{
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            transition: cursor 2s;
+        }

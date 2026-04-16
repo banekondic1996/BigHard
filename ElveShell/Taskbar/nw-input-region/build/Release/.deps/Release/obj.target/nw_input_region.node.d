@@ -1,0 +1,1 @@
+cmd_Release/obj.target/nw_input_region.node := g++ -o Release/obj.target/nw_input_region.node -shared -pthread -rdynamic -m64  -Wl,-soname=nw_input_region.node -Wl,--start-group Release/obj.target/nw_input_region/src/x11.o Release/obj.target/../../node_modules/node-addon-api/nothing.a -Wl,--end-group -lX11 -lXfixes -lwayland-client

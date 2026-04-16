@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taskbar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: gray;
+            overflow: hidden;
+            -webkit-app-region: drag;
+        }
+
+        .taskbar {
+            bottom: 50px;
+            position: fixed;
+            width: 100%;
+            background: rgba(30, 30, 30, 0.95);
+            height: 48px;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            padding: 0 10px;
+            gap: 5px;
+            -webkit-app-region: no-drag;
+        }
+
+        .start-button {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .start-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .start-button.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .separator {
+            width: 1px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.2);
+            margin: 0 5px;
+        }
+
+        .pinned-apps,
+        .running-apps {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .app-button {
+            min-width: 40px;
+            height: 40px;
+            padding: 0 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            position: relative;
+        }
+
+        .app-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .app-button.active {
+            background: rgba(255, 255, 255, 0.15);
+            border-bottom: 2px solid white;
+        }
+
+        .app-button.running::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: rgba(100, 200, 255, 0.8);
+            border-radius: 50%;
+        }
+
+        .app-button.pinned.running::after {
+            background: rgba(100, 255, 100, 0.8);
+        }
+
+        .app-icon {
+            width: 24px;
+            height: 24px;
+            object-fit: contain;
+        }
+
+        .app-icon-fallback {
+            width: 24px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .spacer {
+            flex: 1;
+        }
+
+        .system-tray {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .tray-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tray-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tray-icon img {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+
+        .tray-context-menu {
+            position: fixed;
+            background: rgba(30, 30, 30, 0.98);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 5px 0;
+            display: none;
+            min-width: 150px;
+            z-index: 10000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        .tray-context-menu.show {
+            display: block;
+        }
+
+        .tray-menu-item {
+            padding: 10px 20px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+        }
+
+        .tray-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .system-button {
+            min-width: 100px;
+            height: 40px;
+            padding: 0 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+
+        .system-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .system-menu {
+            position: fixed;
+            bottom: 55px;
+            right: 10px;
+            width: 300px;
+            background: rgba(30, 30, 30, 0.98);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px;
+            display: none;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        }
+
+        .system-menu.show {
+            display: flex;
+        }
+
+        .menu-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .menu-label {
+            color: #aaa;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background 0.15s;
+            color: white;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .menu-item-icon {
+            font-size: 18px;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+        }
+
+        .wifi-list {
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .wifi-item {
+            padding: 8px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background 0.15s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-size: 13px;
+        }
+
+        .wifi-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .wifi-item.connected {
+            background: rgba(100, 200, 100, 0.2);
+        }
+
+        .wifi-signal {
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .wifi-actions {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .wifi-btn {
+            flex: 1;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .wifi-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .wifi-password-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 20000;
+        }
+
+        .wifi-password-modal.show {
+            display: flex;
+        }
+
+        .wifi-password-content {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            min-width: 300px;
+        }
+
+        .wifi-password-content input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+        }
+
+        .power-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .power-btn {
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .power-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .power-btn-icon {
+            font-size: 20px;
+        }
+
+        .clock {
+            color: white;
+            font-size: 13px;
+            padding: 0 10px;
+            text-align: center;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="taskbar">
+        <button class="start-button" id="startButton">🚀</button>
+        <div class="separator"></div>
+        
+        <div class="pinned-apps" id="pinnedApps"></div>
+        
+        <div class="separator" id="runningSeparator" style="display: none;"></div>
+        
+        <div class="running-apps" id="runningApps"></div>
+        
+        <div class="spacer"></div>
+        
+        <div class="system-tray" id="systemTray"></div>
+        
+        <div class="separator"></div>
+        
+        <button class="system-button" id="systemButton">
+            <span>🔊</span>
+            <span>📶</span>
+            <span>🔋</span>
+        </button>
+        
+        <div class="clock" id="clock">
+            <div id="time">00:00</div>
+            <div id="date" style="font-size: 11px; opacity: 0.7;">Jan 1</div>
+        </div>
+    </div>
+
+    <div class="system-menu" id="systemMenu">
+        <div class="menu-section">
+            <div class="menu-label">Wi-Fi</div>
+            <div class="wifi-list" id="wifiList">
+                <div class="wifi-item">Scanning...</div>
+            </div>
+            <div class="wifi-actions">
+                <button class="wifi-btn" id="wifiScan">Scan</button>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Brightness</div>
+            <div class="slider-container">
+                <span>☀️</span>
+                <input type="range" class="slider" id="brightnessSlider" min="0" max="100" value="80">
+                <span id="brightnessValue">80%</span>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Volume</div>
+            <div class="slider-container">
+                <span>🔊</span>
+                <input type="range" class="slider" id="volumeSlider" min="0" max="100" value="60">
+                <span id="volumeValue">60%</span>
+            </div>
+        </div>
+
+        <div class="menu-section">
+            <div class="menu-label">Power</div>
+            <div class="power-buttons">
+                <button class="power-btn" id="powerShutdown">
+                    <span class="power-btn-icon">⏻</span>
+                    <span>Shutdown</span>
+                </button>
+                <button class="power-btn" id="powerRestart">
+                    <span class="power-btn-icon">↻</span>
+                    <span>Restart</span>
+                </button>
+                <button class="power-btn" id="powerSleep">
+                    <span class="power-btn-icon">☾</span>
+                    <span>Sleep</span>
+                </button>
+                <button class="power-btn" id="powerLock">
+                    <span class="power-btn-icon">🔒</span>
+                    <span>Lock</span>
+                </button>
+                <button class="power-btn" id="powerLogout" style="grid-column: span 2;">
+                    <span class="power-btn-icon">→</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="wifi-password-modal" id="wifiPasswordModal">
+        <div class="wifi-password-content">
+            <h3 style="margin-bottom: 10px; color: white;">Connect to Wi-Fi</h3>
+            <div style="color: #aaa; font-size: 14px;" id="wifiSSIDLabel"></div>
+            <input type="password" id="wifiPassword" placeholder="Password">
+            <div style="display: flex; gap: 10px; margin-top: 15px;">
+                <button class="wifi-btn" id="wifiConnect">Connect</button>
+                <button class="wifi-btn" id="wifiCancel">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="tray-context-menu" id="trayContextMenu">
+        <div class="tray-menu-item" id="trayOpen">Open</div>
+        <div class="tray-menu-item" id="trayQuit">Quit</div>
+    </div>
+
+    <script src="taskbar.js"></script>
+    <script src="compositor.js"></script>
+    <webview id="transferDialogID" onmouseleave="" allowtransparency allownw style="position: absolute;z-index: 10000;width: 1050px;height: 477px;bottom: 178;display: block;" partition="trusted" src="../linux-app-launcher/index.html" type=""></webview>
+</body>
+</html>

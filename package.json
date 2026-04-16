@@ -1,22 +1,22 @@
 {
-  "name": "Elve desktop",
-  "main": "toBeNamedDesktop/main.html",
-  "description": "Elve desktop",
+  "name": "Elve Shell",
+  "description": "Elve Shell",
   "scripts": {
     "start": "node index.js",
-    "start-nw": "nw src/ --disable-gpu-compositing --force-cpu-draw",
+    "start-nw": "node scripts/start-nw.js",
     "build-nw": "nwbuild --platform win --arch x64 --outDir dist/src --glob=false src "
   },
   "dependencies": {
-    "@josephuspaye/list-open-windows": "^0.1.2",
+    "ignore-mouse-wayland":"latest",
+    "cmake-js": "^7.3.0",
     "easy-volume": "^1.1.0",
-    "electron-bottom-window": "^1.0.3",
     "fsprogress": "^1.0.0",
-    "hmc-win32": "^1.4.92",
-    "icon-extractor": "^1.0.3",
-    "node-powershell": "^5.0.1",
-    "nw": "^0.83.0",
-    "sortablejs": "^1.15.2"
+    "kill-process": "^1.0.2",
+    "node-addon-api": "^8.5.0",
+    "nw": "^0.85.0",
+    "sortablejs": "^1.15.2",
+    "systeminformation": "^5.23.5",
+    "window-control": "^1.4.5"
   },
   "devDependencies": {
     "nw-builder": "^4.5.3",

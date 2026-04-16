@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="Chart.js"></script><style>undefined.color{background-color: rgba(0,0,0,0.8)} .colorDarker{background-color: rgba(0,0,0,0.8)} .transferDialogButton.color:hover{ background-color: rgba(0,0,0,0.8) }</style>
+    <title>Transfer Dialog</title>
+    <style>
+        body{
+        }
+        .transferDialogContainer{
+            display: block;
+            background: rgb(255 255 255 / 70%);
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            user-select: none;
+            margin-top: 26px;
+            flex-direction: column;
+            flex-wrap: wrap;
+            padding: 0px;
+        }
+        .transferDialogButton{
+            display: flex;
+            background: rgb(248 125 166 / 44%);
+            border-radius: 12px;
+            width: 64px;
+            height: 33px;
+            margin-bottom: 10px;
+            text-align: center;
+            justify-content: center;
+            align-items: center;
+            color:white;
+        }
+        .transferDialogButton img{
+            width: auto;
+            height: 22px;
+           /*  mix-blend-mode: overlay; */
+            opacity: 0.5;
+        }
+        .transferDialogFlexContainer{
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            padding: 4px;
+            justify-content: space-evenly;
+            align-content: center;
+        }
+        .sliderContainer{
+            text-align: center;
+        }
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 22px;
+            background: #c9c9c900;
+            border-radius: 10px;
+        }
+    
+        .slider:hover {
+        opacity: 1;
+        }
+         .sliderTrack{
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: rgb(248 125 166 / 44%);
+            cursor: pointer;
+            position: absolute;
+            border-radius: 10px;
+            margin: 3px;
+            z-index: 0;
+            pointer-events: none;
+            min-width: 10px;
+         }
+        .slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 15px;
+        height: 15px;
+        background: #ff80db00;
+        cursor: pointer;
+        border-radius: 100%;
+        z-index:999;
+        }
+    
+        .slider::-moz-range-thumb {
+        width: 15px;
+        height: 15px;
+        background: #ff80db;
+        cursor: pointer;
+        z-index:999;
+        }
+        .transferDialogTrayContainer{
+            display: flex;
+            width: 100%;
+            border-radius: 10px 10px 0px 0px;
+            justify-content: space-around;
+            flex-wrap: nowrap;
+            align-content: center;
+            align-items: center;
+        }
+        .sliderContainer img{
+            width: 22px;
+            height:22px;
+            opacity: 0.5;
+        }
+        .transferDialogTray{
+            display: flex;
+            width: 95%;
+            height: 80%;
+            border-radius: 10px;
+            margin:8px;
+            text-align: center;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-around;
+            align-items: center;
+            color:white;
+        }
+        .color{
+            background: rgb(255 47 47 / 80%);
+        }
+        .colorDarker{
+            background: rgba(193, 35, 35, 0.8);
+        }
+        .transferDialogTitle{
+            font-family: system-ui;
+            font-size: 90%;
+        }
+        .transferDialogDetails .transferDialogTitle{
+            margin-left: 10px;
+            margin-top: 6px;
+            margin-bottom: 0px;
+        }
+        .transferDialogDetails
+        {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            height: 90%;
+        }
+        .transferChart{
+            width:100%;
+            max-width:600px;
+            padding-top: 5px;
+        }
+        .hide{
+            display: none !important;
+        }
+        .WindowContainer{
+ /* display: none; */
+ display: flex;
+ width: 100%;
+ height: auto;
+ background: #c6c6c663;
+ position: absolute;
+ border-radius: 14px;
+ backdrop-filter: blur(11px);
+ box-shadow: 0px 0px 20px 6px #00000038;
+ z-index: 999;
+ flex-direction: row;
+ padding: 7px;
+ justify-content: space-around;
+ min-width: 472px;
+}
+/* .WindowBar{
+    background-color: #f0f0f099;
+    height: 32px;
+    width: 100%;
+}
+.WindowContent{
+    width: 100%;
+    height: 100%;
+    background:white;
+} */
+ .buttonsHolder{
+    right: 0px;
+    top: 5px;
+    position: absolute;
+    background: #27272745;
+    width: 81px;
+    height: 13px;
+    margin-inline-end: 5px;
+    border-radius: 18px;
+    padding: 5px;
+    top: 5px;
+    position: absolute;
+    background: #27272745;
+    width: 81px;
+    height: 13px;
+    margin-inline-end: 5px;
+    border-radius: 18px;
+    padding: 5px;
+ }
+ .windowButton{
+    position: absolute;
+    margin-inline-end: 5px;
+    width: 4px;
+    height: 3px;
+    aspect-ratio: 1/1;
+    border-radius: 100%;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.windowButton:hover{
+    scale:1.2;
+}
+        </style>
+<style type="text/css">/* Chart.js */
+/*
+ * DOM element rendering detection
+ * https://davidwalsh.name/detect-node-insertion
+ */
+@keyframes chartjs-render-animation {
+	from { opacity: 0.99; }
+	to { opacity: 1; }
+}
+
+.chartjs-render-monitor {
+	animation: chartjs-render-animation 0.001s;
+}
+
+/*
+ * DOM element resizing detection
+ * https://github.com/marcj/css-element-queries
+ */
+.chartjs-size-monitor,
+.chartjs-size-monitor-expand,
+.chartjs-size-monitor-shrink {
+	position: absolute;
+	direction: ltr;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+	overflow: hidden;
+	pointer-events: none;
+	visibility: hidden;
+	z-index: -1;
+}
+
+.chartjs-size-monitor-expand > div {
+	position: absolute;
+	width: 1000000px;
+	height: 1000000px;
+	left: 0;
+	top: 0;
+}
+
+.chartjs-size-monitor-shrink > div {
+	position: absolute;
+	width: 200%;
+	height: 200%;
+	left: 0;
+	top: 0;
+}
+</style>
+</head>
+<body style="display: flex;width: 100%;flex-wrap: nowrap;">
+    
+    <div class="WindowContainer" style="">
+        <div class="resizers">
+            <div class="resizer top-left"></div>
+            <div class="resizer top-right"></div>
+            <div class="resizer bottom-left"></div>
+            <div class="resizer bottom-right"></div>
+          </div>
+            <div class="WindowBar">
+        <div class="buttonsHolder" onclick="" style="
+        display: flex;
+        left: 10px;
+        width: 47%;
+        flex-wrap: nowrap;
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        -webkit-text-stroke-color: #dadada;
+    "><div style="
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        margin: auto;
+        position: absolute;
+    ">This is Title</div></div>
+        
+                <div class="buttonsHolder" onclick="" style=""></div>
+                <div class="windowButton" onclick="" style="right: 69px;top:10px;position: absolute;background: #c3c3c3;"></div>
+                <div class="windowButton" onclick="" style="right: 48px;top:10px;background: #fff49b;"></div>
+                <div class="windowButton" onclick="" style="font-size: 7px;right: 27px;top:10px;background: #cbff9b;"></div>
+            <div class="windowButton" onclick="" style="right: 6px;top:10px;background: #ff9b9b;"></div></div>
+            <div class="WindowContent" style="
+        background: red;
+    "></div>
+        <div id="detailsID" class="transferDialogContainer color hide" style="margin-right: 10px;">
+        <div class="transferDialogTrayContainer" style="height: 100%;">
+            <div class="transferDialogTray transferDialogDetails colorDarker"> 
+                <p class="transferDialogTitle" id="transferNameID">File: </p>
+                <p class="transferDialogTitle" id="transferFromID">From: C:/Windows</p>
+                <p class="transferDialogTitle" id="transferToID">To: C:/User/Desktop</p>
+                <p class="transferDialogTitle" id="transferEstID">Est. Time: 1h 30min</p>
+                <p class="transferDialogTitle" id="transferTimeSpentID">Time spent: 1h 30min</p>
+                <p class="transferDialogTitle" id="transferRateID">Transfer rate: 900Mb/s</p>
+            </div>
+        </div>
+    </div><div class="transferDialogContainer" style="/* width: 239px; */">
+        <div class="transferDialogTrayContainer color">
+            <div class="transferDialogTray colorDarker"><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div><div class="chartjs-size-monitor"><div class="chartjs-size-monitor-expand"><div class=""></div></div><div class="chartjs-size-monitor-shrink"><div class=""></div></div></div>
+                <canvas id="transferChartID" class="transferChart chartjs-render-monitor hide" height="554" width="1116" style="display: block; height: 277px; width: 558px;"></canvas> 
+                <p id="transferingTextID" class="transferDialogTitle">Transfering files.... /index.html</p>
+            </div>
+        </div>
+        <div style="display: flex;flex-direction: row;justify-content: center;">
+            <div class="sliderContainer" style="margin: 13px;width: 85%;">
+                <div style="position: relative;display: flex;width: 100%;height: 22px;background: #b8b8b8;
+                   outline: none;transition: opacity .2s;border-radius: 10px;align-items: center;">
+                   <input type="range" min="1" max="100" value="50" class="slider" id="progressBarID" oninput="sliderTrackChange(this);" onchange="sliderTrackChange(this)" style="display: flex;/* position: absolute; */">
+                   <span class="sliderTrack color" style="display: flex;width: 98%;"></span>
+                </div>
+            </div>
+            <div id="progressTextID" style="margin: auto;margin-right: 27px;margin-left: 5px;width:20px">37%</div>
+        </div>
+        <div class="transferDialogFlexContainer">
+            <div class="transferDialogButton color" style="width: 115px;">
+                <div style="text-wrap: nowrap;" onclick="displayDetails();">Expand Details</div>
+            </div>
+            <div class="transferDialogButton color">
+                <div id="transferDialogButtonID">Cancel</div>
+            </div>
+        </div>
+        <input type="color" oninput="console.log(hexToRgbA(this.value))" value="rgba(0,0,0 / 100)" style="width:85%;border:none;position: absolute;width: 30px;">
+    </div></div>
+    
+        <script>
+            var detailsHidden=true;
+            var detailsElement=document.getElementById("detailsID");
+            var progressTextElemenet=document.getElementById("progressTextID");
+            var transferingTextElemenet=document.getElementById("transferingTextID");
+            var transferChartElement=document.getElementById("transferChartID");
+            var progressBarElement=document.getElementById('progressBarID');
+            var styleElement=document.getElementsByTagName("style");
+            var oldStyle=styleElement[0].innerHTML;
+            function sliderTrackChange(el){
+                /* console.log(el.parentElement.children[0]); */
+                el.parentElement.children[1].style.width="calc("+(el.value)+"% - 8px)";
+                progressTextElemenet.innerHTML=el.value+"%";
+                console.log("calc("+el.value+"% - 8px)");
+            }
+            function hexToRgbA(hex){
+                var c;
+                if(/^#([A-Fa-f0-9]{3}){1,2}$/.test(hex)){
+                    c= hex.substring(1).split('');
+                    if(c.length== 3){
+                        c= [c[0], c[0], c[1], c[1], c[2], c[2]];
+                    }
+                    c= '0x'+c.join('');
+                    color='rgba('+[(c>>16)&255, (c>>8)&255, c&255].join(',')+',0.8)';
+                    colorDarker='rgba('+[((c>>16)&255)*0.75, ((c>>8)&255)*0.75, (c&255)*0.75].join(',')+',0.8)';
+                    colorChange(color,colorDarker);
+                    return color+" "+colorDarker;
+                }
+                throw new Error('Bad Hex');
+            }
+            function colorChange(color,colorDarker){
+                styleElement[0].innerHTML=oldStyle;
+                var css = '.color{background-color: '+color+'} .colorDarker{background-color: '+colorDarker+'} .transferDialogButton.color:hover{ background-color: '+colorDarker+' }';
+                oldStyle=styleElement[0].innerHTML;
+                styleElement[0].innerHTML=oldStyle+css;
+                console.log(styleElement[0]);
+            }
+            function displayDetails(){
+                if(detailsHidden==true){
+                detailsElement.classList.remove("hide");
+                transferChartElement.classList.remove("hide");
+                transferingTextElemenet.classList.add("hide");
+                detailsHidden=false;
+                }
+                else if(detailsHidden==false){
+                detailsElement.classList.add("hide");
+                transferChartElement.classList.add("hide");
+                transferingTextElemenet.classList.remove("hide");
+                detailsHidden=true;
+                }
+            }
+        </script>
+        <script>
+            /* const x = [100,200,300,400,500,600,700,800,900,1000]; */
+            const x = [];
+            var transferChart=new Chart("transferChartID", {
+              type: "line",
+              data: {
+                labels: x,
+                datasets: [{ 
+                  /* data: [860,1140,1060,1060,1070,1110,1330,2210,7830,2478], */
+                  data: [],
+                  borderColor: "rgba(33,33,33,0.5)",
+                  fill: true,
+                  radius: 0,
+                  pointBackgroundColor: 'rgb(255, 99, 132)',
+                  pointHoverBackgroundColor: '#fff',
+                  borderWidth:1,
+                  backgroundColor:"rgba(33,33,33,1)"
+                }]
+              },
+              options: {
+                tooltips: {
+                intersect: false,
+                mode: 'nearest',
+                enabled: false,
+                position: 'nearest',
+                custom: function(context) {
+                        // Tooltip Element
+                        let tooltipEl = document.getElementById('chartjs-tooltip');
+                        // Create element on first render
+                        if (!tooltipEl) {
+                            tooltipEl = document.createElement('div');
+                            tooltipEl.id = 'chartjs-tooltip';
+                            tooltipEl.innerHTML = '<table></table>';
+                            document.body.appendChild(tooltipEl);
+                        }
+                        // Hide if no tooltip
+                        const tooltipModel = context;
+                        if (tooltipModel.opacity === 0) {
+                            tooltipEl.style.opacity = 0;
+                            return;
+                        }
+                        // Set caret Position
+                        tooltipEl.classList.remove('above', 'below', 'no-transform');
+                        if (tooltipModel.yAlign) {
+                            tooltipEl.classList.add(tooltipModel.yAlign);
+                        } else {
+                            tooltipEl.classList.add('no-transform');
+                        }
+                        function getBody(bodyItem) {
+                            return bodyItem.lines;
+                        }
+                        // Set Text
+                        if (tooltipModel.body) {
+                            const titleLines = tooltipModel.title || [];
+                            const bodyLines = tooltipModel.body.map(getBody);
+                            let innerHtml = '<thead style="">';
+      /*                       titleLines.forEach(function(title) {
+                                innerHtml += '<tr><th>' + title + '</th></tr>';
+                            }); */
+                            innerHtml += '</thead><tbody>'; 
+                            bodyLines.forEach(function(body, i) {
+                                const span = '<span style="background:rgba(33,33,33,0.5);border-radius:12px;padding:5px;color:white">' + body + 'MB/s</span>';
+                                innerHtml += '<tr><td>' + span + '</td></tr><tr><td style="color:rgba(255,255,255,1);">●</td></tr>';
+                            });
+                            innerHtml += '</tbody>';
+                            let tableRoot = tooltipEl.querySelector('table');
+                            tableRoot.innerHTML = innerHtml;
+                            console.log(innerHtml);
+                        }
+                        console.log(context);
+                        const position = transferChart.canvas.getBoundingClientRect();
+                        // Display, position, and set styles for font
+                        tooltipEl.style.opacity = 1;
+                        tooltipEl.style.position = 'absolute';
+                        tooltipEl.style.left = position.left + window.pageXOffset + tooltipModel.caretX - 7 + 'px';
+                        tooltipEl.style.top = position.top + window.pageYOffset + tooltipModel.caretY - 29 + 'px';
+                        tooltipEl.style.padding = tooltipModel.padding + 'px ' + tooltipModel.padding + 'px';
+                        tooltipEl.style.pointerEvents = 'none';
+                        tooltipEl.style.zIndex = '999';
+                    }
+                },
+            scales: {
+            xAxes: [{
+                display:false,
+                gridLines: {
+                    color: "rgba(0, 0, 0, 0)",
+                    value:"rgba(0, 0, 0, 0)"
+                }
+            }],
+            yAxes: [{
+                display:false,
+                gridLines: {
+                    color: "rgba(0, 0, 0, 0)",
+                }   
+            }],
+        },
+        legend:{display:false}
+    },
+            });
+  /*   var canvasBCR = transferChartElement.getBoundingClientRect(); */
+    function addChartData(label, newData) {
+        transferChart.data.labels.push(label);
+        transferChart.data.datasets.forEach((dataset) => {
+        dataset.data.push(newData);
+        });
+        transferChart.update();
+    }
+    const fs = require('fs');
+    async function copy(sourceFile,destFile) 
+    {
+    
+    fs.stat(sourceFile, function(err, stat){
+     
+      const filesize = stat.size
+      let bytesCopied = 0;
+      let bufferR=0; 
+      let bufferPrevious=0;
+      let bufferChunk=0;
+      let secondsPassed=0;
+      let timeTotalEst=0;
+      let timeAverageEst=0;
+      let transferAverage=0;
+      let transferEstElement=document.getElementById("transferEstID");
+      let transferRateElement=document.getElementById("transferRateID");
+      let transferDialogButtonElement=document.getElementById("transferDialogButtonID");
+      /* var eventChart=new MouseEvent("click", {clientX: canvasBCR.left + 777, clientY: canvasBCR.top + 144}); */
+      document.getElementById("transferToID").innerHTML="To: "+destFile;
+      document.getElementById("transferFromID").innerHTML="From: "+sourceFile;
+      const readStream = fs.createReadStream(sourceFile)
+      readStream.on('data', function(buffer){
+        bufferR =bufferR+ buffer.length;
+      })
+      readStream.on('error', function(event){
+        clearInterval(refreshIntervalId);
+        console.log("error in processing transfer");
+      })
+      readStream.on('end', function(){
+        clearInterval(refreshIntervalId);
+        chartDataRefresh(bufferChunk,bufferR,true);
+/*         transferChartElement.dispatchEvent(eventChart); */
+        console.log("done copying");
+      })
+      function chartDataRefresh(bufferChunk,bufferR,isDone){
+            console.log(readStream);
+            secondsPassed++;
+            bufferChunk=bufferR-bufferPrevious;
+            bufferPrevious=bufferR;
+            transferSpeed=Math.round(bufferChunk/(1024*1024));
+            transferProgress=Math.round(bufferR/(1024*1024));
+            transferEst=Math.round(filesize/bufferChunk);
+            timeTotalEst+=transferEst;
+            transferAverage+=transferSpeed;
+            timeAverageEst=timeTotalEst/secondsPassed;
+            addChartData(transferProgress,transferSpeed);
+    /*         transferChart.data.datasets[0].data.push(transferSpeed);
+            transferChart.data.labels.push(transferProgress);
+            transferChart.update(); */
+            document.getElementById("transferRateID");
+            transferEstElement.innerText="Est. time: "+Math.round(timeAverageEst-secondsPassed)+" seconds";
+            transferRateElement.innerText="Transfer rate: "+transferSpeed+" MB/s speed";
+            console.log(transferProgress+"MB done");
+            console.log(transferSpeed+"MB speed");
+            console.log(Math.round(timeAverageEst-secondsPassed)+"sec Est. time");
+            let prcentage = ((bufferR/filesize)*100).toFixed(2);
+            progressBarElement.value=Math.round(prcentage);
+            sliderTrackChange(progressBarElement);
+            document.getElementById("transferTimeSpentID").innerHTML="Time spent: "+secondsPassed+" seconds";
+            if(isDone==true){
+                transferEstElement.innerText="Est. time: 0 seconds";
+                transferRateElement.innerText="Average transfer rate: "+Math.round(transferAverage/secondsPassed)+" MB/s speed";
+                transferDialogButtonElement.innerHTML="Close";
+            }
+    }
+      var refreshIntervalId=setInterval(() => {
+        chartDataRefresh(bufferChunk,bufferR,false);
+    }, 1000);
+      readStream.pipe(fs.createWriteStream(destFile));
+    });
+          };
+    copy('copyTest.iso','copyTest_done.iso');
+            </script>
+
+</body></html>
